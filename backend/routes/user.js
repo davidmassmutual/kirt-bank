@@ -17,7 +17,7 @@ const isAdmin = (req, res, next) => {
 // Get all users (admin only)
 router.get('/all', verifyToken, isAdmin, async (req, res) => {
   try {
-    const users = await User.find().select('-password'); // Exclude passwords
+    const users = await User.find().select('-password');
     res.json(users);
   } catch (err) {
     console.error('Error fetching users:', err);

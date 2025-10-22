@@ -39,7 +39,7 @@ router.post('/user/:userId', verifyToken, isAdmin, upload.single('receipt'), asy
       type,
       amount,
       method,
-      status: status || 'pending',
+      status: status || 'Posted',
       date: date ? new Date(date) : new Date(),
       receipt: req.file ? `/uploads/${req.file.filename}` : null,
     });
@@ -83,7 +83,7 @@ router.delete('/:id', verifyToken, isAdmin, async (req, res) => {
   }
 });
 
-// Existing route for user transactions
+// Get user transactions
 router.get('/', verifyToken, async (req, res) => {
   try {
     console.log('Fetching transactions for user:', req.userId);
@@ -96,6 +96,7 @@ router.get('/', verifyToken, async (req, res) => {
   }
 });
 
+// Add user transaction
 router.post('/', verifyToken, upload.single('receipt'), async (req, res) => {
   try {
     const { type, amount, method, status } = req.body;
@@ -104,7 +105,7 @@ router.post('/', verifyToken, upload.single('receipt'), async (req, res) => {
       type,
       amount,
       method,
-      status: status || 'pending',
+      status: status || 'Posted',
       date: new Date(),
       receipt: req.file ? `/uploads/${req.file.filename}` : null,
     });

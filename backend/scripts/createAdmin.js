@@ -19,9 +19,9 @@ const userSchema = new mongoose.Schema({
   currency: { type: String, default: 'USD' },
   theme: { type: String, default: 'light' },
   isAdmin: { type: Boolean, default: false },
-  savingsBalance: { type: Number, default: 115097000 }, // $115,097,000
-  checkingBalance: { type: Number, default: 508890 }, // $508,890
-  usdtBalance: { type: Number, default: 15000 }, // $15,000
+  savingsBalance: { type: Number, default: 0 }, // $0
+  checkingBalance: { type: Number, default: 0 }, // $0
+  usdtBalance: { type: Number, default: 0 }, // $0
   createdAt: { type: Date, default: Date.now },
 });
 
@@ -61,41 +61,15 @@ async function createAdmin() {
       console.log('Dropped username_1 index');
     }
 
-    const email = 'sterlingtrustcontact@gmail.com';
+    const email = 'eunicewellis@gmail.com';
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       console.log('Admin user already exists:', email);
-      // Check existing transactions
-      const existingTransactions = await Transaction.find({ userId: existingUser._id });
-      console.log('Existing transactions:', existingTransactions);
-      if (existingTransactions.length === 0) {
-        console.log('No transactions found, creating default transactions...');
-        const transactions = [
-          { date: new Date('2025-10-10'), type: 'Payroll', method: 'Credit', amount: 2250, status: 'Posted' },
-          { date: new Date('2025-09-10'), type: 'Payroll', method: 'Credit', amount: 2250, status: 'Posted' },
-          { date: new Date('2025-08-10'), type: 'Payroll', method: 'Credit', amount: 2250, status: 'Posted' },
-          { date: new Date('2025-07-10'), type: 'Payroll', method: 'Credit', amount: 2250, status: 'Posted' },
-          { date: new Date('2025-06-10'), type: 'Payroll', method: 'Credit', amount: 2250, status: 'Posted' },
-        ];
-        for (const tx of transactions) {
-          const transaction = new Transaction({
-            userId: existingUser._id,
-            type: tx.type,
-            amount: tx.amount,
-            method: tx.method,
-            status: tx.status,
-            date: tx.date,
-          });
-          await transaction.save();
-          console.log('Created transaction:', tx);
-        }
-        console.log('Default transactions created for existing admin');
-      }
       await mongoose.connection.close();
       return;
     }
 
-    const hashedPassword = await bcrypt.hash('sterling123', 10);
+    const hashedPassword = await bcrypt.hash('kirt123', 10);
     const admin = new User({
       name: 'Admin User',
       email: email,
@@ -107,36 +81,13 @@ async function createAdmin() {
       notifications: { email: true, sms: false, push: true },
       currency: 'USD',
       theme: 'light',
-      savingsBalance: 115097000,
-      checkingBalance: 508890,
-      usdtBalance: 15000,
+      savingsBalance: 0,
+      checkingBalance: 0,
+      usdtBalance: 0,
       createdAt: new Date(),
     });
     await admin.save();
-    console.log('Admin user created:', email);
-
-    // Create default transactions
-    const transactions = [
-      { date: new Date('2025-10-10'), type: 'Payroll', method: 'Credit', amount: 2250, status: 'Posted' },
-      { date: new Date('2025-09-10'), type: 'Payroll', method: 'Credit', amount: 2250, status: 'Posted' },
-      { date: new Date('2025-08-10'), type: 'Payroll', method: 'Credit', amount: 2250, status: 'Posted' },
-      { date: new Date('2025-07-10'), type: 'Payroll', method: 'Credit', amount: 2250, status: 'Posted' },
-      { date: new Date('2025-06-10'), type: 'Payroll', method: 'Credit', amount: 2250, status: 'Posted' },
-    ];
-
-    for (const tx of transactions) {
-      const transaction = new Transaction({
-        userId: admin._id,
-        type: tx.type,
-        amount: tx.amount,
-        method: tx.method,
-        status: tx.status,
-        date: tx.date,
-      });
-      await transaction.save();
-      console.log('Created transaction:', tx);
-    }
-    console.log('Default transactions created for admin');
+    console.log('Admin user created for Kirt Bank:', email);
 
     await mongoose.connection.close();
   } catch (err) {

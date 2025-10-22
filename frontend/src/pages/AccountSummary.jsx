@@ -49,7 +49,7 @@ function AccountSummary() {
 
   return (
     <div className="account-summary">
-      <h2><i className="fas fa-wallet"></i> Account Summary</h2>
+      <h2><i className="fas fa-wallet"></i> Kirt Bank Account Summary</h2>
       {loading ? (
         <div className="loading">Loading...</div>
       ) : (

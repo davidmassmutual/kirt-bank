@@ -1,24 +1,26 @@
+/* frontend/src/styles/index.css */
 :root {
-  --primary: #1E3A8A;
-  --accent: #F59E0B;
-  --secondary: #60A5FA;
-  --highlight: #8B5CF6;
-  --background: #F3F4F6;
-  --text: #111827;
-  --card-bg: rgba(255, 255, 255, 0.9);
-  --success: #10B981;
-  --error: #EF4444;
+  --primary: #DAA520; /* Goldenrod for headers, buttons */
+  --accent: #FFD700; /* Gold for buttons, highlights */
+  --secondary: #C0392B; /* Red for cancel buttons */
+  --highlight: #FFD700; /* Gold for borders */
+  --background: #F5F5F5; /* Light gray for background */
+  --text: #333333; /* Dark gray for text */
+  --card-bg: #FFFFFF; /* White for cards */
+  --success: #10B981; /* Green for success messages */
+  --error: #EF4444; /* Red for error messages */
+  --input-bg: #F9F9F9; /* Light gray for inputs */
 }
 
 [data-theme="dark"] {
-  --primary: #60A5FA;
-  --accent: #93C5FD;
-  --highlight: #1E3A8A;
-  --text: #E5E7EB;
-  --secondary: #9CA3AF;
-  --background: #1F2937;
-  --card-bg: rgba(31, 41, 55, 0.7);
+  --primary: #FFD700; /* Gold for headers, buttons */
+  --accent: #DAA520; /* Goldenrod for buttons, highlights */
+  --background: #1A1A1A; /* Dark gray for background */
+  --text: #F5F5F5; /* Light gray for text */
+  --card-bg: #333333; /* Darker gray for cards */
+  --input-bg: #2A2A2A; /* Darker gray for inputs */
 }
+
 * {
   margin: 0;
   padding: 0;
@@ -27,7 +29,7 @@
 
 body {
   font-family: 'Poppins', sans-serif;
-  background-image: url(../images//ChatGPT\ Image\ Oct\ 17\,\ 2025\,\ 12_03_01\ PM.png);
+  background-image: url(../images/kirt-bank-bg.png); /* Replace with your Kirt Bank background */
   color: var(--text);
   overflow-x: hidden;
 }
@@ -53,6 +55,7 @@ button:hover {
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.2);
 }
+
 .error-boundary {
   display: flex;
   flex-direction: column;
@@ -80,7 +83,7 @@ button:hover {
 .error-boundary button {
   padding: 0.8rem 1.5rem;
   background: linear-gradient(90deg, var(--accent), #FBBF24);
-  color: white;
+  color: var(--card-bg);
   border: none;
   border-radius: 8px;
   font-weight: 600;
@@ -139,23 +142,22 @@ button:hover {
 .main-content {
   flex-grow: 1;
   width: 100%;
-  margin: 0; /* Ensure no margin */
-  padding: 0; /* Remove default padding */
+  margin: 0;
+  padding: 0;
 }
-
 
 /* Mobile */
 @media (max-width: 576px) {
   .main-content {
-    margin-left: 0; /* No offset, navbar is overlay */
+    margin-left: 0;
     width: 100%;
   }
 }
 
 /* Tablet */
 @media (max-width: 768px) and (min-width: 577px) {
-    .main-content {
-    margin-left: 200px; 
+  .main-content {
+    margin-left: 200px;
     width: calc(100% - 200px);
   }
 }
@@ -163,8 +165,7 @@ button:hover {
 /* Laptop */
 @media (min-width: 769px) {
   .main-content {
-    width: 100%;
-    margin-left: 250px; 
-    width: calc(100% - 250px); 
+    margin-left: 250px;
+    width: calc(100% - 250px);
   }
 }

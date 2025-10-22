@@ -172,7 +172,7 @@ function AdminDashboard() {
 
   return (
     <div className="admin-dashboard">
-      <h2><i className="fas fa-tachometer-alt"></i> Admin Dashboard</h2>
+      <h2><i className="fas fa-tachometer-alt"></i> Kirt Bank Admin Dashboard</h2>
       <div className="dashboard-container">
         <div className="password-section">
           <h3>Change Password</h3>

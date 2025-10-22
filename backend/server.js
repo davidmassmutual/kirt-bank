@@ -10,9 +10,8 @@ const app = express();
 
 // Configure CORS to allow multiple origins
 const allowedOrigins = [
-  'https://sterling-trust.onrender.com',
-  'https://sterling-trust.vercel.app',
-  'https://sterlingtrustsbank.com',
+  'https://kirt-bank.onrender.com',
+  'https://kirt-bank.vercel.app',
   'http://localhost:5173', // For local development
 ];
 

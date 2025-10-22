@@ -1,80 +1,80 @@
 /* frontend/src/styles/Transactions.css */
 .transactions {
-  padding: 2rem;
-  min-height: calc(100vh - 80px - 120px);
-  animation: fadeIn 0.7s ease-in;
+  padding: 1rem;
+  min-height: calc(100vh - 80px);
+  background: var(--background);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .transactions h2 {
-  font-size: 2rem;
+  font-size: 1.8rem;
   font-weight: 700;
-  color: var(--primary, #2c3e50);
+  color: var(--primary);
   text-align: center;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
   display: flex;
   align-items: center;
-  justify-content: center;
   gap: 0.5rem;
 }
 
 .transactions-table {
   overflow-x: auto;
-  max-width: 1200px;
-  margin: 0 auto;
+  max-width: 100%;
 }
 
 .transactions-table table {
   width: 100%;
   border-collapse: collapse;
-  background: #fff;
-  border-radius: 8px;
-  overflow: hidden;
+  background: var(--card-bg);
+  border-radius: 4px;
 }
 
 .transactions-table th,
 .transactions-table td {
-  padding: 0.75rem;
+  padding: 0.5rem;
   text-align: left;
   border-bottom: 1px solid #e0e0e0;
+  font-size: 0.85rem;
 }
 
 .transactions-table th {
-  background: var(--primary, #2c3e50);
-  color: white;
+  background: var(--primary);
+  color: var(--card-bg);
   font-weight: 600;
 }
 
 .transactions-table tr:hover {
-  background: #f5f5f5;
+  background: #e0e0e0;
+}
+
+[data-theme="dark"] .transactions-table tr:hover {
+  background: #444444;
 }
 
 .transactions-table td {
-  color: var(--text, #333);
+  color: var(--text);
 }
 
 .loading {
   text-align: center;
-  font-size: 1.2rem;
-  color: var(--primary, #2c3e50);
+  font-size: 1rem;
+  color: var(--text);
 }
 
 @media (max-width: 768px) {
   .transactions {
-    padding: 1rem;
+    padding: 0.5rem;
   }
 
   .transactions h2 {
-    font-size: 1.6rem;
+    font-size: 1.5rem;
   }
 
   .transactions-table th,
   .transactions-table td {
-    padding: 0.5rem;
-    font-size: 0.9rem;
+    padding: 0.3rem;
+    font-size: 0.75rem;
   }
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
 }

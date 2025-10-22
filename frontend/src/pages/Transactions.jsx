@@ -19,10 +19,11 @@ function Transactions() {
           navigate('/login');
           return;
         }
-        console.log('Fetching from:', `${import.meta.env.VITE_API_URL}/api/transactions`);
+        console.log('Fetching transactions from:', `${import.meta.env.VITE_API_URL}/api/transactions`);
         const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/transactions`, {
           headers: { Authorization: `Bearer ${token}` },
         });
+        console.log('Transactions received:', res.data);
         setTransactions(res.data);
         setLoading(false);
       } catch (err) {
@@ -31,6 +32,8 @@ function Transactions() {
           toast.error('Session expired, please log in again');
           localStorage.removeItem('token');
           navigate('/login');
+        } else if (err.response?.status === 404) {
+          toast.error('Transactions endpoint not found, please check backend');
         } else {
           toast.error(err.response?.data?.message || 'Failed to load transactions');
         }
@@ -42,7 +45,7 @@ function Transactions() {
 
   return (
     <div className="transactions">
-      <h2><i className="fas fa-exchange-alt"></i> Recent Transactions</h2>
+      <h2><i className="fas fa-exchange-alt"></i> Kirt Bank Recent Transactions</h2>
       {loading ? (
         <div className="loading">Loading...</div>
       ) : transactions.length === 0 ? (

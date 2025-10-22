@@ -2,7 +2,7 @@
 .admin-dashboard {
   padding: 1rem;
   min-height: calc(100vh - 80px);
-  background: var(--background, #f4f4f9);
+  background: var(--background);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -11,7 +11,7 @@
 .admin-dashboard h2 {
   font-size: 1.8rem;
   font-weight: 700;
-  color: var(--primary, #2c3e50);
+  color: var(--primary);
   margin-bottom: 1rem;
   display: flex;
   align-items: center;
@@ -29,17 +29,17 @@
 
 .password-section,
 .users-section {
-  background: var(--card-bg, rgba(255, 255, 255, 0.9));
+  background: var(--card-bg);
   border-radius: 8px;
   padding: 1rem;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-  border: 1px solid var(--highlight, #3498db);
+  border: 1px solid var(--highlight);
 }
 
 .password-section h3,
 .users-section h3 {
   font-size: 1.2rem;
-  color: var(--text, #333);
+  color: var(--text);
   margin-bottom: 0.5rem;
 }
 
@@ -53,22 +53,23 @@
   display: flex;
   flex-direction: column;
   font-size: 0.9rem;
-  color: var(--text, #333);
+  color: var(--text);
 }
 
 .password-form input {
   margin-top: 0.3rem;
   padding: 0.5rem;
-  border: 1px solid var(--highlight, #3498db);
+  border: 1px solid var(--highlight);
   border-radius: 4px;
   font-size: 0.9rem;
-  background: var(--input-bg, #f9f9f9);
+  background: var(--input-bg);
+  color: var(--text);
 }
 
 .password-form button {
   padding: 0.5rem;
-  background: var(--accent, #3498db);
-  color: white;
+  background: var(--accent);
+  color: var(--card-bg);
   border: none;
   border-radius: 4px;
   font-size: 0.9rem;
@@ -80,12 +81,12 @@
 }
 
 .password-form button:disabled {
-  background: var(--highlight, #7f8c8d);
+  background: #7f8c8d;
   cursor: not-allowed;
 }
 
 .password-form button:hover:not(:disabled) {
-  background: var(--primary, #2c3e50);
+  background: var(--primary);
 }
 
 .users-table {
@@ -95,7 +96,7 @@
 .users-table table {
   width: 100%;
   border-collapse: collapse;
-  background: #fff;
+  background: var(--card-bg);
   border-radius: 4px;
 }
 
@@ -108,23 +109,27 @@
 }
 
 .users-table th {
-  background: var(--primary, #2c3e50);
-  color: white;
+  background: var(--primary);
+  color: var(--card-bg);
   font-weight: 600;
 }
 
 .users-table tr:hover {
-  background: #f5f5f5;
+  background: #e0e0e0;
+}
+
+[data-theme="dark"] .users-table tr:hover {
+  background: #444444;
 }
 
 .users-table td {
-  color: var(--text, #333);
+  color: var(--text);
 }
 
 .users-table button {
   padding: 0.3rem 0.5rem;
-  background: var(--accent, #3498db);
-  color: white;
+  background: var(--accent);
+  color: var(--card-bg);
   border: none;
   border-radius: 4px;
   cursor: pointer;
@@ -133,13 +138,13 @@
 }
 
 .users-table button:hover {
-  background: var(--primary, #2c3e50);
+  background: var(--primary);
 }
 
 .loading {
   text-align: center;
   font-size: 1rem;
-  color: var(--primary, #2c3e50);
+  color: var(--text);
 }
 
 /* Modal Styles */
@@ -157,7 +162,7 @@
 }
 
 .modal-content {
-  background: #fff;
+  background: var(--card-bg);
   border-radius: 8px;
   padding: 1rem;
   max-width: 90%;
@@ -170,7 +175,7 @@
 .modal-content h3,
 .modal-content h4 {
   font-size: 1.2rem;
-  color: var(--text, #333);
+  color: var(--text);
   margin-bottom: 0.5rem;
 }
 
@@ -184,17 +189,18 @@
   display: flex;
   flex-direction: column;
   font-size: 0.9rem;
-  color: var(--text, #333);
+  color: var(--text);
 }
 
 .modal-content input,
 .modal-content select {
   margin-top: 0.3rem;
   padding: 0.5rem;
-  border: 1px solid var(--highlight, #3498db);
+  border: 1px solid var(--highlight);
   border-radius: 4px;
   font-size: 0.9rem;
-  background: var(--input-bg, #f9f9f9);
+  background: var(--input-bg);
+  color: var(--text);
 }
 
 .modal-buttons {
@@ -205,8 +211,8 @@
 
 .modal-buttons button {
   padding: 0.5rem;
-  background: var(--accent, #3498db);
-  color: white;
+  background: var(--accent);
+  color: var(--card-bg);
   border: none;
   border-radius: 4px;
   font-size: 0.9rem;
@@ -214,11 +220,11 @@
 }
 
 .modal-buttons button[type="button"] {
-  background: var(--secondary, #e74c3c);
+  background: var(--secondary);
 }
 
 .modal-buttons button:hover {
-  background: var(--primary, #2c3e50);
+  background: var(--primary);
 }
 
 .transactions-table {
@@ -228,7 +234,7 @@
 .transactions-table table {
   width: 100%;
   border-collapse: collapse;
-  background: #fff;
+  background: var(--card-bg);
   border-radius: 4px;
 }
 
@@ -241,19 +247,23 @@
 }
 
 .transactions-table th {
-  background: var(--primary, #2c3e50);
-  color: white;
+  background: var(--primary);
+  color: var(--card-bg);
   font-weight: 600;
 }
 
 .transactions-table tr:hover {
-  background: #f5f5f5;
+  background: #e0e0e0;
+}
+
+[data-theme="dark"] .transactions-table tr:hover {
+  background: #444444;
 }
 
 .transactions-table button {
   padding: 0.3rem 0.5rem;
-  background: var(--accent, #3498db);
-  color: white;
+  background: var(--accent);
+  color: var(--card-bg);
   border: none;
   border-radius: 4px;
   cursor: pointer;
@@ -261,7 +271,7 @@
 }
 
 .transactions-table button:hover {
-  background: var(--primary, #2c3e50);
+  background: var(--primary);
 }
 
 @media (max-width: 768px) {
@@ -309,9 +319,4 @@
     width: 95%;
     padding: 0.75rem;
   }
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
 }
