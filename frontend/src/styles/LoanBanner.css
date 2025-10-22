@@ -1,0 +1,65 @@
+.loan-banner {
+  padding: 2rem 1rem;
+  background: linear-gradient(135deg, var(--primary), #168db1);
+  color: white;
+  text-align: center;
+  border-radius: 10px;
+  margin: 2rem 1rem;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  animation: fadeIn 0.7s ease-in;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.loan-banner h2 {
+  font-weight: 700;
+  font-size: 1.8rem;
+}
+
+.loan-banner button {
+  padding: 0.8rem 2rem;
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.loan-banner button:hover {
+  background: orange;
+}
+
+.loan-banner button i {
+  margin-right: 0.5rem;
+}
+
+/* Phone */
+@media (max-width: 576px) {
+  .loan-banner {
+    padding: 1.5rem 0.5rem;
+    margin: 1rem 0.5rem;
+  }
+  .loan-banner h2 {
+    font-size: 1.4rem;
+  }
+  .loan-banner button {
+    padding: 0.7rem 1.5rem;
+  }
+}
+
+/* Tablet */
+@media (max-width: 768px) {
+  .loan-banner {
+    padding: 1.5rem 1rem;
+  }
+}
+
+/* Laptop */
+@media (min-width: 769px) {
+  .loan-banner {
+    padding: 2rem;
+    max-width: 1200px;
+    margin: 2rem auto;
+  }
+}

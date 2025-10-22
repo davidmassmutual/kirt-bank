@@ -1,0 +1,37 @@
+.dashboard-content {
+  margin-left: 250px;
+  padding: 2rem;
+  min-height: calc(100vh - 60px);
+  transition: margin-left 0.3s ease;
+}
+
+.profile-card {
+  background: var(--card-bg);
+  padding: 2rem;
+  border-radius: 10px;
+  text-align: center;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.profile-icon {
+  font-size: 2.5rem;
+  color: var(--accent);
+  margin-bottom: 1.5rem;
+}
+
+.profile-card p {
+  font-size: 1.1rem;
+  color: var(--text);
+  margin: 0.5rem 0;
+}
+
+.profile-card strong {
+  color: var(--primary);
+}
+
+@media (max-width: 768px) {
+  .dashboard-content {
+    margin-left: 0;
+    padding: 1rem;
+  }
+}

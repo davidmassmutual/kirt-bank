@@ -1,0 +1,68 @@
+.currency-converter {
+  padding: 2rem 1rem;
+  background: var(--card-bg);
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  animation: fadeIn 0.7s ease-in;
+  max-width: 450px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.currency-converter input,
+.currency-converter select {
+  padding: 0.9rem;
+  margin: 0.6rem 0;
+  border: 1px solid #E5E7EB;
+  border-radius: 8px;
+  font-size: 1rem;
+  background: white;
+  width: 100%;
+}
+
+.currency-converter button {
+  padding: 0.9rem;
+  background: linear-gradient(90deg, var(--accent), #FBBF24);
+  color: var(--text);
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  width: 100%;
+}
+
+.currency-converter button:hover {
+  background: linear-gradient(90deg, #FBBF24, var(--accent));
+}
+
+.currency-converter button i {
+  margin-right: 0.5rem;
+}
+
+/* Phone */
+@media (max-width: 576px) {
+  .currency-converter {
+    padding: 1.2rem;
+  }
+  .currency-converter input,
+  .currency-converter select {
+    padding: 0.8rem;
+    margin: 0.4rem 0;
+  }
+}
+
+/* Tablet */
+@media (max-width: 768px) {
+  .currency-converter {
+    padding: 1.5rem;
+  }
+}
+
+/* Laptop */
+@media (min-width: 769px) {
+  .currency-converter {
+    padding: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+}
