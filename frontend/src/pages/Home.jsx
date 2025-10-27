@@ -112,7 +112,7 @@ function Home({ setIsAuthenticated }) {
         </form>
       </section>
       <section className="features-section">
-        <h2>Why Choose Sterling Trust?</h2>
+        <h2>Why Choose Kirt Bank?</h2>
         <div className="features">
           <div className="feature-card">
             <img

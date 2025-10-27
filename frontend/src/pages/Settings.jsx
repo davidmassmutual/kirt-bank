@@ -177,7 +177,10 @@ function Settings() {
   };
 
   if (loading) {
-    return <div className="loading">Loading...</div>;
+    return <div className="loading-container">
+  <div className="loading-spinner"></div>
+  <p className="loading-message">Processing your request...</p>
+</div>;
   }
 
   return (

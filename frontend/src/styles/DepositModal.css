@@ -1,0 +1,110 @@
+/* frontend/src/components/DepositModal.css */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+}
+
+.modal-content {
+  background: var(--card-bg);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  padding: 1.5rem;
+  max-width: 90%;
+  width: 400px;
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+  border: 2px solid var(--gold);
+}
+
+.modal-content h3 {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 1rem;
+}
+
+.deposit-select,
+.modal-content input,
+.modal-content select {
+  width: 100%;
+  padding: 0.8rem;
+  border: 1px solid var(--gold);
+  border-radius: 10px;
+  font-size: 1rem;
+  background: var(--input-bg);
+  color: var(--text);
+  margin-top: 0.3rem;
+}
+
+.deposit-select,
+.modal-content select {
+  appearance: none;
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24"><path fill="%23FFD700" d="M7 10l5 5 5-5z"/></svg>');
+  background-repeat: no-repeat;
+  background-position: right 0.8rem center;
+  background-size: 12px;
+}
+
+.modal-content label {
+  display: flex;
+  flex-direction: column;
+  font-size: 1rem;
+  color: var(--text);
+  margin-bottom: 0.8rem;
+}
+
+.modal-buttons {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.modal-buttons button {
+  flex: 1;
+  padding: 0.8rem;
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.modal-buttons button[type="submit"] {
+  background: linear-gradient(90deg, var(--gold), #FBBF24);
+  color: #1F2937;
+}
+
+.modal-buttons button[type="submit"]:hover {
+  background: linear-gradient(90deg, #FBBF24, var(--gold));
+}
+
+.modal-buttons button[type="button"] {
+  background: var(--navy);
+  color: white;
+}
+
+.modal-buttons button[type="button"]:hover {
+  background: var(--navy-light);
+}
+
+@media (max-width: 576px) {
+  .modal-content {
+    width: 90%;
+    padding: 1rem;
+  }
+  .modal-content h3 {
+    font-size: 1.2rem;
+  }
+  .deposit-select,
+  .modal-content input,
+  .modal-content select {
+    font-size: 0.9rem;
+  }
+}

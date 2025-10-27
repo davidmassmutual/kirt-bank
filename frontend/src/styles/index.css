@@ -108,7 +108,37 @@ button:hover {
   transform: translateY(-4px);
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
 }
+/* frontend/src/styles/index.css (append at the end) */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 80px);
+  color: var(--text);
+}
 
+.loading-spinner {
+  width: 50px;
+  height: 50px;
+  border: 5px solid var(--gold);
+  border-top: 5px solid var(--gold-dark);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+.loading-message {
+  font-size: 1.2rem;
+  font-weight: 500;
+  color: var(--secondary);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
 /* Mobile */
 @media (max-width: 576px) {
   .error-boundary h2 { font-size: 1.6rem; }

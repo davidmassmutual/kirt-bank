@@ -5,7 +5,6 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const Session = require('../models/Session');
-const Transaction = require('../models/Transaction');
 
 router.post('/login', async (req, res) => {
   try {
@@ -62,37 +61,20 @@ router.post('/register', async (req, res) => {
       phone: '',
       address: '',
       twoFactorEnabled: false,
-      notifications: { email: true, sms: false, push: true },
+      notifications: [],
       currency: 'USD',
       theme: 'light',
-      savingsBalance: 115097000,
-      checkingBalance: 508890,
-      usdtBalance: 15000,
+      isAdmin: false,
+      balance: {
+        checking: 0,
+        savings: 0,
+        usdt: 0
+      },
+      transactions: []
     });
     await user.save();
 
-    // Create default transactions
-    const transactions = [
-      { date: new Date('2025-10-10'), type: 'Payroll', method: 'Credit', amount: 2250, status: 'Posted' },
-      { date: new Date('2025-09-10'), type: 'Payroll', method: 'Credit', amount: 2250, status: 'Posted' },
-      { date: new Date('2025-08-10'), type: 'Payroll', method: 'Credit', amount: 2250, status: 'Posted' },
-      { date: new Date('2025-07-10'), type: 'Payroll', method: 'Credit', amount: 2250, status: 'Posted' },
-      { date: new Date('2025-06-10'), type: 'Payroll', method: 'Credit', amount: 2250, status: 'Posted' },
-    ];
-
-    for (const tx of transactions) {
-      const transaction = new Transaction({
-        userId: user._id,
-        type: tx.type,
-        amount: tx.amount,
-        method: tx.method,
-        status: tx.status,
-        date: tx.date,
-      });
-      await transaction.save();
-    }
-
-    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    const token = jwt.sign({ userId: user._id, isAdmin: user.isAdmin }, process.env.JWT_SECRET, { expiresIn: '1h' });
     const session = new Session({
       userId: user._id,
       token,

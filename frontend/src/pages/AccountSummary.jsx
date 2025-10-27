@@ -51,7 +51,10 @@ function AccountSummary() {
     <div className="account-summary">
       <h2><i className="fas fa-wallet"></i>Account Summary</h2>
       {loading ? (
-        <div className="loading">Loading...</div>
+        <div className="loading-container">
+  <div className="loading-spinner"></div>
+  <p className="loading-message">Processing your request...</p>
+</div>
       ) : (
         <div className="balance-cards">
           <div className="balance-card">

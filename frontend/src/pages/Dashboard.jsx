@@ -1,4 +1,4 @@
-// src/pages/Dashboard.jsx
+// frontend/src/pages/Dashboard.jsx
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
@@ -9,6 +9,7 @@ import TransferPayment from '../pages/TransferPayment';
 import CurrencyConverter from '../components/CurrencyConverter';
 import LoanBanner from '../components/LoanBanner';
 import SecurityDisplay from '../components/SecurityDisplay';
+import DepositModal from '../components/DepositModal';
 import '../styles/Dashboard.css';
 import img9 from '../images/WhatsApp Image 2025-10-17 at 16.15.27.jpeg';
 
@@ -17,6 +18,7 @@ function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [isDepositModalOpen, setIsDepositModalOpen] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -28,7 +30,7 @@ function Dashboard() {
         if (!token) {
           throw new Error('No authentication token found');
         }
-        const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/user`, {
+        const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/user/me`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         console.log('User data:', res.data);
@@ -50,18 +52,17 @@ function Dashboard() {
     fetchData();
   }, [navigate]);
 
-  const sampleNotifications = [
-    { id: 1, message: 'Deposit Pending', timestamp: '2025-10-17 10:00 AM' },
-    { id: 2, message: 'Transfer Successful', timestamp: '2025-10-16 3:45 PM' },
-    { id: 3, message: 'Low Balance Warning', timestamp: '2025-10-15 9:20 AM' },
-  ];
-
   const toggleNotifications = () => {
     setShowNotifications(!showNotifications);
   };
 
   if (loading) {
-    return <div className="loading">Loading...</div>;
+    return (
+      <div className="loading-container">
+        <div className="loading-spinner"></div>
+        <p className="loading-message">Processing your request...</p>
+      </div>
+    );
   }
 
   if (error) {
@@ -71,25 +72,29 @@ function Dashboard() {
   return (
     <div className="dashboard">
       <div className="navbar-brand-mobile">
-        <h1>Kirt Bank <img src={img9} alt=""  className='navbar-brand-image'/></h1>
+        <h1>Kirt Bank <img src={img9} alt="" className="navbar-brand-image" /></h1>
         <p>Strength. Security. Stability.</p>
       </div>
       <div className="notifications-bell">
         <button onClick={toggleNotifications} className="bell-icon">
           <i className="fas fa-bell"></i>
-          {sampleNotifications.length > 0 && (
-            <span className="badge">{sampleNotifications.length}</span>
+          {userData?.notifications?.length > 0 && (
+            <span className="badge">{userData.notifications.length}</span>
           )}
         </button>
         {showNotifications && (
           <div className="notifications-overlay">
             <h3>Notifications</h3>
-            {sampleNotifications.slice(0, 3).map((notification) => (
-              <div key={notification.id} className="notification-item">
-                <p>{notification.message}</p>
-                <span>{notification.timestamp}</span>
-              </div>
-            ))}
+            {userData?.notifications?.length > 0 ? (
+              userData.notifications.slice(0, 3).map((notification, index) => (
+                <div key={index} className="notification-item">
+                  <p>{notification.message}</p>
+                  <span>{new Date(notification.date).toLocaleString()}</span>
+                </div>
+              ))
+            ) : (
+              <p>No notifications available.</p>
+            )}
             <Link to="/notifications" onClick={() => setShowNotifications(false)} className="view-all">
               View Full Notifications
             </Link>
@@ -101,17 +106,17 @@ function Dashboard() {
           <span className="welcome-icon">
             <i className="fas fa-user-circle"></i>
           </span>
-          Welcome, {userData?.name || 'Lillian'}
+          Welcome, {userData?.name || 'User'}
         </h1>
       </div>
       <div className="account-sum">
-        <AccountSummary accounts={userData?.accounts} />
+        <AccountSummary accounts={userData?.balance} />
       </div>
       <div className="action-buttons">
         <div className="action-button-grid">
-          <Link to="/deposit-details" className="action-button">
+          <button onClick={() => setIsDepositModalOpen(true)} className="action-button">
             <i className="fas fa-money-check-alt"></i> Deposit
-          </Link>
+          </button>
           <Link to="/loans" className="action-button">
             <i className="fas fa-hand-holding-usd"></i> Loan
           </Link>
@@ -139,6 +144,7 @@ function Dashboard() {
           twoFactorEnabled={userData?.twoFactorEnabled || false}
         />
       </div>
+      <DepositModal isOpen={isDepositModalOpen} onClose={() => setIsDepositModalOpen(false)} />
     </div>
   );
 }
