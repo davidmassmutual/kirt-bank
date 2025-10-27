@@ -5,6 +5,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const Session = require('../models/Session');
+const verifyToken = require('../middleware/auth');
 
 router.post('/login', async (req, res) => {
   try {
@@ -84,6 +85,18 @@ router.post('/register', async (req, res) => {
     res.json({ token });
   } catch (err) {
     console.error('Register error:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// New route to fetch authenticated user data
+router.get('/me', verifyToken, async (req, res) => {
+  try {
+    const user = await User.findById(req.userId).select('-password').populate('transactions');
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    res.json(user);
+  } catch (err) {
+    console.error('Error fetching user data:', err);
     res.status(500).json({ message: 'Server error' });
   }
 });
