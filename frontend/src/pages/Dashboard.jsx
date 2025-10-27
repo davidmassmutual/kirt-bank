@@ -30,7 +30,7 @@ function Dashboard() {
         if (!token) {
           throw new Error('No authentication token found');
         }
-        const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/user/me`, {
+        const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/auth/me`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         console.log('User data:', res.data);
@@ -43,9 +43,9 @@ function Dashboard() {
           toast.error('Session expired. Please log in again.');
           navigate('/');
         } else {
-          setError(err.message || 'Failed to fetch user data');
+          setError(err.response?.data?.message || 'Failed to fetch user data');
           setLoading(false);
-          toast.error(err.message || 'Failed to fetch user data');
+          toast.error(err.response?.data?.message || 'Failed to fetch user data');
         }
       }
     };

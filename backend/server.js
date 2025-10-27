@@ -12,7 +12,7 @@ const app = express();
 const allowedOrigins = [
   'https://kirt-bank.onrender.com',
   'https://kirt-bank.vercel.app',
-  'http://localhost:5173', // For local development
+  'http://localhost:5173',
 ];
 
 app.use(cors({
@@ -26,7 +26,6 @@ app.use(cors({
   credentials: true,
 }));
 app.use(express.json());
-
 app.use('/uploads', express.static('uploads'));
 
 const MONGO_URI = process.env.MONGO_URI;
@@ -42,15 +41,19 @@ mongoose.connect(MONGO_URI)
 
 console.log('Loading routes...');
 const authRoutes = require('./routes/auth');
-const userRoutes = require('./routes/user');
 const transactionRoutes = require('./routes/transactions');
 
 app.use('/api/auth', authRoutes);
-app.use('/api/user', userRoutes);
 app.use('/api/transactions', transactionRoutes);
 console.log('Routes loaded');
 
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error('Server error:', err.message);
+  res.status(500).json({ message: 'Server error' });
+});
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
