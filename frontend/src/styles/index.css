@@ -1,24 +1,35 @@
 /* frontend/src/styles/index.css */
 :root {
-  --primary: #DAA520; /* Goldenrod for headers, buttons */
-  --accent: #FFD700; /* Gold for buttons, highlights */
-  --secondary: #C0392B; /* Red for cancel buttons */
-  --highlight: #FFD700; /* Gold for borders */
-  --background: #F5F5F5; /* Light gray for background */
-  --text: #333333; /* Dark gray for text */
-  --card-bg: #FFFFFF; /* White for cards */
-  --success: #10B981; /* Green for success messages */
-  --error: #EF4444; /* Red for error messages */
-  --input-bg: #F9F9F9; /* Light gray for inputs */
+  /* Kirt Bank – Rich Gold + Deep Navy */
+  --gold: #FFC107;          /* Primary Gold (vibrant, luxurious) */
+  --gold-dark: #B8860B;     /* Deeper gold for depth */
+  --navy: #1E3A8A;          /* Deep navy – pairs perfectly with gold */
+  --navy-light: #3B82F6;    /* Lighter navy for accents */
+  
+  --primary: var(--gold);           /* Headers, buttons */
+  --accent: var(--gold-dark);       /* Hover, secondary buttons */
+  --secondary: var(--navy);         /* Cancel, subtle accents */
+  --highlight: var(--navy-light);   /* Borders, links */
+  
+  --background: #F8F9FA;    /* Light mode background */
+  --text: #1F2937;          /* Dark text */
+  --card-bg: rgba(255, 255, 255, 0.95);
+  --input-bg: #FFFFFF;
+  
+  --success: #10B981;
+  --error: #EF4444;
 }
 
 [data-theme="dark"] {
-  --primary: #FFD700; /* Gold for headers, buttons */
-  --accent: #DAA520; /* Goldenrod for buttons, highlights */
-  --background: #1A1A1A; /* Dark gray for background */
-  --text: #F5F5F5; /* Light gray for text */
-  --card-bg: #333333; /* Darker gray for cards */
-  --input-bg: #2A2A2A; /* Darker gray for inputs */
+  --primary: var(--gold);           /* Gold stays bright in dark mode */
+  --accent: var(--gold-dark);
+  --secondary: var(--navy-light);
+  --highlight: var(--gold);
+  
+  --background: #0F172A;    /* Deep slate black */
+  --text: #F1F5F9;
+  --card-bg: rgba(15, 23, 42, 0.85);
+  --input-bg: #1E293B;
 }
 
 * {
@@ -29,14 +40,16 @@
 
 body {
   font-family: 'Poppins', sans-serif;
-  background-image: url(../images/kirt-bank-bg.png); /* Replace with your Kirt Bank background */
+  background-image: url(../images/ChatGPT\ Image\ Oct\ 17\,\ 2025\,\ 12_03_01\ PM.png);
+  background-size: cover;
+  background-attachment: fixed;
   color: var(--text);
   overflow-x: hidden;
 }
 
 a {
   text-decoration: none;
-  color: var(--primary);
+  color: var(--highlight);
 }
 
 button {
@@ -53,6 +66,7 @@ button:hover {
 .glass {
   background: var(--card-bg);
   backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
@@ -82,8 +96,8 @@ button:hover {
 
 .error-boundary button {
   padding: 0.8rem 1.5rem;
-  background: linear-gradient(90deg, var(--accent), #FBBF24);
-  color: var(--card-bg);
+  background: linear-gradient(90deg, var(--gold), #FBBF24);
+  color: #1F2937;
   border: none;
   border-radius: 8px;
   font-weight: 600;
@@ -97,15 +111,9 @@ button:hover {
 
 /* Mobile */
 @media (max-width: 576px) {
-  .error-boundary h2 {
-    font-size: 1.6rem;
-  }
-  .error-boundary p {
-    font-size: 0.9rem;
-  }
-  .error-boundary button {
-    padding: 0.7rem 1.2rem;
-  }
+  .error-boundary h2 { font-size: 1.6rem; }
+  .error-boundary p { font-size: 0.9rem; }
+  .error-boundary button { padding: 0.7rem 1.2rem; }
 }
 
 @keyframes fadeIn {
@@ -140,7 +148,7 @@ button:hover {
 }
 
 .main-content {
-  flex-grow: 1;
+  flex-grow: 1; 
   width: 100%;
   margin: 0;
   padding: 0;
@@ -148,24 +156,15 @@ button:hover {
 
 /* Mobile */
 @media (max-width: 576px) {
-  .main-content {
-    margin-left: 0;
-    width: 100%;
-  }
+  .main-content { margin-left: 0; width: 100%; }
 }
 
 /* Tablet */
 @media (max-width: 768px) and (min-width: 577px) {
-  .main-content {
-    margin-left: 200px;
-    width: calc(100% - 200px);
-  }
+  .main-content { margin-left: 200px; width: calc(100% - 200px); }
 }
 
 /* Laptop */
 @media (min-width: 769px) {
-  .main-content {
-    margin-left: 250px;
-    width: calc(100% - 250px);
-  }
+  .main-content { margin-left: 250px; width: calc(100% - 250px); }
 }

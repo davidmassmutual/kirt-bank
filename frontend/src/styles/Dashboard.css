@@ -1,4 +1,4 @@
-/* src/styles/Dashboard.css */
+/* frontend/src/styles/Dashboard.css */
 .dashboard {
   padding: 1rem 1rem 1rem;
   display: grid;
@@ -11,8 +11,9 @@
 .navbar-brand-mobile {
   display: none;
   text-align: center;
+  margin-top: 1rem;
   margin-bottom: 1rem;
-  background: linear-gradient(90deg, var(--primary), var(--secondary));
+  background: linear-gradient(90deg, var(--navy), #0F172A);
   padding: 1rem;
   border-radius: 12px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
@@ -22,7 +23,7 @@
 .navbar-brand-mobile h1 {
   font-size: 2.2rem;
   font-weight: 800;
-  color: white;
+  color: var(--gold);
   text-transform: uppercase;
   letter-spacing: 1px;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
@@ -30,16 +31,19 @@
 
 .navbar-brand-mobile p {
   font-size: 0.9rem;
-  color: white;
+  color: #E5E7EB;
   opacity: 0.9;
   font-style: italic;
 }
+
 .navbar-brand-mobile img {
   width: 40px;
   height: 40px;
   border-radius: 50%;
   object-fit: cover;
+  border: 2px solid var(--gold);
 }
+
 .welcome-section {
   text-align: center;
   animation: slideInDown 0.5s ease-out;
@@ -48,7 +52,7 @@
 .welcome-section h1 {
   font-size: 2rem;
   font-weight: 700;
-  color: var(--primary);
+  color: var(--secondary);
   margin-bottom: 1rem;
   display: flex;
   align-items: center;
@@ -59,11 +63,12 @@
   padding: 0.8rem 1.5rem;
   border-radius: 12px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--secondary);
 }
 
 .welcome-section .welcome-icon i {
   font-size: 2rem;
-  color: var(--accent);
+  color: var(--gold);
   animation: pulse 2s infinite;
 }
 
@@ -76,22 +81,24 @@
 
 .bell-icon {
   background: none;
-  border: none;
   backdrop-filter: blur(10px);
+  border: 2px solid var(--secondary);
   font-size: 1.5rem;
-  color: var(--accent);
+  color: var(--secondary);
   cursor: pointer;
   position: relative;
   padding: 0.5rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: transform 0.3s ease;
+  transition: transform 0.3s ease, background 0.3s ease;
+  border-radius: 50%;
 }
 
 .bell-icon:hover {
   transform: scale(1.2);
-  color: var(--accent);
+  background: var(--secondary);
+  color: #1F2937;
 }
 
 .bell-icon i {
@@ -123,6 +130,7 @@
   padding: 1.2rem;
   z-index: 1200;
   animation: fadeInDown 0.3s ease-out;
+  border: 1px solid var(--gold);
 }
 
 .notifications-overlay h3 {
@@ -151,17 +159,13 @@
   display: block;
   text-align: center;
   margin-top: 1rem;
-  color: var(--accent);
+  color: var(--gold-dark);
   font-weight: 600;
   transition: color 0.3s ease;
 }
 
 .view-all:hover {
-  color: var(--highlight);
-}
-
-.account-sum {
-  height: 380px;
+  color: var(--gold);
 }
 
 .action-buttons {
@@ -191,13 +195,14 @@
   justify-content: center;
   gap: 0.5rem;
   transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
+  border: 2px solid var(--secondary);
 }
 
 .action-button:hover {
   transform: translateY(-8px);
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-  background: linear-gradient(90deg, var(--accent), #FBBF24);
-  color: white;
+  background: linear-gradient(90deg, var(--gold), #FBBF24);
+  color: #1F2937;
 }
 
 .action-button i {
@@ -218,6 +223,7 @@
   box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   animation: scaleIn 0.5s ease-out;
+  border: 1px solid var(--secondary);
 }
 
 .action-card:hover {
@@ -299,9 +305,6 @@
   .secondary-features {
     gap: 0.8rem;
   }
-  .account-sum {
-  height: 480px;
-}
 }
 
 /* Tablet */

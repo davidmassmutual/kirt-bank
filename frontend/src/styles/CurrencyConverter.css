@@ -22,7 +22,7 @@
 
 .currency-converter button {
   padding: 0.9rem;
-  background: linear-gradient(90deg, var(--accent), #FBBF24);
+  background: var(--gold);
   color: var(--text);
   border: none;
   border-radius: 8px;

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import '../styles/Navbar.css';
 import img9 from '../images/WhatsApp Image 2025-10-17 at 16.15.27.jpeg';
+import DarkModeToggle from './DarkModeToggle';
 
 function Navbar({ handleLogout, isAuthenticated }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -32,7 +33,7 @@ function Navbar({ handleLogout, isAuthenticated }) {
       </button>
       <nav className={`navbar ${isMenuOpen ? 'active' : ''}`}>
         <div className="navbar-brand">
-          <h1>Sterling Trust Bank <img src={img9} alt="" className='navbar-brand-image' /></h1>
+          <h1>Kirt Bank <img src={img9} alt="" className='navbar-brand-image' /></h1>
           <p>Strength. Security. Stability.</p>
           <button className="close-menu" onClick={toggleMenu}>
             <i className="fas fa-times"></i>
@@ -51,6 +52,7 @@ function Navbar({ handleLogout, isAuthenticated }) {
             </li>
           ))}
           <li>
+            {/* <DarkModeToggle/> */}
             <button onClick={() => { handleLogout(); setIsMenuOpen(false); }}>
               <i className="fas fa-sign-out-alt"></i> Logout
             </button>

@@ -71,7 +71,7 @@ function Dashboard() {
   return (
     <div className="dashboard">
       <div className="navbar-brand-mobile">
-        <h1>Sterling Trust Bank <img src={img9} alt=""  className='navbar-brand-image'/></h1>
+        <h1>Kirt Bank <img src={img9} alt=""  className='navbar-brand-image'/></h1>
         <p>Strength. Security. Stability.</p>
       </div>
       <div className="notifications-bell">

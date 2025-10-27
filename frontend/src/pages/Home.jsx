@@ -10,6 +10,7 @@ import img4 from "../images/8523a5f867ed9cbc1e1944bf7d2c25b340b6550a.png";
 import img5 from "../images/fast.webp";
 import img6 from "../images/Mobile-Banking-App-Features.jpg";
 import img7 from "../images/support.png";
+import img9 from "../images/WhatsApp Image 2025-10-17 at 16.15.27.jpeg";
 
 
 function Home({ setIsAuthenticated }) {
@@ -59,8 +60,8 @@ function Home({ setIsAuthenticated }) {
         />
          
         <div className="hero-content">
-          
-          <h1>Secure Banking, Simplified</h1>
+          <h1>Kirt Bank <img src={img9} alt=""  className='navbar-brand-image'/></h1>
+          <h2>Secure Banking, Simplified</h2>
           <p>Join Sterling Trust Bank for seamless, secure, and innovative banking solutions.</p>
           <div className="hero-buttons">
             <button onClick={() => setIsSignUp(true)} className="auth-button signup">
@@ -157,6 +158,14 @@ function Home({ setIsAuthenticated }) {
           <div className="review-card">
             <p>"Sterling Trust is reliable and user-friendly!"</p>
             <span>– Jane Doe</span>
+          </div>
+          <div className="review-card">
+            <p>"Best banking app I've used. Highly secure."</p>
+            <span>– John Smith</span>
+          </div>
+          <div className="review-card">
+            <p>"Best banking app I've used. Highly secure."</p>
+            <span>– John Smith</span>
           </div>
           <div className="review-card">
             <p>"Best banking app I've used. Highly secure."</p>

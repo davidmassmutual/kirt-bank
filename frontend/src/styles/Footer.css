@@ -1,7 +1,9 @@
+/* frontend/src/styles/footer.css */
 .footer {
-  background: linear-gradient(135deg, var(--primary), #168db1);
+  background: linear-gradient(135deg, var(--navy), #0F172A);
   color: white;
   padding: 2rem 1.5rem;
+  margin-top: auto;
 }
 
 .footer-content {
@@ -9,6 +11,7 @@
   flex-wrap: wrap;
   justify-content: space-between;
   gap: 1.5rem;
+  max-width: 1200px;
   margin: 0 auto;
 }
 
@@ -21,18 +24,21 @@
   font-size: 1.5rem;
   font-weight: 700;
   margin-bottom: 1rem;
+  color: var(--gold);
 }
 
 .footer-section h4 {
   font-size: 1.2rem;
   font-weight: 600;
   margin-bottom: 1rem;
+  color: var(--gold);
 }
 
 .footer-section p,
 .footer-section ul li a {
   font-size: 0.9rem;
   opacity: 0.9;
+  color: #E5E7EB;
 }
 
 .footer-section ul {
@@ -44,23 +50,22 @@
 }
 
 .footer-section ul li a {
-  color: white;
+  color: #E5E7EB;
   text-decoration: none;
+  transition: color 0.3s ease;
 }
 
 .footer-section ul li a:hover {
-  color: var(--accent);
+  color: var(--gold);
 }
 
 .footer-bottom {
   text-align: center;
   padding-top: 1rem;
   border-top: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.footer-bottom p {
   font-size: 0.8rem;
   opacity: 0.8;
+  color: #94A3B8;
 }
 
 /* Tablet */
@@ -74,23 +79,17 @@
 @media (max-width: 576px) {
   .footer {
     padding: 1.5rem 1rem;
-    margin-left: 0; /* No offset */
+    margin-left: 0;
     width: 100%;
   }
-  .footer-section h3 {
-    font-size: 1.3rem;
-  }
-  .footer-section h4 {
-    font-size: 1.1rem;
-  }
+  .footer-section h3 { font-size: 1.3rem; }
+  .footer-section h4 { font-size: 1.1rem; }
   .footer-section p,
-  .footer-section ul li a {
-    font-size: 0.85rem;
-  }
+  .footer-section ul li a { font-size: 0.85rem; }
 }
 
 @media (min-width: 769px) {
   .footer-content {
-    margin-left: 250px; 
+    margin-left: 250px;
   }
 }

@@ -3,7 +3,6 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import Transactions from '../components/Transactions';
-import Footer from '../components/Footer';
 
 function Activity() {
   const [transactions, setTransactions] = useState([]);

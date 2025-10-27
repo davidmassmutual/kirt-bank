@@ -5,7 +5,7 @@ function Footer() {
     <footer className="footer">
       <div className="footer-content">
         <div className="footer-section">
-          <h3>Sterling Trust Bank</h3>
+          <h3>Kirt Bank</h3>
           <p>Strength. Security. Stability.</p>
         </div>
         <div className="footer-section">
@@ -23,7 +23,7 @@ function Footer() {
         </div>
       </div>
       <div className="footer-bottom">
-        <p>&copy; {new Date().getFullYear()} Sterling Trust Bank. All rights reserved.</p>
+        <p>&copy; {new Date().getFullYear()} Kirt Bank. All rights reserved.</p>
       </div>
     </footer>
   );

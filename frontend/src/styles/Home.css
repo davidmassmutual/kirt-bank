@@ -6,6 +6,7 @@
 }
 
 .hero {
+  width: 100%;
   position: relative;
   text-align: center;
   padding: 3rem 1.5rem;
@@ -25,7 +26,7 @@
 }
 
 .hero-content {
-  background: linear-gradient(135deg, var(--primary), #168db1);
+background: linear-gradient(135deg, var(--navy), #0F172A);
   padding: 2rem;
   border-radius: 12px;
 }
@@ -48,6 +49,13 @@
   justify-content: center;
   gap: 1rem;
 }
+.hero-content img {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--gold);
+}
 
 .auth-button {
   padding: 0.8rem 1.5rem;
@@ -64,13 +72,16 @@
 }
 
 .auth-button.signup {
-  background: linear-gradient(90deg, var(--accent), #FBBF24); /* Match Dashboard */
+  background: var(--gold); /* Match Dashboard */
 }
 
 .auth-button.login {
-  background: linear-gradient(90deg, var(--highlight), #A78BFA); /* Match Dashboard */
+  background: var(--gold); /* Match Dashboard */
 }
 
+/* .fas .fauser-plus {
+  color: var(--navy);
+} */
 .auth-button:hover {
   transform: translateY(-4px);
   box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
@@ -131,7 +142,7 @@
 
 .auth-form p {
   cursor: pointer;
-  color: var(--primary);
+  color: var(--secondary);
   font-weight: 500;
 }
 
@@ -283,6 +294,15 @@
     display: flex;
     flex-direction: column;
     align-items: center;
+  }
+  .auth-section {
+    width: 100%;
+  }
+  .features-section{
+    width: 100%;
+  }
+  .reviews-section{
+    width: 100%;
   }
 }
 

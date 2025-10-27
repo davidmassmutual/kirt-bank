@@ -1,11 +1,13 @@
+/* frontend/src/styles/navbar.css */
 .navbar {
   position: fixed;
   top: 0;
   left: 0;
   width: 250px;
   height: 100vh;
-  background: linear-gradient(135deg, var(--primary), #168db1);
+  background: linear-gradient(135deg, var(--navy), #0F172A);
   color: white;
+ /* Tallahassee; */
   padding: 2rem 1.5rem;
   box-shadow: 2px 0 10px rgba(0, 0, 0, 0.2);
   z-index: 1000;
@@ -18,20 +20,22 @@
   margin-bottom: 2rem;
   position: relative;
 }
+
 .navbar-brand img {
   width: 40px;
   height: 40px;
   border-radius: 50%;
   object-fit: cover;
+  border: 2px solid var(--gold);
 }
+
 .navbar-brand h1 {
   display: flex;
   align-items: center;
-  text-align: center;
   gap: 0.8rem;
   font-size: 1.6rem;
   font-weight: 700;
-  color: var(--accent);
+  color: var(--gold);
 }
 
 .navbar-brand p {
@@ -52,7 +56,7 @@
 }
 
 .close-menu:hover {
-  color: var(--accent);
+  color: var(--gold);
 }
 
 .navbar-menu {
@@ -60,7 +64,7 @@
   flex-grow: 1;
   overflow-y: auto;
   scrollbar-width: thin;
-  scrollbar-color: var(--accent) var(--primary);
+  scrollbar-color: var(--gold) var(--navy);
 }
 
 .navbar-menu::-webkit-scrollbar {
@@ -68,16 +72,16 @@
 }
 
 .navbar-menu::-webkit-scrollbar-track {
-  background: var(--primary);
+  background: var(--navy);
 }
 
 .navbar-menu::-webkit-scrollbar-thumb {
-  background: var(--accent);
+  background: var(--gold);
   border-radius: 4px;
 }
 
 .navbar-menu::-webkit-scrollbar-thumb:hover {
-  background: var(--highlight);
+  background: var(--gold-dark);
 }
 
 .navbar-menu li {
@@ -103,12 +107,12 @@
 .navbar-menu li button:hover {
   background: rgba(255, 255, 255, 0.1);
   transform: translateX(5px);
-  color: var(--accent);
+  color: var(--gold);
 }
 
 .navbar-menu li a.active {
-  background: var(--accent);
-  color: var(--text);
+  background: var(--gold);
+  color: #1F2937;
   font-weight: 600;
 }
 
@@ -116,14 +120,13 @@
   display: none;
   background: none;
   border: none;
-  color: var(--primary);
-  font-size: 1.8rem;
+  color: var(--gold);
+  font-size: 2rem;
   position: fixed;
-  top: 0.8rem;
+  top: 0.5rem;
   left: 0.8rem;
   z-index: 1100;
   padding: 0.6rem;
-  border-radius: 50%;
   cursor: pointer;
   transition: transform 0.3s ease;
 }
@@ -138,33 +141,19 @@
 
 /* Mobile */
 @media (max-width: 576px) {
-  .hamburger {
-    display: block;
-    background: none;
-    border: none;
-  }
+  .hamburger { display: block; }
   .navbar {
     width: 70%;
-    height: 100vh;
-    background: linear-gradient(180deg, var(--primary), var(--secondary));
+    background: linear-gradient(180deg, var(--navy), #0F172A);
     transform: translateX(-100%);
-    padding: 1rem 1.5rem; /* Adjusted for no navbar-brand */
+    padding: 1rem 1.5rem;
     z-index: 1000;
     animation: slideInLeft 0.3s ease-out;
   }
-  .navbar.active {
-    transform: translateX(0);
-  }
-  .close-menu {
-    display: block;
-  }
-  .navbar-brand {
-    display: none; /* Hide in mobile hamburger */
-  }
-  .navbar-menu {
-    max-height: calc(100vh - 60px); /* Adjusted for no navbar-brand */
-    overflow-y: auto;
-  }
+  .navbar.active { transform: translateX(0); }
+  .close-menu { display: block; }
+  .navbar-brand { display: none; }
+  .navbar-menu { max-height: calc(100vh - 60px); }
   .navbar-menu li a,
   .navbar-menu li button {
     font-size: 1.1rem;
@@ -174,33 +163,17 @@
 
 /* Tablet */
 @media (max-width: 768px) and (min-width: 577px) {
-  .navbar {
-    width: 200px;
-    padding: 1.5rem 1rem;
-  }
-  .hamburger, .close-menu {
-    display: none;
-  }
+  .hamburger, .close-menu { display: none; }
+  .navbar { width: 200px; padding: 1.5rem 1rem; }
 }
 
 /* Laptop */
 @media (min-width: 769px) {
-  .navbar {
-    width: 250px;
-    padding: 2rem 1.5rem;
-  }
-  .hamburger, .close-menu {
-    display: none;
-  }
+  .hamburger, .close-menu { display: none; }
+  .navbar { width: 250px; padding: 2rem 1.5rem; }
 }
 
 @keyframes slideInLeft {
   from { transform: translateX(-100%); }
   to { transform: translateX(0); }
-}
-
-@keyframes bounce {
-  0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
-  40% { transform: translateY(-5px); }
-  60% { transform: translateY(-3px); }
 }

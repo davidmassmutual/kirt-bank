@@ -1,21 +1,20 @@
-/* src/styles/Settings.css */
+/* frontend/src/styles/settings.css */
 .settings {
   padding: 1.5rem 1.5rem 2rem;
-  min-height: calc(100vh - 80px - 120px); /* Navbar (80px) + Footer (~120px) */
+  min-height: calc(100vh - 80px - 120px);
   animation: fadeIn 0.7s ease-in;
 }
 
 .settings h2 {
   font-size: 2rem;
   font-weight: 700;
-  color: var(--primary);
+  color: var(--gold);
   text-align: center;
   margin-bottom: 1.5rem;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .settings-container {
@@ -30,7 +29,7 @@
   border-radius: 12px;
   padding: 1.5rem;
   box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
-  border: 2px solid var(--highlight);
+  border: 2px solid var(--gold);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   animation: scaleIn 0.5s ease-out;
 }
@@ -50,20 +49,6 @@
   gap: 0.5rem;
 }
 
-.settings-card form {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.settings-card label {
-  display: flex;
-  flex-direction: column;
-  font-size: 0.9rem;
-  font-weight: 500;
-  color: var(--text);
-}
-
 .settings-card input,
 .settings-card textarea,
 .settings-card select {
@@ -71,7 +56,7 @@
   border: 1px solid #E5E7EB;
   border-radius: 10px;
   font-size: 1rem;
-  background: white;
+  background: var(--input-bg);
   margin-top: 0.3rem;
 }
 
@@ -81,8 +66,8 @@
 
 .settings-card button {
   padding: 0.8rem;
-  background: linear-gradient(90deg, var(--accent), #FBBF24);
-  color: white;
+  background: linear-gradient(90deg, var(--gold), #FBBF24);
+  color: #1F2937;
   border: none;
   border-radius: 10px;
   font-weight: 600;
@@ -90,49 +75,10 @@
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  transition: background 0.3s ease;
 }
 
 .settings-card button:hover {
-  background: linear-gradient(90deg, #FBBF24, var(--accent));
-}
-
-.settings-toggle {
-  margin-bottom: 1rem;
-}
-
-.settings-toggle label {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.sessions-list {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.session-item {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-  align-items: center;
-  padding: 0.8rem;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-}
-
-.session-item p {
-  font-size: 1rem;
-  font-weight: 500;
-  color: var(--text);
-  flex: 1;
-}
-
-.session-item span {
-  font-size: 0.8rem;
-  color: var(--secondary);
+  background: linear-gradient(90deg, #FBBF24, var(--gold));
 }
 
 .session-item button.logout-session {
@@ -150,49 +96,14 @@
   padding: 2rem;
 }
 
-/* Mobile */
 @media (max-width: 576px) {
-  .settings {
-    padding: 1rem 1rem 2rem;
-    min-height: calc(100vh - 60px - 120px); /* Mobile navbar (60px) */
-  }
-  .settings h2 {
-    font-size: 1.6rem;
-  }
-  .settings-container {
-    grid-template-columns: 1fr;
-  }
-  .settings-card {
-    padding: 1rem;
-  }
-  .settings-card h3 {
-    font-size: 1.2rem;
-  }
-  .settings-card input,
-  .settings-card textarea,
-  .settings-card select {
-    font-size: 0.9rem;
-  }
-  .settings-card button {
-    font-size: 0.9rem;
-  }
+  .settings { padding: 1rem; min-height: calc(100vh - 60px - 120px); }
+  .settings h2 { font-size: 1.6rem; }
+  .settings-container { grid-template-columns: 1fr; }
+  .settings-card { padding: 1rem; }
+  .settings-card h3 { font-size: 1.2rem; }
 }
 
-/* Tablet */
 @media (max-width: 768px) and (min-width: 577px) {
-  .settings {
-    padding: 1.5rem 1.5rem 2rem;
-    min-height: calc(100vh - 70px - 120px); /* Tablet navbar (70px) */
-  }
-}
-
-/* Animations */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes scaleIn {
-  from { opacity: 0; transform: scale(0.95); }
-  to { opacity: 1; transform: scale(1); }
+  .settings { min-height: calc(100vh - 70px - 120px); }
 }

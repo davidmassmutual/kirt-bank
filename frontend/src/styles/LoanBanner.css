@@ -1,6 +1,6 @@
 .loan-banner {
   padding: 2rem 1rem;
-  background: linear-gradient(135deg, var(--primary), #168db1);
+  background: linear-gradient(135deg, var(--secondary), #0F172A);
   color: white;
   text-align: center;
   border-radius: 10px;
@@ -18,8 +18,8 @@
 
 .loan-banner button {
   padding: 0.8rem 2rem;
-  background: var(--accent);
-  color: white;
+  background: var(--primary);
+  color: var(--text);
   border: none;
   border-radius: 8px;
   font-weight: 600;
@@ -27,7 +27,7 @@
 }
 
 .loan-banner button:hover {
-  background: orange;
+  background: var(--accent);
 }
 
 .loan-banner button i {
