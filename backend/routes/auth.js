@@ -77,15 +77,10 @@ router.post('/register', async (req, res) => {
       currency: 'USD',
       theme: 'light',
       isAdmin: false,
-      balance: {
-        checking: 0,
-        savings: 0,
-        usdt: 0
-      },
-      transactions: []
+      balance: { checking: 0, savings: 0, usdt: 0 },
+      transactions: [],
     });
     await user.save();
-
     const token = jwt.sign({ userId: user._id, isAdmin: user.isAdmin }, process.env.JWT_SECRET, { expiresIn: '1h' });
     const session = new Session({
       userId: user._id,
@@ -107,6 +102,16 @@ router.get('/me', verifyToken, async (req, res) => {
     res.json(user);
   } catch (err) {
     console.error('Error fetching user data:', err.message);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+router.get('/sessions', verifyToken, async (req, res) => {
+  try {
+    const sessions = await Session.find({ userId: req.userId }).select('device lastActive _id');
+    res.json(sessions);
+  } catch (err) {
+    console.error('Error fetching sessions:', err.message);
     res.status(500).json({ message: 'Server error' });
   }
 });

@@ -13,6 +13,11 @@ const userSchema = new mongoose.Schema({
     date: { type: Date, default: Date.now },
     read: { type: Boolean, default: false }
   }],
+  notificationsSettings: {
+    email: { type: Boolean, default: true },
+    sms: { type: Boolean, default: false },
+    push: { type: Boolean, default: true },
+  },
   currency: { type: String, default: 'USD' },
   theme: { type: String, default: 'light' },
   isAdmin: { type: Boolean, default: false },

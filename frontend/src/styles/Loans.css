@@ -1,56 +1,136 @@
-.loans {
- padding: 4rem 2rem 8rem;
- background-color: var(--background);
- animation: fadeIn 0.7s ease-in;
- min-height: calc(100vh - 80px);
+/* frontend/src/styles/Loan.css */
+.loan-page {
+  padding: 2rem 1.5rem;
+  display: grid;
+  gap: 1rem;
+  background: var(--background);
+  min-height: calc(100vh - 80px);
 }
 
-.loans h2 {
- font-weight: 700;
- color: var(--text);
- margin-bottom: 1.5rem;
+.loan-page h2 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--gold);
+  text-align: center;
+  margin-bottom: 1.5rem;
 }
 
-.loans button {
- padding: 1rem;
- background: linear-gradient(90deg, var(--accent), #FBBF24);
- color: var(--text);
- border: none;
- border-radius: 10px;
- font-weight: 600;
- box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+.loan-offer,
+.loan-confirmation,
+.loan-details,
+.repayment-calculator,
+.faq {
+  background: var(--card-bg);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  padding: 1.2rem;
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+  border: 2px solid var(--gold);
 }
 
-.loans button:hover {
- background: linear-gradient(90deg, #FBBF24, var(--accent));
+.loan-offer h3,
+.loan-confirmation h3,
+.loan-details h3,
+.repayment-calculator h3,
+.faq h3 {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 0.8rem;
 }
 
-.loans button i {
- margin-right: 0.5rem;
+.loan-offer p,
+.loan-confirmation p,
+.loan-details p,
+.repayment-calculator p,
+.faq p {
+  font-size: 1rem;
+  color: var(--text);
+  margin: 0.5rem 0;
 }
 
-/* Phone */
+.loan-offer button {
+  padding: 0.8rem;
+  background: linear-gradient(90deg, var(--gold), #FBBF24);
+  color: #1F2937;
+  border: none;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
+  margin-top: 1rem;
+}
+
+.loan-offer button:hover {
+  background: linear-gradient(90deg, #FBBF24, var(--gold));
+}
+
+.repayment-calculator form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.repayment-calculator label {
+  display: flex;
+  flex-direction: column;
+  font-size: 1rem;
+  color: var(--text);
+}
+
+.repayment-calculator input,
+.repayment-calculator select {
+  padding: 0.8rem;
+  border: 1px solid var(--gold);
+  border-radius: 10px;
+  font-size: 1rem;
+  background: var(--input-bg);
+  color: var(--text);
+  margin-top: 0.3rem;
+}
+
+.repayment-calculator select {
+  appearance: none;
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24"><path fill="%23FFD700" d="M7 10l5 5 5-5z"/></svg>');
+  background-repeat: no-repeat;
+  background-position: right 0.8rem center;
+  background-size: 12px;
+}
+
+.error {
+  font-size: 1.2rem;
+  color: var(--error);
+  padding: 1rem;
+  background: rgba(239, 68, 68, 0.1);
+  border-radius: 8px;
+  text-align: center;
+}
+
+/* Mobile */
 @media (max-width: 576px) {
- .loans {
- padding: 2rem 1rem 6rem;
- min-height: calc(100vh - 60px);
- }
- .loans button {
- padding: 0.8rem;
- }
+  .loan-page {
+    padding: 1.5rem 1rem;
+    gap: 0.8rem;
+  }
+  .loan-offer h3,
+  .loan-confirmation h3,
+  .loan-details h3,
+  .repayment-calculator h3,
+  .faq h3 {
+    font-size: 1.2rem;
+  }
+  .loan-offer p,
+  .loan-confirmation p,
+  .loan-details p,
+  .repayment-calculator p,
+  .faq p {
+    font-size: 0.9rem;
+  }
 }
 
 /* Tablet */
-@media (max-width: 768px) {
- .loans {
- padding: 3rem 1.5rem 7rem;
- min-height: calc(100vh - 70px);
- }
-}
-
-/* Laptop */
-@media (min-width: 769px) {
- .loans {
- padding: 4rem 2rem 8rem;
- }
+@media (max-width: 768px) and (min-width: 577px) {
+  .loan-page {
+    padding: 2rem 1.2rem;
+  }
 }

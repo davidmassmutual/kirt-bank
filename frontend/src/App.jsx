@@ -100,7 +100,7 @@ function App() {
               />
               <Route
                 path="/loans"
-                element={isAuthenticated ? <Loans /> : <Navigate to="/" />}
+                element={isAuthenticated ? <Loans/> : <Navigate to="/" />}
               />
               <Route
                 path="/support"

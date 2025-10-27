@@ -23,13 +23,13 @@ function AccountSummary() {
           navigate('/login');
           return;
         }
-        const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/user`, {
+        const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/auth/me`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setBalances({
-          savingsBalance: res.data.savingsBalance || 0,
-          checkingBalance: res.data.checkingBalance || 0,
-          usdtBalance: res.data.usdtBalance || 0,
+          savingsBalance: res.data.balance?.savings || 0,
+          checkingBalance: res.data.balance?.checking || 0,
+          usdtBalance: res.data.balance?.usdt || 0,
         });
         setLoading(false);
       } catch (err) {
@@ -49,12 +49,12 @@ function AccountSummary() {
 
   return (
     <div className="account-summary">
-      <h2><i className="fas fa-wallet"></i>Account Summary</h2>
+      <h2><i className="fas fa-wallet"></i> Account Summary</h2>
       {loading ? (
         <div className="loading-container">
-  <div className="loading-spinner"></div>
-  <p className="loading-message">Processing your request...</p>
-</div>
+          <div className="loading-spinner"></div>
+          <p className="loading-message">Processing your request...</p>
+        </div>
       ) : (
         <div className="balance-cards">
           <div className="balance-card">
