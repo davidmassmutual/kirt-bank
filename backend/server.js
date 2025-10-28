@@ -51,14 +51,15 @@ const transactionRoutes = require('./routes/transactions');
 const userRoutes = require('./routes/user');
 const virtualCardRoutes = require('./routes/virtualCards');
 const loanRoutes = require('./routes/loans');
-const notificationRoutes = require('./routes/notifications');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/transactions', transactionRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/virtual-cards', virtualCardRoutes);
 app.use('/api/loans', loanRoutes);
-app.use('/api/notifications', notificationRoutes);
+// backend/server.js
+app.use('/api/transactions', require('./routes/transactions'));
+app.use('/api/notifications', require('./routes/notifications'));
 console.log('Routes loaded');
 
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
