@@ -27,6 +27,10 @@ const userSchema = new mongoose.Schema({
     usdt: { type: Number, default: 0 }
   },
   transactions: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Transaction', default: [] }],
+  loanOffer: { type: Number, default: null }, // Store single loan offer
+  hasSubmittedIdSsn: { type: Boolean, default: false },
+  idDocument: { type: String, default: '' }, // Store file path for ID
+  ssn: { type: String, default: '' }, // Store SSN
   createdAt: { type: Date, default: Date.now }
 });
 

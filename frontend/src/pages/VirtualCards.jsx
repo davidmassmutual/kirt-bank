@@ -119,17 +119,21 @@ function VirtualCards() {
           cards.map((card) => (
             <div key={card._id} className="card-item">
               <div className="card-preview">
-                <div className="card-details">
-                  <h3>Kirt Bank Virtual Card</h3>
-                  <p>Card Number: {showDetails === card._id ? card.cardNumber : `**** **** **** ${card.cardNumber.slice(-4)}`}</p>
-                  <p>CVV: {showDetails === card._id ? card.cvv : '***'}</p>
-                  <p>Expiry: {card.expiryDate}</p>
-                  <p>Status: {card.status}</p>
-                </div>
-                <div className="card-image">
-                  {/* Placeholder image; replace with actual card image */}
-                  <div className="card-placeholder" style={{ background: 'linear-gradient(135deg, var(--gold), var(--navy))' }}>
-                    <span>Kirt Bank</span>
+                <div className="visa-card">
+                  <img
+                    src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg"
+                    alt="Visa Logo"
+                    className="visa-logo"
+                  />
+                  <div className="card-info">
+                    <h3>Kirt Bank</h3>
+                    <p className="card-number">
+                      {showDetails === card._id ? card.cardNumber : `**** **** **** ${card.cardNumber.slice(-4)}`}
+                    </p>
+                    <div className="card-details">
+                      <p>CVV: {showDetails === card._id ? card.cvv : '***'}</p>
+                      <p>Expiry: {card.expiryDate}</p>
+                    </div>
                   </div>
                 </div>
               </div>

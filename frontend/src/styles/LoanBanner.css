@@ -1,6 +1,15 @@
+/* frontend/src/styles/LoanBanner.css */
+:root {
+  --gold: #D4AF37;
+  --navy: #1F2937;
+  --background: #F9FAFB;
+  --text: #1F2937;
+  --highlight: #D4AF37;
+}
+
 .loan-banner {
   padding: 2rem 1rem;
-  background: linear-gradient(135deg, var(--secondary), #0F172A);
+  background: linear-gradient(135deg, var(--navy), #0F172A);
   color: white;
   text-align: center;
   border-radius: 10px;
@@ -14,27 +23,36 @@
 .loan-banner h2 {
   font-weight: 700;
   font-size: 1.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
 }
 
 .loan-banner button {
   padding: 0.8rem 2rem;
-  background: var(--primary);
-  color: var(--text);
+  background: linear-gradient(90deg, var(--gold), #FBBF24);
+  color: var(--navy);
   border: none;
   border-radius: 8px;
   font-weight: 600;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
 }
 
 .loan-banner button:hover {
-  background: var(--accent);
+  background: linear-gradient(90deg, #FBBF24, var(--gold));
 }
 
-.loan-banner button i {
-  margin-right: 0.5rem;
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-/* Phone */
 @media (max-width: 576px) {
   .loan-banner {
     padding: 1.5rem 0.5rem;
@@ -48,14 +66,12 @@
   }
 }
 
-/* Tablet */
 @media (max-width: 768px) {
   .loan-banner {
     padding: 1.5rem 1rem;
   }
 }
 
-/* Laptop */
 @media (min-width: 769px) {
   .loan-banner {
     padding: 2rem;

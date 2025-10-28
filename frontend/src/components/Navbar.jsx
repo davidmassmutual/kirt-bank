@@ -17,11 +17,11 @@ function Navbar({ handleLogout, isAuthenticated }) {
   const navItems = [
     { path: '/dashboard', label: 'Dashboard', icon: 'fas fa-home' },
     { path: '/account-summary', label: 'Account Summary', icon: 'fas fa-wallet' },
-    { path: '/transfer', label: 'Transfer', icon: 'fas fa-exchange-alt' },
+    { path: '/deposit', label: 'Deposit', icon: 'fas fa-money-check-alt' },
+    { path: '/loans', label: 'Loan', icon: 'fas fa-hand-holding-usd' },
     { path: '/cards', label: 'Cards', icon: 'fas fa-credit-card' },
     { path: '/transactions', label: 'Transactions', icon: 'fas fa-history' },
     { path: '/notifications', label: 'Notifications', icon: 'fas fa-bell' },
-    { path: '/loans', label: 'Loan', icon: 'fas fa-hand-holding-usd' },
     { path: '/support', label: 'Support', icon: 'fas fa-headset' },
     { path: '/settings', label: 'Settings', icon: 'fas fa-cog' },
   ];

@@ -4,9 +4,16 @@ const cors = require('cors');
 const mongoose = require('mongoose');
 const path = require('path');
 const dotenv = require('dotenv');
+const fs = require('fs');
 
 dotenv.config();
 const app = express();
+
+// Create uploads directory if it doesn't exist
+const uploadsDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir);
+}
 
 const allowedOrigins = [
   'https://kirt-bank.onrender.com',
@@ -43,11 +50,13 @@ const authRoutes = require('./routes/auth');
 const transactionRoutes = require('./routes/transactions');
 const userRoutes = require('./routes/user');
 const virtualCardRoutes = require('./routes/virtualCards');
+const loanRoutes = require('./routes/loans');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/transactions', transactionRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/virtual-cards', virtualCardRoutes);
+app.use('/api/loans', loanRoutes);
 console.log('Routes loaded');
 
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
