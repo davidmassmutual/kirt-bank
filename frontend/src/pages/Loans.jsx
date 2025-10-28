@@ -15,6 +15,8 @@ const Loans = () => {
   const [accepted, setAccepted] = useState(false);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [calcAmount, setCalcAmount] = useState(5000); // For repayment calculator
+  const [calcTerm, setCalcTerm] = useState(36);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -34,7 +36,6 @@ const Loans = () => {
         setBalance(res.data.balance);
         setLoading(false);
       } catch (err) {
-        console.error('Fetch loan data error:', err.response?.status, err.response?.data);
         if (err.response?.status === 401) {
           toast.error('Session expired, please log in again');
           localStorage.removeItem('token');
@@ -49,31 +50,39 @@ const Loans = () => {
   }, [navigate]);
 
   const handleCalculateOffer = async () => {
+    setSubmitting(true);
     try {
       const token = localStorage.getItem('token');
-      const amount = hasSubmittedIdSsn
-        ? Math.floor(Math.random() * (15000 - 3000 + 1)) + 3000
-        : Math.floor(Math.random() * (5000 - 2000 + 1)) + 2000;
+      const min = hasSubmittedIdSsn ? 3000 : 2000;
+      const max = hasSubmittedIdSsn ? 15000 : 5000;
+      const amount = Math.floor(Math.random() * (max - min + 1)) + min;
+
       await axios.post(
         `${import.meta.env.VITE_API_URL}/api/loans/apply`,
         { amount },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setLoanOffer(amount);
-      toast.success('Loan offer generated!');
+      toast.success(`Your loan offer: $${amount.toLocaleString()}`);
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to generate loan offer');
+      toast.error(err.response?.data?.message || 'Failed to generate offer');
+    } finally {
+      setSubmitting(false);
     }
   };
 
   const handleAccept = async () => {
     setSubmitting(true);
     try {
-      if (balance.checking < 200 && balance.savings < 200 && balance.usdt < 200) {
-        toast.error('Minimum account balance of $200 required for a loan. Please contact customer care at support@kirtbank.com or 1-800-KIRT-BANK for more information.');
+      const totalBalance = balance.checking + balance.savings + balance.usdt;
+      if (totalBalance < 200) {
+        toast.error(
+          'Minimum account balance of $200 required to accept a loan. Please contact customer care at support@kirtbank.com or 1-800-KIRT-BANK.'
+        );
         setSubmitting(false);
         return;
       }
+
       const token = localStorage.getItem('token');
       await axios.post(
         `${import.meta.env.VITE_API_URL}/api/loans/apply`,
@@ -81,9 +90,9 @@ const Loans = () => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setAccepted(true);
-      toast.success('Loan application submitted!');
+      toast.success('Loan application submitted successfully!');
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Loan application failed. Please try again.');
+      toast.error(err.response?.data?.message || 'Failed to submit application');
     } finally {
       setSubmitting(false);
     }
@@ -101,23 +110,26 @@ const Loans = () => {
       const formData = new FormData();
       formData.append('idDocument', idFile);
       formData.append('ssn', ssn);
+
       const res = await axios.post(
         `${import.meta.env.VITE_API_URL}/api/loans/update-offer`,
         formData,
-        { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' } }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
       setLoanOffer(res.data.amount);
       setHasSubmittedIdSsn(true);
       setShowIdSsnForm(false);
       setIdFile(null);
       setSsn('');
-      toast.success('ID and SSN submitted, loan offer updated!');
+      toast.success('ID & SSN verified — your loan offer has been increased!');
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to update loan offer');
+      toast.error(err.response?.data?.message || 'Failed to update offer');
     } finally {
       setSubmitting(false);
     }
   };
+
+  const monthlyPayment = calcAmount && calcTerm ? (calcAmount / calcTerm).toFixed(2) : 0;
 
   if (loading) {
     return (
@@ -130,99 +142,123 @@ const Loans = () => {
 
   return (
     <div className="loan-page">
+      {/* Banner */}
       <div className="loan-banner">
-        <h2><i className="fas fa-hand-holding-usd"></i> Calculate Your Loan Offer</h2>
-        <button onClick={handleCalculateOffer} disabled={submitting || loanOffer}>
-          <i className="fas fa-calculator"></i> Calculate Now
+        <h2>Calculate Your Personalized Loan Offer</h2>
+        <button onClick={handleCalculateOffer} disabled={submitting}>
+          {submitting ? 'Calculating...' : 'Get My Offer'}
         </button>
       </div>
-      {loanOffer && (
-        <>
-          {!accepted ? (
-            <div className="loan-offer">
-              <h3>Your Loan Offer</h3>
-              <p>Amount: ${loanOffer.toLocaleString()}</p>
-              <p>Term: 36 months</p>
-              <p>Interest Rate: 5.99% APR</p>
-              <button onClick={handleAccept} disabled={submitting}>
-                <i className="fas fa-check"></i> {submitting ? 'Submitting...' : 'Accept Offer'}
-              </button>
-              {!hasSubmittedIdSsn && (
-                <button onClick={() => setShowIdSsnForm(true)} disabled={submitting}>
-                  <i className="fas fa-arrow-up"></i> Increase Your Loan Offer
-                </button>
-              )}
-            </div>
-          ) : (
-            <div className="loan-confirmation">
-              <h3>Loan Application Submitted</h3>
-              <p>Your application for a ${loanOffer.toLocaleString()} loan has been received. We'll notify you within 1-2 business days.</p>
-            </div>
+
+      {/* Loan Offer */}
+      {loanOffer && !accepted && (
+        <div className="loan-offer">
+          <h3>Your Pre-Approved Offer</h3>
+          <p className="offer-amount">${loanOffer.toLocaleString()}</p>
+          <p>Term: 36 months</p>
+          <p>Interest Rate: 5.99% APR</p>
+
+          <button onClick={handleAccept} disabled={submitting} className="accept-btn">
+            {submitting ? 'Submitting...' : 'Accept Offer'}
+          </button>
+
+          {!hasSubmittedIdSsn && (
+            <button
+              onClick={() => setShowIdSsnForm(true)}
+              className="increase-btn"
+              disabled={submitting}
+            >
+              Increase Offer (Submit ID & SSN)
+            </button>
           )}
-        </>
+        </div>
       )}
+
+      {accepted && (
+        <div className="loan-confirmation">
+          <h3>Application Submitted!</h3>
+          <p>We’ve received your ${loanOffer?.toLocaleString()} loan request.</p>
+          <p>You’ll hear back within 1–2 business days.</p>
+        </div>
+      )}
+
+      {/* ID/SSN Form */}
       {showIdSsnForm && !hasSubmittedIdSsn && (
         <div className="id-ssn-form">
-          <h3>Submit ID and SSN to Increase Loan Offer</h3>
+          <h3>Submit Documents to Increase Offer</h3>
           <form onSubmit={handleIdSsnSubmit}>
             <label>
-              ID Document (JPG, PNG, PDF)
+              Government ID (JPG, PNG, PDF)
               <input
                 type="file"
                 accept="image/jpeg,image/png,application/pdf"
                 onChange={(e) => setIdFile(e.target.files[0])}
-                disabled={submitting}
+                required
               />
             </label>
             <label>
-              SSN
+              SSN (e.g., 123-45-6789)
               <input
                 type="text"
                 value={ssn}
                 onChange={(e) => setSsn(e.target.value)}
                 placeholder="XXX-XX-XXXX"
-                disabled={submitting}
+                pattern="\d{3}-\d{2}-\d{4}"
+                required
               />
             </label>
-            <button type="submit" disabled={submitting}>
-              <i className="fas fa-upload"></i> {submitting ? 'Submitting...' : 'Submit'}
-            </button>
-            <button type="button" onClick={() => setShowIdSsnForm(false)} disabled={submitting}>
-              <i className="fas fa-times"></i> Cancel
-            </button>
+            <div className="form-actions">
+              <button type="submit" disabled={submitting}>
+                {submitting ? 'Uploading...' : 'Submit & Increase Offer'}
+              </button>
+              <button type="button" onClick={() => setShowIdSsnForm(false)} disabled={submitting}>
+                Cancel
+              </button>
+            </div>
           </form>
         </div>
       )}
-      <div className="loan-details">
-        <h3>Loan Details</h3>
-        <p>Repayment Terms: Flexible monthly payments.</p>
-        <p>Eligibility: Minimum balance of $200 in any account.</p>
-        <p>Contact: Reach out to support@kirtbank.com for assistance.</p>
-      </div>
+
+      {/* Repayment Calculator - Independent */}
       <div className="repayment-calculator">
         <h3>Repayment Calculator</h3>
-        <form>
+        <p>Try any amount and term to see your monthly payment.</p>
+        <div className="calc-inputs">
           <label>
-            Loan Amount
-            <input type="number" value={loanOffer || 2000} disabled />
+            Loan Amount ($)
+            <input
+              type="number"
+              value={calcAmount}
+              onChange={(e) => setCalcAmount(Math.max(100, parseInt(e.target.value) || 0))}
+              min="100"
+              step="100"
+            />
           </label>
           <label>
             Term (months)
-            <select defaultValue="36">
-              <option value="12">12</option>
-              <option value="24">24</option>
-              <option value="36">36</option>
+            <select value={calcTerm} onChange={(e) => setCalcTerm(parseInt(e.target.value))}>
+              <option value="12">12 months</option>
+              <option value="24">24 months</option>
+              <option value="36">36 months</option>
+              <option value="48">48 months</option>
+              <option value="60">60 months</option>
             </select>
           </label>
-          <p>Estimated Monthly Payment: ${((loanOffer || 2000) / 36).toFixed(2)}</p>
-        </form>
+        </div>
+        <div className="calc-result">
+          <p>
+            <strong>Estimated Monthly Payment:</strong> ${monthlyPayment}
+          </p>
+        </div>
       </div>
+
+      {/* FAQ */}
       <div className="faq">
-        <h3>Frequently Asked Questions</h3>
-        <p><strong>Q:</strong> What are the eligibility criteria?</p>
-        <p><strong>A:</strong> You need a minimum balance of $200 and a good credit score.</p>
-        <p><strong>Q:</strong> How long does approval take?</p>
-        <p><strong>A:</strong> Typically 1-2 business days.</p>
+        <h3>FAQs</h3>
+        <p><strong>Q:</strong> Do I need $200 to calculate an offer?</p>
+        <p><strong>A:</strong> No — only to accept it.</p>
+        <p><strong>Q:</strong> Can I change my offer later?</p>
+        <p><strong>A:</strong> Yes! Submit ID & SSN to increase it.</p>
       </div>
     </div>
   );
