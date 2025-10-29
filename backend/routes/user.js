@@ -6,7 +6,7 @@ const User = require('../models/User');
 const verifyToken = require('../middleware/auth');
 
 // ──────────────────────────────────────────────────────────────
-// Middleware: isAdmin
+// Middleware: Admin check
 // ──────────────────────────────────────────────────────────────
 const isAdmin = (req, res, next) => {
   if (!req.isAdmin) {
@@ -14,6 +14,20 @@ const isAdmin = (req, res, next) => {
   }
   next();
 };
+
+// ──────────────────────────────────────────────────────────────
+// GET: Current user (token validation)
+// ──────────────────────────────────────────────────────────────
+router.get('/', verifyToken, async (req, res) => {
+  try {
+    const user = await User.findById(req.userId).select('-password');
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    res.json(user);
+  } catch (err) {
+    console.error('Get current user error:', err.message);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
 
 // ──────────────────────────────────────────────────────────────
 // GET: All users (Admin only)
@@ -30,7 +44,7 @@ router.get('/all', verifyToken, isAdmin, async (req, res) => {
 
 // ──────────────────────────────────────────────────────────────
 // SEARCH & FILTER: Users (Admin only)
-// Query: ?q=john&page=1&limit=10
+// ?q=john&page=1&limit=10
 // ──────────────────────────────────────────────────────────────
 router.get('/search', verifyToken, isAdmin, async (req, res) => {
   try {
@@ -71,8 +85,8 @@ router.get('/search', verifyToken, isAdmin, async (req, res) => {
 });
 
 // ──────────────────────────────────────────────────────────────
-// BULK ACTIONS: Delete or Update Balance (Admin only)
-// POST body: { action: 'delete' | 'updateBalance', userIds: [], data: { balance: { checking: 100 } } }
+// BULK ACTIONS: Delete or Update Balance
+// POST { action: 'delete' | 'updateBalance', userIds: [], data: { balance: { checking: 100 } } }
 // ──────────────────────────────────────────────────────────────
 router.post('/bulk', verifyToken, isAdmin, async (req, res) => {
   const { action, userIds, data } = req.body;
@@ -85,7 +99,6 @@ router.post('/bulk', verifyToken, isAdmin, async (req, res) => {
     switch (action) {
       case 'delete':
         await User.deleteMany({ _id: { $in: userIds } });
-        // Notify admin
         await logAdminNotification(req.userId, `Bulk deleted ${userIds.length} users`);
         return res.json({ message: `${userIds.length} users deleted` });
 
@@ -93,14 +106,20 @@ router.post('/bulk', verifyToken, isAdmin, async (req, res) => {
         if (!data?.balance) {
           return res.status(400).json({ message: 'Balance data required' });
         }
-        const updateResult = await User.updateMany(
+        const result = await User.updateMany(
           { _id: { $in: userIds } },
-          { $set: { 'balance.checking': data.balance.checking || 0 } }
+          {
+            $set: {
+              'balance.checking': data.balance.checking || 0,
+              'balance.savings': data.balance.savings || 0,
+              'balance.usdt': data.balance.usdt || 0,
+            },
+          }
         );
         await logAdminNotification(req.userId, `Bulk updated balance for ${userIds.length} users`);
         return res.json({
-          message: `Updated ${updateResult.modifiedCount} user(s)`,
-          modified: updateResult.modifiedCount,
+          message: `Updated ${result.modifiedCount} user(s)`,
+          modified: result.modifiedCount,
         });
 
       default:
@@ -149,7 +168,7 @@ async function logAdminNotification(adminId, message) {
 }
 
 // ──────────────────────────────────────────────────────────────
-// Existing Routes (unchanged)
+// PUT: Update profile
 // ──────────────────────────────────────────────────────────────
 router.put('/profile', verifyToken, async (req, res) => {
   try {
@@ -173,6 +192,9 @@ router.put('/profile', verifyToken, async (req, res) => {
   }
 });
 
+// ──────────────────────────────────────────────────────────────
+// PUT: Change password
+// ──────────────────────────────────────────────────────────────
 router.put('/password', verifyToken, async (req, res) => {
   try {
     const { password } = req.body;
@@ -192,6 +214,9 @@ router.put('/password', verifyToken, async (req, res) => {
   }
 });
 
+// ──────────────────────────────────────────────────────────────
+// PUT: 2FA toggle
+// ──────────────────────────────────────────────────────────────
 router.put('/2fa', verifyToken, async (req, res) => {
   try {
     const { twoFactor } = req.body;
@@ -208,6 +233,9 @@ router.put('/2fa', verifyToken, async (req, res) => {
   }
 });
 
+// ──────────────────────────────────────────────────────────────
+// PUT: Notification settings
+// ──────────────────────────────────────────────────────────────
 router.put('/notifications', verifyToken, async (req, res) => {
   try {
     const { email, sms, push } = req.body;
@@ -224,6 +252,9 @@ router.put('/notifications', verifyToken, async (req, res) => {
   }
 });
 
+// ──────────────────────────────────────────────────────────────
+// PUT: Preferences (currency/theme)
+// ──────────────────────────────────────────────────────────────
 router.put('/preferences', verifyToken, async (req, res) => {
   try {
     const { currency, theme } = req.body;
@@ -244,9 +275,12 @@ router.put('/preferences', verifyToken, async (req, res) => {
   }
 });
 
+// ──────────────────────────────────────────────────────────────
+// DELETE: Session (optional)
+// ──────────────────────────────────────────────────────────────
 router.delete('/sessions/:sessionId', verifyToken, async (req, res) => {
   try {
-    const Session = require('../models/Session'); // assuming you have a Session model
+    const Session = require('../models/Session');
     const session = await Session.findOne({ _id: req.params.sessionId, userId: req.userId });
     if (!session) return res.status(404).json({ message: 'Session not found' });
 
