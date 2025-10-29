@@ -25,6 +25,12 @@ const userSchema = new mongoose.Schema({
     date: { type: Date, default: Date.now },
   }],
   createdAt: { type: Date, default: Date.now },
+
+  adminNotifications: [{
+    message: String,
+    date: { type: Date, default: Date.now },
+    read: { type: Boolean, default: false },
+  }],
 });
 
 module.exports = mongoose.model('User', userSchema);

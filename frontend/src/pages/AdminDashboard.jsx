@@ -8,13 +8,20 @@ import '../styles/AdminDashboard.css';
 function AdminDashboard() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [passwordForm, setPasswordForm] = useState({ newPassword: '', confirmPassword: '' });
+  const [passwordForm, setPasswordForm] = useState({
+    newPassword: '',
+    confirmPassword: '',
+  });
   const [passwordLoading, setPasswordLoading] = useState(false);
   const [editBalance, setEditBalance] = useState(null);
   const [editTransactions, setEditTransactions] = useState(null);
   const [transactions, setTransactions] = useState([]);
   const [newTransaction, setNewTransaction] = useState({
-    type: '', amount: '', method: '', status: 'Posted', date: '',
+    type: '',
+    amount: '',
+    method: '',
+    status: 'Posted',
+    date: '',
   });
   const navigate = useNavigate();
 
@@ -34,8 +41,9 @@ function AdminDashboard() {
         setUsers(res.data);
         setLoading(false);
       } catch (err) {
+        console.error('Fetch users error:', err.response?.status, err.response?.data);
         if (err.response?.status === 401 || err.response?.status === 403) {
-          toast.error('Access denied');
+          toast.error('Access denied, please log in as admin');
           localStorage.removeItem('token');
           localStorage.removeItem('isAdmin');
           navigate('/admin');
@@ -48,7 +56,10 @@ function AdminDashboard() {
     fetchUsers();
   }, [navigate]);
 
-  // Password Change
+  const handlePasswordChange = (e) => {
+    setPasswordForm({ ...passwordForm, [e.target.name]: e.target.value });
+  };
+
   const handlePasswordSubmit = async (e) => {
     e.preventDefault();
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
@@ -67,24 +78,28 @@ function AdminDashboard() {
         { password: passwordForm.newPassword },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      toast.success('Password updated');
+      toast.success('Password updated successfully');
       setPasswordForm({ newPassword: '', confirmPassword: '' });
     } catch (err) {
+      console.error('Password update error:', err.response?.status, err.response?.data);
       toast.error(err.response?.data?.message || 'Failed to update password');
     } finally {
       setPasswordLoading(false);
     }
   };
 
-  // Edit Balances
   const handleBalanceEdit = (user) => {
     setEditBalance({
       userId: user._id,
       email: user.email,
-      savingsBalance: user.savingsBalance || 0,
-      checkingBalance: user.checkingBalance || 0,
-      usdtBalance: user.usdtBalance || 0,
+      savingsBalance: user.savingsBalance,
+      checkingBalance: user.checkingBalance,
+      usdtBalance: user.usdtBalance,
     });
+  };
+
+  const handleBalanceChange = (e) => {
+    setEditBalance({ ...editBalance, [e.target.name]: Number(e.target.value) });
   };
 
   const handleBalanceSubmit = async (e) => {
@@ -98,13 +113,13 @@ function AdminDashboard() {
       );
       setUsers(users.map(u => u._id === editBalance.userId ? { ...u, ...editBalance } : u));
       setEditBalance(null);
-      toast.success('Balances updated');
+      toast.success('User balances updated successfully');
     } catch (err) {
+      console.error('Balance update error:', err.response?.status, err.response?.data);
       toast.error(err.response?.data?.message || 'Failed to update balances');
     }
   };
 
-  // Manage Transactions
   const handleTransactionEdit = async (user) => {
     setEditTransactions(user._id);
     try {
@@ -114,28 +129,13 @@ function AdminDashboard() {
       });
       setTransactions(res.data);
     } catch (err) {
+      console.error('Fetch transactions error:', err.response?.status, err.response?.data);
       toast.error(err.response?.data?.message || 'Failed to load transactions');
     }
   };
 
-  const handleTransactionAction = async (txId, action) => {
-    try {
-      const token = localStorage.getItem('token');
-      await axios.put(
-        `${import.meta.env.VITE_API_URL}/api/transactions/admin/confirm/${txId}`,
-        { action },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      toast.success(`Transaction ${action}ed`);
-      // Refresh transactions
-      const userId = editTransactions;
-      const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/transactions/user/${userId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setTransactions(res.data);
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Action failed');
-    }
+  const handleNewTransactionChange = (e) => {
+    setNewTransaction({ ...newTransaction, [e.target.name]: e.target.value });
   };
 
   const handleNewTransactionSubmit = async (e) => {
@@ -149,134 +149,149 @@ function AdminDashboard() {
       );
       setTransactions([...transactions, res.data]);
       setNewTransaction({ type: '', amount: '', method: '', status: 'Posted', date: '' });
-      toast.success('Transaction added');
+      toast.success('Transaction added successfully');
     } catch (err) {
+      console.error('Add transaction error:', err.response?.status, err.response?.data);
       toast.error(err.response?.data?.message || 'Failed to add transaction');
     }
   };
 
-  const handleDeleteTransaction = async (txId) => {
+  const handleDeleteTransaction = async (transactionId) => {
     try {
       const token = localStorage.getItem('token');
-      await axios.delete(`${import.meta.env.VITE_API_URL}/api/transactions/${txId}`, {
+      await axios.delete(`${import.meta.env.VITE_API_URL}/api/transactions/${transactionId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setTransactions(transactions.filter(tx => tx._id !== txId));
-      toast.success('Transaction deleted');
+      setTransactions(transactions.filter(tx => tx._id !== transactionId));
+      toast.success('Transaction deleted successfully');
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to delete');
+      console.error('Delete transaction error:', err.response?.status, err.response?.data);
+      toast.error(err.response?.data?.message || 'Failed to delete transaction');
     }
   };
 
   return (
     <div className="admin-dashboard">
-      <h2>Kirt Bank Admin Dashboard</h2>
-
-      {/* Password Section */}
-      <div className="section password-section">
-        <h3>Change Admin Password</h3>
-        <form onSubmit={handlePasswordSubmit} className="form-grid">
-          <input
-            type="password"
-            placeholder="New Password"
-            value={passwordForm.newPassword}
-            onChange={e => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
-            required
-            minLength={6}
-          />
-          <input
-            type="password"
-            placeholder="Confirm Password"
-            value={passwordForm.confirmPassword}
-            onChange={e => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
-            required
-            minLength={6}
-          />
-          <button type="submit" disabled={passwordLoading}>
-            {passwordLoading ? 'Updating...' : 'Update Password'}
-          </button>
-        </form>
-      </div>
-
-      {/* Users Table */}
-      <div className="section users-section">
-        <h3>Registered Users</h3>
-        {loading ? (
-          <div className="loading">Loading users...</div>
-        ) : (
-          <div className="table-container">
-            <table>
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Email</th>
-                  <th>Savings</th>
-                  <th>Checking</th>
-                  <th>USDT</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {users.map(user => (
-                  <tr key={user._id}>
-                    <td>{user.name}</td>
-                    <td>{user.email}</td>
-                    <td>${(user.savingsBalance || 0).toLocaleString()}</td>
-                    <td>${(user.checkingBalance || 0).toLocaleString()}</td>
-                    <td>${(user.usdtBalance || 0).toLocaleString()}</td>
-                    <td className="actions">
-                      <button onClick={() => handleBalanceEdit(user)} className="edit">
-                        Edit Balance
-                      </button>
-                      <button onClick={() => handleTransactionEdit(user)} className="view">
-                        View Transactions
-                      </button>
-                    </td>
+      <h2><i className="fas fa-tachometer-alt"></i> Admin Dashboard</h2>
+      <div className="dashboard-container">
+        <div className="password-section">
+          <h3>Change Password</h3>
+          <form className="password-form" onSubmit={handlePasswordSubmit}>
+            <label>
+              New Password
+              <input
+                type="password"
+                name="newPassword"
+                value={passwordForm.newPassword}
+                onChange={handlePasswordChange}
+                required
+                minLength={6}
+              />
+            </label>
+            <label>
+              Confirm Password
+              <input
+                type="password"
+                name="confirmPassword"
+                value={passwordForm.confirmPassword}
+                onChange={handlePasswordChange}
+                required
+                minLength={6}
+              />
+            </label>
+            <button type="submit" disabled={passwordLoading}>
+              <i className="fas fa-lock"></i> {passwordLoading ? 'Updating...' : 'Change Password'}
+            </button>
+          </form>
+        </div>
+        <div className="users-section">
+          <h3>Registered Users</h3>
+          {loading ? (
+            <div className="loading">Loading users...</div>
+          ) : users.length === 0 ? (
+            <p>No users found.</p>
+          ) : (
+            <div className="users-table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Phone</th>
+                    <th>Address</th>
+                    <th>Admin</th>
+                    <th>Joined</th>
+                    <th>Savings</th>
+                    <th>Checking</th>
+                    <th>USDT</th>
+                    <th>Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+                </thead>
+                <tbody>
+                  {users.map((user) => (
+                    <tr key={user._id}>
+                      <td>{user.name}</td>
+                      <td>{user.email}</td>
+                      <td>{user.phone || 'N/A'}</td>
+                      <td>{user.address || 'N/A'}</td>
+                      <td>{user.isAdmin ? 'Yes' : 'No'}</td>
+                      <td>{new Date(user.createdAt).toLocaleDateString()}</td>
+                      <td>${user.savingsBalance.toLocaleString()}</td>
+                      <td>${user.checkingBalance.toLocaleString()}</td>
+                      <td>${user.usdtBalance.toLocaleString()}</td>
+                      <td>
+                        <button onClick={() => handleBalanceEdit(user)}>Edit Balances</button>
+                        <button onClick={() => handleTransactionEdit(user)}>Manage Transactions</button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Edit Balance Modal */}
+      {/* Edit Balances Modal */}
       {editBalance && (
         <div className="modal-overlay" onClick={() => setEditBalance(null)}>
-          <div className="modal" onClick={e => e.stopPropagation()}>
-            <h3>Edit Balances - {editBalance.email}</h3>
-            <form onSubmit={handleBalanceSubmit} className="form-grid">
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <h3>Edit Balances for {editBalance.email}</h3>
+            <form onSubmit={handleBalanceSubmit}>
               <label>
-                Savings
+                Savings Balance
                 <input
                   type="number"
+                  name="savingsBalance"
                   value={editBalance.savingsBalance}
-                  onChange={e => setEditBalance({ ...editBalance, savingsBalance: Number(e.target.value) })}
+                  onChange={handleBalanceChange}
+                  required
                   min="0"
-                  step="0.01"
                 />
               </label>
               <label>
-                Checking
+                Checking Balance
                 <input
                   type="number"
+                  name="checkingBalance"
                   value={editBalance.checkingBalance}
-                  onChange={e => setEditBalance({ ...editBalance, checkingBalance: Number(e.target.value) })}
+                  onChange={handleBalanceChange}
+                  required
                   min="0"
-                  step="0.01"
                 />
               </label>
               <label>
-                USDT
+                USDT Balance
                 <input
                   type="number"
+                  name="usdtBalance"
                   value={editBalance.usdtBalance}
-                  onChange={e => setEditBalance({ ...editBalance, usdtBalance: Number(e.target.value) })}
+                  onChange={handleBalanceChange}
+                  required
                   min="0"
-                  step="0.01"
                 />
               </label>
-              <div className="modal-actions">
+              <div className="modal-buttons">
                 <button type="submit">Save</button>
                 <button type="button" onClick={() => setEditBalance(null)}>Cancel</button>
               </div>
@@ -285,113 +300,106 @@ function AdminDashboard() {
         </div>
       )}
 
-      {/* Transactions Modal */}
+      {/* Manage Transactions Modal */}
       {editTransactions && (
         <div className="modal-overlay" onClick={() => setEditTransactions(null)}>
-          <div className="modal large" onClick={e => e.stopPropagation()}>
-            <h3>Transactions - {users.find(u => u._id === editTransactions)?.email}</h3>
-
-            <div className="add-transaction">
-              <h4>Add New Transaction</h4>
-              <form onSubmit={handleNewTransactionSubmit} className="form-grid">
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <h3>Manage Transactions for {users.find(u => u._id === editTransactions)?.email}</h3>
+            <h4>Add New Transaction</h4>
+            <form onSubmit={handleNewTransactionSubmit}>
+              <label>
+                Type
                 <input
                   type="text"
-                  placeholder="Type (e.g., deposit)"
+                  name="type"
                   value={newTransaction.type}
-                  onChange={e => setNewTransaction({ ...newTransaction, type: e.target.value })}
+                  onChange={handleNewTransactionChange}
                   required
                 />
+              </label>
+              <label>
+                Amount
                 <input
                   type="number"
-                  placeholder="Amount"
+                  name="amount"
                   value={newTransaction.amount}
-                  onChange={e => setNewTransaction({ ...newTransaction, amount: e.target.value })}
-                  min="0"
-                  step="0.01"
+                  onChange={handleNewTransactionChange}
                   required
+                  min="0"
                 />
+              </label>
+              <label>
+                Method
                 <input
                   type="text"
-                  placeholder="Method"
+                  name="method"
                   value={newTransaction.method}
-                  onChange={e => setNewTransaction({ ...newTransaction, method: e.target.value })}
+                  onChange={handleNewTransactionChange}
                   required
                 />
-                <select
-                  value={newTransaction.status}
-                  onChange={e => setNewTransaction({ ...newTransaction, status: e.target.value })}
-                >
+              </label>
+              <label>
+                Status
+                <select name="status" value={newTransaction.status} onChange={handleNewTransactionChange}>
                   <option value="Posted">Posted</option>
                   <option value="Pending">Pending</option>
                   <option value="Failed">Failed</option>
                 </select>
+              </label>
+              <label>
+                Date
                 <input
                   type="date"
+                  name="date"
                   value={newTransaction.date}
-                  onChange={e => setNewTransaction({ ...newTransaction, date: e.target.value })}
+                  onChange={handleNewTransactionChange}
                   required
                 />
-                <button type="submit">Add</button>
-              </form>
-            </div>
-
-            <div className="table-container">
-              <h4>Existing Transactions</h4>
-              {transactions.length === 0 ? (
-                <p>No transactions.</p>
-              ) : (
+              </label>
+              <div className="modal-buttons">
+                <button type="submit">Add Transaction</button>
+                <button type="button" onClick={() => setEditTransactions(null)}>Close</button>
+              </div>
+            </form>
+            <h4>Existing Transactions</h4>
+            {transactions.length === 0 ? (
+              <p>No transactions found.</p>
+            ) : (
+              <div className="transactions-table">
                 <table>
                   <thead>
                     <tr>
                       <th>Date</th>
                       <th>Type</th>
+                      <th>Method</th>
                       <th>Amount</th>
                       <th>Status</th>
                       <th>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {transactions.map(tx => (
+                    {transactions.map((tx) => (
                       <tr key={tx._id}>
                         <td>{new Date(tx.date).toLocaleDateString()}</td>
                         <td>{tx.type}</td>
+                        <td>{tx.method}</td>
                         <td>${tx.amount.toLocaleString()}</td>
-                        <td className={`status ${tx.status.toLowerCase()}`}>
-                          {tx.status}
-                        </td>
-                        <td className="actions">
+                        <td className="status">{tx.status}</td>
+                        <td>
                           {tx.status === 'Pending' && (
                             <>
-                              <button
-                                onClick={() => handleTransactionAction(tx._id, 'confirm')}
-                                className="confirm"
-                              >
-                                Confirm
-                              </button>
-                              <button
-                                onClick={() => handleTransactionAction(tx._id, 'fail')}
-                                className="fail"
-                              >
-                                Fail
-                              </button>
+                              <button onClick={() => handleTransactionAction(tx._id, 'confirm')}>Confirm</button>
+                              <button onClick={() => handleTransactionAction(tx._id, 'fail')}>Fail</button>
                             </>
                           )}
-                          <button
-                            onClick={() => handleDeleteTransaction(tx._id)}
-                            className="delete"
-                          >
-                            Delete
-                          </button>
+                          <button onClick={() => handleDeleteTransaction(tx._id)}>Delete</button>
                         </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
-              )}
-            </div>
-            <button className="close-modal" onClick={() => setEditTransactions(null)}>
-              Close
-            </button>
+              </div>
+            )}
           </div>
         </div>
       )}
