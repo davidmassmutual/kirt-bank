@@ -7,6 +7,24 @@ const User = require('../models/User');
 const Session = require('../models/Session');
 const verifyToken = require('../middleware/auth');
 
+
+router.get('/me', verifyToken, async (req, res) => {
+  try {
+    const user = await User.findById(req.userId).select('-password');
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    res.json({
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      isAdmin: user.isAdmin || false,
+      balance: user.balance || { checking: 0, savings: 0, usdt: 0 },
+    });
+  } catch (err) {
+    console.error('Get current user error:', err.message);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -95,16 +113,7 @@ router.post('/register', async (req, res) => {
   }
 });
 
-router.get('/me', verifyToken, async (req, res) => {
-  try {
-    const user = await User.findById(req.userId).select('-password').populate('transactions');
-    if (!user) return res.status(404).json({ message: 'User not found' });
-    res.json(user);
-  } catch (err) {
-    console.error('Error fetching user data:', err.message);
-    res.status(500).json({ message: 'Server error' });
-  }
-});
+
 
 router.get('/sessions', verifyToken, async (req, res) => {
   try {
