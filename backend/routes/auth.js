@@ -7,7 +7,6 @@ const User = require('../models/User');
 const Session = require('../models/Session');
 const verifyToken = require('../middleware/auth');
 
-
 router.get('/me', verifyToken, async (req, res) => {
   try {
     const user = await User.findById(req.userId).select('-password');
@@ -91,12 +90,11 @@ router.post('/register', async (req, res) => {
       phone: '',
       address: '',
       twoFactorEnabled: false,
-      notifications: [],
       currency: 'USD',
       theme: 'light',
       isAdmin: false,
       balance: { checking: 0, savings: 0, usdt: 0 },
-      transactions: [],
+      notifications: [],
     });
     await user.save();
     const token = jwt.sign({ userId: user._id, isAdmin: user.isAdmin }, process.env.JWT_SECRET, { expiresIn: '1h' });
@@ -112,8 +110,6 @@ router.post('/register', async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 });
-
-
 
 router.get('/sessions', verifyToken, async (req, res) => {
   try {

@@ -96,14 +96,6 @@ function Home({ setIsAuthenticated }) {
           </h1>
           <h2>Secure Banking, Simplified</h2>
           <p>Join Kirt Bank for seamless, secure, and innovative banking solutions.</p>
-          <div className="hero-buttons">
-            <button onClick={() => setIsSignUp(true)} className="auth-button signup">
-              <i className="fas fa-user-plus"></i> Sign Up
-            </button>
-            <button onClick={() => setIsSignUp(false)} className="auth-button login">
-              <i className="fas fa-sign-in-alt"></i> Login
-            </button>
-          </div>
         </div>
       </section>
       <section className="auth-section">

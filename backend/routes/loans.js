@@ -2,8 +2,10 @@
 const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
+const Transaction = require('../models/Transaction');
 const verifyToken = require('../middleware/auth');
 const upload = require('../middleware/upload');
+const crypto = require('crypto');
 
 // GET: Fetch current loan offer + balance + ID/SSN status
 router.get('/', verifyToken, async (req, res) => {
@@ -37,19 +39,36 @@ router.post('/apply', verifyToken, async (req, res) => {
     if (user.loanOffer && amount === user.loanOffer) {
       const totalBalance = user.balance.checking + user.balance.savings + user.balance.usdt;
       if (totalBalance < 200) {
-        return res.status(400).json({
-          message: 'Minimum account balance of $200 required to accept a loan. Please contact customer care at support@kirtbank.com or 1-800-KIRT-BANK for more information.',
+        user.notifications.push({
+          message: 'Loan acceptance failed due to balance less than $200',
+          date: new Date(),
+        });
+        await user.save();
+        return res.json({
+          message: 'Loan acceptance failed due to insufficient balance. Please contact customer care at support@kirtbank.com or 1-800-KIRT-BANK for more information.',
         });
       }
 
-      // Loan accepted — add notification
+      // Loan accepted — add to balance, create transaction, reset offer, add notification
+      user.balance.checking += amount;
+      const loanTx = new Transaction({
+        userId: user._id,
+        type: 'loan',
+        amount,
+        method: 'bank_loan',
+        status: 'Posted',
+        account: 'checking',
+        date: new Date(),
+      });
+      await loanTx.save();
+      user.loanOffer = 0;
       user.notifications.push({
-        message: `Loan of $${amount} accepted and processing`,
+        message: `Loan of $${amount} accepted and added to your checking account.`,
         date: new Date(),
       });
       await user.save();
 
-      return res.json({ message: 'Loan application submitted successfully!', amount });
+      return res.json({ message: 'Loan accepted successfully!', amount });
     }
 
     // Otherwise: Generate new offer (only if none exists)
@@ -87,13 +106,18 @@ router.post('/update-offer', verifyToken, upload.single('idDocument'), async (re
     const user = await User.findById(req.userId);
     if (!user) return res.status(404).json({ message: 'User not found' });
 
+    // Encrypt SSN
+    const cipher = crypto.createCipher('aes-256-cbc', process.env.ENCRYPTION_KEY);
+    let encryptedSsn = cipher.update(ssn, 'utf8', 'hex');
+    encryptedSsn += cipher.final('hex');
+
     // Generate higher offer
     const newAmount = Math.floor(Math.random() * (15000 - 3000 + 1)) + 3000;
 
     user.loanOffer = newAmount;
     user.hasSubmittedIdSsn = true;
     user.idDocument = req.file.path;
-    user.ssn = ssn;
+    user.ssn = encryptedSsn;
 
     user.notifications.push({
       message: `Loan offer increased to $${newAmount} after ID verification`,

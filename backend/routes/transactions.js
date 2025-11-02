@@ -1,14 +1,15 @@
 // backend/routes/transactions.js
 const express = require('express');
 const router = express.Router();
+const Transaction = require('../models/Transaction');
 const User = require('../models/User');
 const verifyToken = require('../middleware/auth');
 
 // GET: User transactions
 router.get('/', verifyToken, async (req, res) => {
   try {
-    const user = await User.findById(req.userId).select('transactions');
-    res.json(user.transactions);
+    const transactions = await Transaction.find({ userId: req.userId });
+    res.json(transactions);
   } catch (err) {
     res.status(500).json({ message: 'Server error' });
   }
@@ -21,15 +22,16 @@ router.post('/deposit', verifyToken, async (req, res) => {
 
   try {
     const user = await User.findById(req.userId);
-    const transaction = {
+    const transaction = new Transaction({
+      userId: req.userId,
       type: 'deposit',
       amount,
       method,
       status: 'Pending',
       date: new Date(),
-    };
+    });
 
-    user.transactions.push(transaction);
+    await transaction.save();
     user.notifications.push({
       message: `Deposit of $${amount} is pending approval.`,
       type: 'deposit',
@@ -52,10 +54,12 @@ router.put('/admin/confirm/:txId', verifyToken, async (req, res) => {
     const admin = await User.findById(req.userId);
     if (!admin.isAdmin) return res.status(403).json({ message: 'Admin access required' });
 
-    const user = await User.findOne({ 'transactions._id': txId });
-    if (!user) return res.status(404).json({ message: 'Transaction not found' });
+    const tx = await Transaction.findById(txId);
+    if (!tx) return res.status(404).json({ message: 'Transaction not found' });
 
-    const tx = user.transactions.id(txId);
+    const user = await User.findById(tx.userId);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
     if (tx.status !== 'Pending') return res.status(400).json({ message: 'Transaction already processed' });
 
     if (action === 'confirm') {
@@ -73,6 +77,7 @@ router.put('/admin/confirm/:txId', verifyToken, async (req, res) => {
       });
     }
 
+    await tx.save();
     await user.save();
     res.json({ message: `Transaction ${action}ed`, transaction: tx });
   } catch (err) {
