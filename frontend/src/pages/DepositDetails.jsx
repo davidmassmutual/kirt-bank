@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'react-toastify';
-import { FaCheckCircle, FaCopy, FaUpload, FaQrcode, FaCheck } from 'react-icons/fa';
+import { FaCheckCircle, FaCopy, FaUpload, FaQrcode } from 'react-icons/fa';
 import '../styles/DepositDetails.css';
 
 function DepositDetails() {
@@ -15,9 +15,9 @@ function DepositDetails() {
   const [currency] = useState(localStorage.getItem('currency') || 'USD');
   const [file, setFile] = useState(null);
   const [filePreview, setFilePreview] = useState(null);
+  const [copied, setCopied] = useState(false);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
-  const [copied, setCopied] = useState(false); // ← ADDED BACK
 
   useEffect(() => {
     const state = location.state || {};
@@ -26,7 +26,6 @@ function DepositDetails() {
     setAccount(state.account || 'checking');
   }, [location]);
 
-  // Reset copied after 2s
   useEffect(() => {
     if (copied) {
       const timer = setTimeout(() => setCopied(false), 2000);
@@ -59,7 +58,7 @@ function DepositDetails() {
       formData.append('account', account);
       if (file) formData.append('receipt', file);
 
-      await axios.post(`${import.meta.env.VITE_API_URL}/api/transactions/deposit`, formData, {
+      const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/transactions/deposit`, formData, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
@@ -80,8 +79,8 @@ function DepositDetails() {
         <div className="success-card">
           <FaCheckCircle className="checkmark" />
           <h2>Deposit Submitted</h2>
-          <p>Your deposit of <strong>{currency === 'USD' ? '$' : currency}{amount}</strong> via <strong>{method}</strong> is pending approval.</p>
-          <p>You’ll be notified when it’s confirmed.</p>
+          <p>Your deposit of <strong>{currency === 'USD' ? '$' : currency}{amount}</strong> via <strong>{method.replace('-', ' ').toUpperCase()}</strong> is now pending approval.</p>
+          <p>You'll be notified when it's processed.</p>
           <button onClick={() => navigate('/dashboard')} className="home-btn">
             Back to Dashboard
           </button>
