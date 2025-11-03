@@ -12,13 +12,15 @@ import DepositModal from '../components/DepositModal';
 import LoadingSkeleton from '../components/LoadingSkeleton';
 import '../styles/Dashboard.css';
 import img9 from '../images/WhatsApp Image 2025-10-17 at 16.15.27.jpeg';
+import {useDeposit} from '../context/DepositContext';
+import { FaPlus } from 'react-icons/fa';
 
 function Dashboard() {
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showNotifications, setShowNotifications] = useState(false);
-  const [isDepositModalOpen, setIsDepositModalOpen] = useState(false);
   const navigate = useNavigate();
+  const { openDepositModal, isModalOpen, closeDepositModal } = useDeposit();
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -90,8 +92,8 @@ function Dashboard() {
       </div>
       <div className="action-buttons">
         <div className="action-button-grid">
-          <button onClick={() => setIsDepositModalOpen(true)} className="action-button">
-            Deposit
+         <button onClick={openDepositModal} className="action-button">
+            <FaPlus /> Deposit
           </button>
           <Link to="/loans" className="action-button">Loan</Link>
           <Link to="/transfer" className="action-button">Transfer</Link>
@@ -107,7 +109,11 @@ function Dashboard() {
         <CurrencyConverter />
         <SecurityDisplay lastLogin={userData?.lastLogin} twoFactorEnabled={userData?.twoFactorEnabled} />
       </div>
-      <DepositModal isOpen={isDepositModalOpen} onClose={() => setIsDepositModalOpen(false)} />
+       {/* MODAL */}
+      <DepositModal 
+        isOpen={isModalOpen} 
+        onClose={closeDepositModal} 
+      />
     </div>
   );
 }

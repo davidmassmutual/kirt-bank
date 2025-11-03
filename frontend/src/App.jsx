@@ -22,6 +22,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import './styles/App.css';
 import NotFound from './pages/NotFound';
 import LoadingSkeleton from './components/LoadingSkeleton';
+import { DepositProvider } from './context/DepositContext';
 
 // Lazy load heavy admin page
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
@@ -100,6 +101,7 @@ function App() {
 
   return (
     <Router>
+      <DepositProvider>
       <ErrorBoundary>
         <div className="app" onMouseMove={resetIdleTimer} onKeyDown={resetIdleTimer}>
           <ScrollToTop />
@@ -151,6 +153,7 @@ function App() {
           <ToastContainer position="top-right" autoClose={3000} />
         </div>
       </ErrorBoundary>
+      </DepositProvider>
     </Router>
   );
 }

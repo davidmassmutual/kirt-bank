@@ -1,8 +1,9 @@
-// frontend/src/pages/DepositDetails.jsx
+// src/pages/DepositDetails.jsx
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'react-toastify';
+import { FaCheck, FaCopy, FaUpload, FaQrcode } from 'react-icons/fa';
 import '../styles/DepositDetails.css';
 
 function DepositDetails() {
@@ -11,46 +12,45 @@ function DepositDetails() {
   const [method, setMethod] = useState('');
   const [amount, setAmount] = useState('');
   const [account, setAccount] = useState('checking');
+  const [currency, setCurrency] = useState('USD');
   const [file, setFile] = useState(null);
-  const [transactions, setTransactions] = useState([]);
-  const [error, setError] = useState('');
+  const [filePreview, setFilePreview] = useState(null);
+  const [copied, setCopied] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    setMethod(params.get('method') || '');
-    setAmount(params.get('amount') || '');
-    setAccount(params.get('account') || 'checking');
-
-    const fetchTransactions = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/transactions`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setTransactions(res.data.filter(tx => tx.type === 'deposit').slice(0, 5));
-      } catch (err) {
-        setError('Failed to load transaction history.');
-      }
-    };
-    fetchTransactions();
+    const state = location.state || {};
+    setMethod(state.method || '');
+    setAmount(state.amount || '');
+    setAccount(state.account || 'checking');
+    setCurrency(state.currency || localStorage.getItem('currency') || 'USD');
   }, [location]);
 
+  useEffect(() => {
+    if (copied) {
+      const t = setTimeout(() => setCopied(false), 2000);
+      return () => clearTimeout(t);
+    }
+  }, [copied]);
+
   const handleFileChange = (e) => {
-    setFile(e.target.files[0]);
+    const file = e.target.files[0];
+    if (file) {
+      setFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => setFilePreview(reader.result);
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleCopy = (text) => {
+    navigator.clipboard.writeText(text);
+    setCopied(true);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!method) {
-      setError('Please select a deposit method.');
-      toast.error('Please select a deposit method.');
-      return;
-    }
-    if (!amount || amount <= 0) {
-      setError('Please enter a valid amount.');
-      toast.error('Please enter a valid amount.');
-      return;
-    }
+    setLoading(true);
     try {
       const formData = new FormData();
       formData.append('amount', amount);
@@ -64,76 +64,114 @@ function DepositDetails() {
           'Content-Type': 'multipart/form-data',
         },
       });
-      toast.success('Deposit submitted successfully');
+
+      toast.success('Deposit submitted! Awaiting confirmation.');
       navigate('/dashboard');
     } catch (err) {
-      const message = err.response?.data?.message || 'Failed to submit deposit';
-      setError(message);
-      toast.error(message);
+      toast.error(err.response?.data?.message || 'Deposit failed');
+    } finally {
+      setLoading(false);
     }
+  };
+
+  if (!method) {
+    return (
+      <div className="deposit-details">
+        <div className="error-card">
+          <p>Please select a deposit method first.</p>
+          <button onClick={() => navigate(-1)} className="back-btn">Go Back</button>
+        </div>
+      </div>
+    );
+  }
+
+  const bankInfo = {
+    name: 'Kirt Bank',
+    account: '1234-5678-9012-3456',
+    routing: '987654321',
+    swift: 'KIRTUS33',
   };
 
   return (
     <div className="deposit-details">
-      <h2>Make a Deposit</h2>
-      {error && <div className="error">{error}</div>}
-      <div className="details-card">
-        <h3>Deposit Details</h3>
-        <p><strong>Method:</strong> {method || 'Not selected'}</p>
-        <p><strong>Bank Name:</strong> Kirt Bank</p>
-        <p><strong>Account Number:</strong> 1234-5678-9012-3456</p>
-        <p><strong>Routing Number:</strong> 987654321</p>
-        <button
-          onClick={() => navigator.clipboard.writeText('1234-5678-9012-3456')}
-          className="copy-button"
-        >
-          Copy Account Number
-        </button>
+      <h2>Complete Your Deposit</h2>
+
+      <div className="summary-card">
+        <div className="summary-row">
+          <span>Method</span>
+          <strong>{method.replace('-', ' ')}</strong>
+        </div>
+        <div className="summary-row">
+          <span>Amount</span>
+          <strong>{currency === 'USD' ? '$' : currency}{amount}</strong>
+        </div>
+        <div className="summary-row">
+          <span>To</span>
+          <strong>{account.toUpperCase()} Account</strong>
+        </div>
       </div>
+
+      {method === 'bank-transfer' && (
+        <div className="bank-info-card">
+          <h3>Bank Transfer Details</h3>
+          <div className="info-grid">
+            <div>
+              <label>Bank Name</label>
+              <p>{bankInfo.name}</p>
+            </div>
+            <div>
+              <label>Account Number</label>
+              <p>{bankInfo.account}</p>
+              <button onClick={() => handleCopy(bankInfo.account)} className="copy-btn">
+                {copied ? <><FaCheck /> Copied</> : <><FaCopy /> Copy</>}
+              </button>
+            </div>
+            <div>
+              <label>Routing Number</label>
+              <p>{bankInfo.routing}</p>
+            </div>
+            <div>
+              <label>SWIFT</label>
+              <p>{bankInfo.swift}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {method === 'crypto' && (
+        <div className="crypto-card">
+          <h3>Send USDT (TRC20)</h3>
+          <div className="qr-container">
+            <FaQrcode size={100} />
+          </div>
+          <p className="address">0xa49a10d8F662A043243A2b66a922e5ebB1e05250</p>
+          <button onClick={() => handleCopy('0xa49a10d8F662A043243A2b66a922e5ebB1e05250')} className="copy-btn large">
+            {copied ? <><FaCheck /> Copied!</> : <><FaCopy /> Copy Address</>}
+          </button>
+          <p className="warning">Only send USDT on TRC20 network</p>
+        </div>
+      )}
+
       <form onSubmit={handleSubmit} className="upload-form">
-        <h3>Deposit Form</h3>
-        <label>
-          Amount
-          <input
-            type="number"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            placeholder="Enter amount"
-            min="0.01"
-            step="0.01"
-            required
-          />
-        </label>
-        <label>
-          Account
-          <select value={account} onChange={(e) => setAccount(e.target.value)}>
-            <option value="checking">Checking</option>
-            <option value="savings">Savings</option>
-            <option value="usdt">USDT</option>
-          </select>
-        </label>
-        <label>
-          Payment Receipt (Optional)
-          <input
-            type="file"
-            accept="image/*,.pdf"
-            onChange={handleFileChange}
-          />
-        </label>
-        <button type="submit">Confirm Deposit</button>
-      </form>
-      <div className="details-card">
-        <h3>Recent Deposits</h3>
-        {transactions.length > 0 ? (
-          transactions.map((tx, index) => (
-            <p key={index}>
-              {tx.method}: ${tx.amount.toFixed(2)} to {tx.account} on {new Date(tx.date).toLocaleDateString()}
-            </p>
-          ))
-        ) : (
-          <p>No recent deposits.</p>
+        <h3>Upload Proof (Optional)</h3>
+        <div className="file-upload">
+          <input type="file" id="receipt" accept="image/*,.pdf" onChange={handleFileChange} />
+          <label htmlFor="receipt" className="upload-label">
+            <FaUpload /> Upload Receipt
+          </label>
+        </div>
+        {filePreview && (
+          <div className="preview">
+            <img src={filePreview} alt="Preview" />
+          </div>
         )}
-        <p className="security-note">🔒 All transactions are secured with 256-bit AES encryption.</p>
+        <button type="submit" disabled={loading} className="submit-btn">
+          {loading ? 'Submitting...' : 'Confirm Deposit'}
+        </button>
+      </form>
+
+      <div className="security-note">
+        <p>All deposits are encrypted with 256-bit AES</p>
       </div>
     </div>
   );

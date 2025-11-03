@@ -1,110 +1,225 @@
-/* frontend/src/components/DepositModal.css */
-.modal {
+/* src/styles/DepositModal.css */
+.deposit-modal-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.5);
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(8px);
   display: flex;
-  justify-content: center;
   align-items: center;
-  z-index: 2000;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
 }
 
-.modal-content {
+.deposit-modal {
   background: var(--card-bg);
-  backdrop-filter: blur(10px);
-  border-radius: 12px;
-  padding: 1.5rem;
-  max-width: 90%;
-  width: 400px;
-  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
-  border: 2px solid var(--gold);
+  border-radius: 20px;
+  width: 100%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  position: relative;
+  animation: modalIn 0.3s ease;
 }
 
-.modal-content h3 {
-  font-size: 1.4rem;
+.close-btn {
+  position: absolute;
+  top: 1rem; right: 1rem;
+  background: none;
+  border: none;
+  font-size: 1.8rem;
+  color: var(--secondary);
+  cursor: pointer;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s;
+}
+
+.close-btn:hover {
+  background: rgba(239,68,68,0.2);
+  color: var(--error);
+}
+
+.deposit-modal h2 {
+  margin: 2rem 2rem 0.5rem;
+  font-size: 1.8rem;
+  color: var(--text);
+  text-align: center;
+}
+
+.subtitle {
+  text-align: center;
+  color: var(--secondary);
+  margin-bottom: 1.5rem;
+}
+
+.deposit-form {
+  padding: 0 2rem 2rem;
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
   font-weight: 600;
   color: var(--text);
-  margin-bottom: 1rem;
 }
 
-.deposit-select,
-.modal-content input,
-.modal-content select {
-  width: 100%;
-  padding: 0.8rem;
-  border: 1px solid var(--gold);
-  border-radius: 10px;
-  font-size: 1rem;
-  background: var(--input-bg);
+.method-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.method-btn {
+  padding: 1rem;
+  border: 2px solid var(--highlight);
+  border-radius: 12px;
+  background: var(--card-bg);
   color: var(--text);
-  margin-top: 0.3rem;
-}
-
-.deposit-select,
-.modal-content select {
-  appearance: none;
-  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24"><path fill="%23FFD700" d="M7 10l5 5 5-5z"/></svg>');
-  background-repeat: no-repeat;
-  background-position: right 0.8rem center;
-  background-size: 12px;
-}
-
-.modal-content label {
-  display: flex;
-  flex-direction: column;
-  font-size: 1rem;
-  color: var(--text);
-  margin-bottom: 0.8rem;
-}
-
-.modal-buttons {
-  display: flex;
-  gap: 0.5rem;
-  margin-top: 1rem;
-}
-
-.modal-buttons button {
-  flex: 1;
-  padding: 0.8rem;
-  border: none;
-  border-radius: 10px;
-  font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
 }
 
-.modal-buttons button[type="submit"] {
-  background: linear-gradient(90deg, var(--gold), #FBBF24);
-  color: #1F2937;
+.method-btn.active {
+  border-color: var(--primary);
+  background: linear-gradient(135deg, rgba(255,193,7,0.1), transparent);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(255,193,7,0.2);
 }
 
-.modal-buttons button[type="submit"]:hover {
-  background: linear-gradient(90deg, #FBBF24, var(--gold));
+.method-icon {
+  font-size: 1.8rem;
 }
 
-.modal-buttons button[type="button"] {
-  background: var(--navy);
+.amount-input {
+  position: relative;
+}
+
+.amount-input .currency {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--primary);
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.amount-input input {
+  width: 100%;
+  padding: 1rem 1rem 1rem 2.5rem;
+  border: 2px solid var(--highlight);
+  border-radius: 12px;
+  background: var(--input-bg);
+  color: var(--text);
+  font-size: 1.1rem;
+}
+
+.amount-input input:focus {
+  border-color: var(--primary);
+  outline: none;
+}
+
+.deposit-form select {
+  width: 100%;
+  padding: 1rem;
+  border: 2px solid var(--highlight);
+  border-radius: 12px;
+  background: var(--input-bg);
+  color: var(--text);
+  font-size: 1rem;
+}
+
+.crypto-info {
+  background: rgba(59, 130, 246, 0.05);
+  border: 1px dashed var(--primary);
+  border-radius: 12px;
+  padding: 1.5rem;
+  text-align: center;
+  margin: 1rem 0;
+}
+
+.qr-code {
+  margin-bottom: 1rem;
+  color: var(--primary);
+}
+
+.address {
+  font-family: monospace;
+  font-size: 0.9rem;
+  word-break: break-all;
+  margin: 1rem 0;
+  color: var(--text);
+}
+
+.copy-btn {
+  background: var(--primary);
+  color: white;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 50px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 auto;
+  transition: all 0.3s;
+}
+
+.copy-btn:hover {
+  background: var(--accent);
+  transform: translateY(-2px);
+}
+
+.modal-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.proceed-btn, .cancel-btn {
+  flex: 1;
+  padding: 1rem;
+  border: none;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.proceed-btn {
+  background: var(--primary);
   color: white;
 }
 
-.modal-buttons button[type="button"]:hover {
-  background: var(--navy-light);
+.cancel-btn {
+  background: var(--secondary);
+  color: white;
 }
 
-@media (max-width: 576px) {
-  .modal-content {
-    width: 90%;
-    padding: 1rem;
-  }
-  .modal-content h3 {
-    font-size: 1.2rem;
-  }
-  .deposit-select,
-  .modal-content input,
-  .modal-content select {
-    font-size: 0.9rem;
-  }
+.proceed-btn:hover { background: var(--accent); }
+.cancel-btn:hover { opacity: 0.9; }
+
+@keyframes modalIn {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@media (max-width: 480px) {
+  .method-grid { grid-template-columns: 1fr; }
 }
