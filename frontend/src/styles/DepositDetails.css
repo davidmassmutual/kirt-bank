@@ -188,6 +188,72 @@
   cursor: pointer;
 }
 
+/* Add to bottom of DepositDetails.css */
+.success-screen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 80vh;
+  padding: 2rem;
+}
+
+.success-card {
+  background: var(--card-bg);
+  border-radius: 20px;
+  padding: 3rem 2rem;
+  text-align: center;
+  max-width: 500px;
+  width: 100%;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+  animation: fadeIn 0.6s ease;
+}
+
+.checkmark {
+  font-size: 4rem;
+  color: #10B981;
+  margin-bottom: 1rem;
+  animation: bounce 0.6s ease;
+}
+
+.success-card h2 {
+  color: var(--text);
+  margin: 1rem 0;
+  font-size: 1.8rem;
+}
+
+.success-card p {
+  color: var(--secondary);
+  margin: 0.5rem 0;
+  line-height: 1.6;
+}
+
+.home-btn {
+  margin-top: 2rem;
+  background: var(--primary);
+  color: white;
+  border: none;
+  padding: 1rem 2rem;
+  border-radius: 50px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.home-btn:hover {
+  background: var(--accent);
+  transform: translateY(-2px);
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+
 @media (max-width: 768px) {
   .info-grid { grid-template-columns: 1fr; }
 }

@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'react-toastify';
-import { FaCheck, FaCopy, FaUpload, FaQrcode } from 'react-icons/fa';
+import { FaCheckCircle, FaCopy, FaUpload, FaQrcode, FaCheck } from 'react-icons/fa';
 import '../styles/DepositDetails.css';
 
 function DepositDetails() {
@@ -12,24 +12,25 @@ function DepositDetails() {
   const [method, setMethod] = useState('');
   const [amount, setAmount] = useState('');
   const [account, setAccount] = useState('checking');
-  const [currency, setCurrency] = useState('USD');
+  const [currency] = useState(localStorage.getItem('currency') || 'USD');
   const [file, setFile] = useState(null);
   const [filePreview, setFilePreview] = useState(null);
-  const [copied, setCopied] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [copied, setCopied] = useState(false); // ← ADDED BACK
 
   useEffect(() => {
     const state = location.state || {};
     setMethod(state.method || '');
     setAmount(state.amount || '');
     setAccount(state.account || 'checking');
-    setCurrency(state.currency || localStorage.getItem('currency') || 'USD');
   }, [location]);
 
+  // Reset copied after 2s
   useEffect(() => {
     if (copied) {
-      const t = setTimeout(() => setCopied(false), 2000);
-      return () => clearTimeout(t);
+      const timer = setTimeout(() => setCopied(false), 2000);
+      return () => clearTimeout(timer);
     }
   }, [copied]);
 
@@ -61,18 +62,33 @@ function DepositDetails() {
       await axios.post(`${import.meta.env.VITE_API_URL}/api/transactions/deposit`, formData, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
-          'Content-Type': 'multipart/form-data',
         },
       });
 
-      toast.success('Deposit submitted! Awaiting confirmation.');
-      navigate('/dashboard');
+      setSuccess(true);
+      toast.success('Deposit submitted! Awaiting approval.');
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Deposit failed');
+      toast.error(err.response?.data?.message || 'Failed to submit');
     } finally {
       setLoading(false);
     }
   };
+
+  if (success) {
+    return (
+      <div className="success-screen">
+        <div className="success-card">
+          <FaCheckCircle className="checkmark" />
+          <h2>Deposit Submitted</h2>
+          <p>Your deposit of <strong>{currency === 'USD' ? '$' : currency}{amount}</strong> via <strong>{method}</strong> is pending approval.</p>
+          <p>You’ll be notified when it’s confirmed.</p>
+          <button onClick={() => navigate('/dashboard')} className="home-btn">
+            Back to Dashboard
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (!method) {
     return (
@@ -99,7 +115,7 @@ function DepositDetails() {
       <div className="summary-card">
         <div className="summary-row">
           <span>Method</span>
-          <strong>{method.replace('-', ' ')}</strong>
+          <strong>{method.replace('-', ' ').toUpperCase()}</strong>
         </div>
         <div className="summary-row">
           <span>Amount</span>

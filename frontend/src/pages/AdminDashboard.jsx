@@ -25,9 +25,12 @@ function AdminDashboard() {
   const [editTxUser, setEditTxUser] = useState(null);
   const [transactions, setTransactions] = useState([]);
   const [newTx, setNewTx] = useState({ type: '', amount: '', method: '', status: 'Posted', date: '' });
+const [pendingDeposits, setPendingDeposits] = useState([]);
 
   const navigate = useNavigate();
   const token = localStorage.getItem('token');
+
+
 
   // ───── FETCH USERS ─────
   const fetchUsers = useCallback(
@@ -67,6 +70,42 @@ function AdminDashboard() {
     }
   }, [token]);
 
+// Add useEffect
+useEffect(() => {
+  const fetchPending = async () => {
+    try {
+      const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/transactions/admin`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setPendingDeposits(res.data.filter(tx => tx.status === 'Pending' && tx.type === 'deposit'));
+    } catch (err) {
+      console.error(err);
+    }
+  };
+  fetchPending();
+}, [token]);
+
+// Add in render, after audit log
+{pendingDeposits.length > 0 && (
+  <div className="pending-deposits">
+    <h3>Pending Deposits</h3>
+    <div className="deposit-list">
+      {pendingDeposits.map(tx => (
+        <div key={tx._id} className="deposit-item">
+          <div>
+            <strong>{tx.userId.name}</strong> • ${tx.amount} • {tx.method}
+            {tx.receipt && <a href={tx.receipt} target="_blank" rel="noopener">View Receipt</a>}
+          </div>
+          <div className="actions">
+            <button onClick={() => confirmTx(tx._id, 'confirm')} className="confirm">Confirm</button>
+            <button onClick={() => confirmTx(tx._id, 'reject')} className="reject">Reject</button>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+)}
+
   // ───── INITIAL LOAD ─────
   useEffect(() => {
     const isAdm = localStorage.getItem('isAdmin') === 'true';
@@ -78,6 +117,8 @@ function AdminDashboard() {
     fetchUsers();
     fetchNotifs();
   }, [token, navigate, fetchUsers, fetchNotifs]);
+
+  
 
   // ───── SEARCH ─────
   const handleSearch = () => {
