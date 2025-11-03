@@ -1,76 +1,61 @@
-// frontend/src/pages/AccountSummary.jsx
-import { useState, useEffect } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
-import { useNavigate } from 'react-router-dom';
+import LoadingSkeleton from '../components/LoadingSkeleton';
+import { FaWallet, FaUniversity, FaCoins } from 'react-icons/fa';
 import '../styles/AccountSummary.css';
 
 function AccountSummary() {
-  const [balances, setBalances] = useState({
-    savingsBalance: 0,
-    checkingBalance: 0,
-    usdtBalance: 0,
-  });
+  const [balances, setBalances] = useState({ checking: 0, savings: 0, usdt: 0 });
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
+
+  const fetch = useCallback(async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/auth/me`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const { balance } = res.data;
+      setBalances({
+        checking: balance?.checking || 0,
+        savings: balance?.savings || 0,
+        usdt: balance?.usdt || 0,
+      });
+    } catch (err) {
+      toast.error('Failed to load balances');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    const fetchBalances = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        if (!token) {
-          toast.error('Please log in to view account summary');
-          navigate('/login');
-          return;
-        }
-        const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/auth/me`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setBalances({
-          savingsBalance: res.data.balance?.savings || 0,
-          checkingBalance: res.data.balance?.checking || 0,
-          usdtBalance: res.data.balance?.usdt || 0,
-        });
-        setLoading(false);
-      } catch (err) {
-        console.error('Fetch balances error:', err.response?.status, err.response?.data);
-        if (err.response?.status === 401) {
-          toast.error('Session expired, please log in again');
-          localStorage.removeItem('token');
-          navigate('/login');
-        } else {
-          toast.error(err.response?.data?.message || 'Failed to load account summary');
-        }
-        setLoading(false);
-      }
-    };
-    fetchBalances();
-  }, [navigate]);
+    fetch();
+  }, [fetch]);
+
+  if (loading) return <LoadingSkeleton />;
 
   return (
     <div className="account-summary">
-      <h2><i className="fas fa-wallet"></i> Account Summary</h2>
-      {loading ? (
-        <div className="loading-container">
-          <div className="loading-spinner"></div>
-          <p className="loading-message">Processing your request...</p>
+      <h2>
+        <FaWallet /> Account Summary
+      </h2>
+      <div className="balance-cards">
+        <div className="balance-card">
+          <FaUniversity />
+          <h4>Checking</h4>
+          <p>${Number(balances.checking).toLocaleString()}</p>
         </div>
-      ) : (
-        <div className="balance-cards">
-          <div className="balance-card">
-            <h3>Savings Account</h3>
-            <p>${balances.savingsBalance.toLocaleString()}</p>
-          </div>
-          <div className="balance-card">
-            <h3>Checking Account</h3>
-            <p>${balances.checkingBalance.toLocaleString()}</p>
-          </div>
-          <div className="balance-card">
-            <h3>USDT (Crypto)</h3>
-            <p>${balances.usdtBalance.toLocaleString()}</p>
-          </div>
+        <div className="balance-card">
+          <FaCoins />
+          <h4>Savings</h4>
+          <p>${Number(balances.savings).toLocaleString()}</p>
         </div>
-      )}
+        <div className="balance-card">
+          <FaCoins />
+          <h4>USDT</h4>
+          <p>{Number(balances.usdt).toLocaleString()} USDT</p>
+        </div>
+      </div>
     </div>
   );
 }

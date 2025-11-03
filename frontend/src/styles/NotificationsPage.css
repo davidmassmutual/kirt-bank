@@ -1,163 +1,161 @@
 /* src/styles/NotificationsPage.css */
 .notifications-page {
-  padding: 4rem 2rem;
-  min-height: calc(100vh - 80px);
-  animation: fadeIn 0.7s ease-in;
+  padding: 2rem;
+  background: var(--background);
+  min-height: 100vh;
+  color: var(--text);
 }
 
-.notifications-page h2 {
-  font-size: 2rem;
+.page-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.page-header h1 {
+  font-size: 2.2rem;
   font-weight: 700;
   color: var(--primary);
-  text-align: center;
-  margin-bottom: 1.5rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  gap: 0.6rem;
 }
 
-.filter-bar {
+.filter-tabs {
   display: flex;
   justify-content: center;
   gap: 1rem;
-  margin-bottom: 1.5rem;
+  margin-top: 1rem;
   flex-wrap: wrap;
 }
 
-.filter-bar button {
-  padding: 0.6rem 1.2rem;
+.filter-tabs button {
+  padding: 0.7rem 1.5rem;
   border: none;
-  border-radius: 8px;
+  border-radius: 50px;
   background: var(--card-bg);
-  backdrop-filter: blur(10px);
   color: var(--text);
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.3s ease, transform 0.3s ease;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 
-.filter-bar button.active,
-.filter-bar button:hover {
-  background: linear-gradient(90deg, var(--accent), #FBBF24);
+.filter-tabs button.active {
+  background: linear-gradient(135deg, var(--primary), var(--accent));
   color: white;
-  transform: translateY(-4px);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(255,193,7,0.3);
 }
 
-.notification-list {
+.notifications-grid {
+  max-width: 1000px;
+  margin: 0 auto;
   display: grid;
-  gap: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 1.5rem;
 }
 
 .notification-card {
-  display: flex;
-  align-items: center;
   background: var(--card-bg);
-  backdrop-filter: blur(10px);
-  border-radius: 12px;
-  padding: 1rem;
-  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
-  border: 2px solid var(--highlight);
-  transition: transform 0.3s ease;
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+  backdrop-filter: blur(12px);
+  transition: all 0.3s ease;
+  border-left: 5px solid transparent;
+  position: relative;
+  animation: slideInUp 0.4s ease forwards;
+}
+
+.notification-card.unread {
+  border-left-color: var(--primary);
+  background: linear-gradient(135deg, rgba(255,193,7,0.05), var(--card-bg));
 }
 
 .notification-card:hover {
-  transform: translateY(-4px);
+  transform: translateY(-6px);
+  box-shadow: 0 12px 30px rgba(0,0,0,0.15);
 }
 
-.notification-icon i {
-  font-size: 1.5rem;
-  color: var(--accent);
-  margin-right: 1rem;
+.notif-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.8rem;
 }
 
-.notification-content {
-  flex-grow: 1;
+.priority {
+  font-size: 1.3rem;
 }
 
-.notification-content p {
-  font-size: 1rem;
-  color: var(--text);
-  font-weight: 500;
-  margin-bottom: 0.3rem;
-}
+.priority.high { color: #EF4444; }
+.priority.medium { color: #F59E0B; }
+.priority.low { color: #10B981; }
 
-.notification-content span {
+.notif-time {
   font-size: 0.8rem;
   color: var(--secondary);
-  display: block;
 }
 
-.notification-content .status {
+.mark-read {
+  background: none;
+  border: none;
+  color: var(--success);
+  cursor: pointer;
+  font-size: 1.1rem;
+}
+
+.notification-card h3 {
+  margin: 0 0 0.5rem;
+  font-size: 1.1rem;
   font-weight: 600;
-}
-
-.notification-content .status.unread {
-  color: var(--accent);
-}
-
-.notification-content .status.read {
-  color: var(--secondary);
-}
-
-.no-notifications {
-  text-align: center;
-  font-size: 1.2rem;
   color: var(--text);
 }
 
-.back-button {
-  display: block;
-  text-align: center;
-  margin-top: 1.5rem;
-  color: var(--accent);
+.notification-card p {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--text);
+  line-height: 1.5;
+}
+
+.action-link {
+  display: inline-block;
+  margin-top: 1rem;
+  color: var(--primary);
   font-weight: 600;
   text-decoration: none;
+  font-size: 0.9rem;
 }
 
-.back-button:hover {
+.action-link:hover {
+  text-decoration: underline;
+}
+
+.empty-state {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 4rem 2rem;
+  color: var(--secondary);
+}
+
+.empty-icon {
+  font-size: 3.5rem;
   color: var(--highlight);
-}
-
-/* Mobile */
-@media (max-width: 576px) {
-  .notifications-page {
-    padding: 3rem 1rem 6rem;
-  }
-  .notifications-page h2 {
-    font-size: 1.6rem;
-  }
-  .filter-bar {
-    gap: 0.5rem;
-  }
-  .filter-bar button {
-    padding: 0.5rem 1rem;
-    font-size: 0.9rem;
-  }
-  .notification-card {
-    padding: 0.8rem;
-  }
-  .notification-icon i {
-    font-size: 1.2rem;
-  }
-  .notification-content p {
-    font-size: 0.9rem;
-  }
-  .notification-content span {
-    font-size: 0.7rem;
-  }
-}
-
-/* Tablet */
-@media (max-width: 768px) and (min-width: 577px) {
-  .notifications-page {
-    padding: 3.5rem 1.5rem 7rem;
-  }
+  margin-bottom: 1rem;
 }
 
 /* Animations */
-@keyframes fadeIn {
+@keyframes slideInUp {
   from { opacity: 0; transform: translateY(20px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .notifications-grid {
+    grid-template-columns: 1fr;
+  }
+  .page-header h1 { font-size: 1.8rem; }
 }

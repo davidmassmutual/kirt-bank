@@ -1,286 +1,373 @@
-// frontend/src/pages/Settings.jsx
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
+import { QRCodeSVG } from "qrcode.react";
+import LoadingSkeleton from '../components/LoadingSkeleton';
+import {
+  FaUser,
+  FaEnvelope,
+  FaPhone,
+  FaMapMarkerAlt,
+  FaBell,
+  FaGlobe,
+  FaPalette,
+  FaShieldAlt,
+  FaKey,
+  FaDesktop,
+  FaSignOutAlt,
+  FaSave,
+  FaCog
+} from 'react-icons/fa';
 import '../styles/Settings.css';
 
 function Settings() {
-  const [profile, setProfile] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    address: '',
-  });
+  // ────────────────────────────────────── STATE ──────────────────────────────────────
+  const [profile, setProfile] = useState({ name: '', email: '', phone: '', address: '' });
   const [security, setSecurity] = useState({
     twoFactor: false,
     newPassword: '',
     confirmPassword: '',
+    totpSecret: '',
+    totpUrl: '',
   });
-  const [notifications, setNotifications] = useState({
-    email: true,
-    sms: false,
-    push: true,
-  });
-  const [preferences, setPreferences] = useState({
-    currency: 'USD',
-    theme: 'light',
-  });
+  const [notifications, setNotifications] = useState({ email: true, sms: false, push: true });
+  const [preferences, setPreferences] = useState({ currency: 'USD', theme: 'light' });
   const [sessions, setSessions] = useState([]);
+  const [show2FASetup, setShow2FASetup] = useState(false);
+  const [totpCode, setTotpCode] = useState('');
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
+  // ────────────────────────────────────── HELPERS ──────────────────────────────────────
+  const token = localStorage.getItem('token');
+
+  const fetchSettings = useCallback(async () => {
+    try {
+      const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/auth/me`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setProfile({
+        name: res.data.name || '',
+        email: res.data.email || '',
+        phone: res.data.phone || '',
+        address: res.data.address || '',
+      });
+      setSecurity(prev => ({ ...prev, twoFactor: res.data.twoFactorEnabled || false }));
+      setNotifications(res.data.notificationsSettings || { email: true, sms: false, push: true });
+      setPreferences({ currency: res.data.currency || 'USD', theme: res.data.theme || 'light' });
+
+      const sessRes = await axios.get(`${import.meta.env.VITE_API_URL}/api/auth/sessions`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setSessions(sessRes.data);
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to load settings');
+    } finally {
+      setLoading(false);
+    }
+  }, [token]);
+
+  // ────────────────────────────────────── EFFECTS ──────────────────────────────────────
   useEffect(() => {
-    const fetchSettings = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        if (!token) throw new Error('No authentication token found');
-        const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/auth/me`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setProfile({
-          name: res.data.name || '',
-          email: res.data.email || '',
-          phone: res.data.phone || '',
-          address: res.data.address || '',
-        });
-        setSecurity({ ...security, twoFactor: res.data.twoFactorEnabled || false });
-        setNotifications({
-          email: res.data.notificationsSettings?.email ?? true,
-          sms: res.data.notificationsSettings?.sms ?? false,
-          push: res.data.notificationsSettings?.push ?? true,
-        });
-        setPreferences({
-          currency: res.data.currency || 'USD',
-          theme: res.data.theme || 'light',
-        });
-        const sessionsRes = await axios.get(`${import.meta.env.VITE_API_URL}/api/auth/sessions`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setSessions(sessionsRes.data);
-        setLoading(false);
-      } catch (err) {
-        console.error('Fetch error:', err);
-        toast.error(err.message || 'Failed to load settings');
-        setLoading(false);
-      }
-    };
     fetchSettings();
-  }, []);
+  }, [fetchSettings]);
 
-  const handleProfileChange = (e) => {
-    setProfile({ ...profile, [e.target.name]: e.target.value });
-  };
-
-  const handleSecurityChange = (e) => {
-    setSecurity({ ...security, [e.target.name]: e.target.value });
-  };
-
-  const handleNotificationsChange = (e) => {
+  // ────────────────────────────────────── HANDLERS ──────────────────────────────────────
+  const handleProfileChange = e => setProfile({ ...profile, [e.target.name]: e.target.value });
+  const handleSecurityChange = e => setSecurity({ ...security, [e.target.name]: e.target.value });
+  const handleNotificationsChange = e =>
     setNotifications({ ...notifications, [e.target.name]: e.target.checked });
-  };
+  const handlePreferencesChange = e => setPreferences({ ...preferences, [e.target.name]: e.target.value });
 
-  const handlePreferencesChange = (e) => {
-    setPreferences({ ...preferences, [e.target.name]: e.target.value });
-  };
-
-  const handleProfileSubmit = async (e) => {
+  const submitProfile = async e => {
     e.preventDefault();
     setSubmitting(true);
     try {
-      const token = localStorage.getItem('token');
-      await axios.put(
-        `${import.meta.env.VITE_API_URL}/api/user/profile`,
-        profile,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      toast.success('Profile updated successfully!');
+      await axios.put(`${import.meta.env.VITE_API_URL}/api/user/profile`, profile, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      toast.success('Profile updated');
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to update profile');
+      toast.error(err.response?.data?.message || 'Update failed');
     } finally {
       setSubmitting(false);
     }
   };
 
-  const handlePasswordSubmit = async (e) => {
+  const submitPassword = async e => {
     e.preventDefault();
+    if (security.newPassword !== security.confirmPassword) return toast.error('Passwords do not match');
     setSubmitting(true);
-    if (security.newPassword !== security.confirmPassword) {
-      toast.error('Passwords do not match');
-      setSubmitting(false);
-      return;
-    }
     try {
-      const token = localStorage.getItem('token');
       await axios.put(
         `${import.meta.env.VITE_API_URL}/api/user/password`,
         { password: security.newPassword },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      toast.success('Password updated successfully!');
-      setSecurity({ ...security, newPassword: '', confirmPassword: '' });
+      toast.success('Password changed');
+      setSecurity(prev => ({ ...prev, newPassword: '', confirmPassword: '' }));
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to update password');
+      toast.error(err.response?.data?.message || 'Password change failed');
     } finally {
       setSubmitting(false);
     }
   };
 
-  const handle2FASubmit = async () => {
+  const start2FASetup = async () => {
     setSubmitting(true);
     try {
-      const token = localStorage.getItem('token');
-      await axios.put(
-        `${import.meta.env.VITE_API_URL}/api/user/2fa`,
-        { twoFactor: !security.twoFactor },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setSecurity({ ...security, twoFactor: !security.twoFactor });
-      toast.success(`Two-Factor Authentication ${security.twoFactor ? 'disabled' : 'enabled'}!`);
+      const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/user/2fa/setup`, {}, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setSecurity(prev => ({ ...prev, totpSecret: res.data.secret, totpUrl: res.data.otpauth_url }));
+      setShow2FASetup(true);
+      toast.success('Scan QR code with an authenticator app');
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to update 2FA');
+      toast.error(err.response?.data?.message || '2FA setup failed');
     } finally {
       setSubmitting(false);
     }
   };
 
-  const handleNotificationsSubmit = async (e) => {
+  const verify2FA = async () => {
+    if (!/^\d{6}$/.test(totpCode)) return toast.error('Enter a 6‑digit code');
+    try {
+      await axios.post(
+        `${import.meta.env.VITE_API_URL}/api/user/2fa/verify`,
+        { token: totpCode },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setSecurity(prev => ({ ...prev, twoFactor: true }));
+      setShow2FASetup(false);
+      setTotpCode('');
+      toast.success('2FA enabled');
+    } catch (err) {
+      toast.error('Invalid code');
+    }
+  };
+
+  const disable2FA = async () => {
+    try {
+      await axios.post(`${import.meta.env.VITE_API_URL}/api/user/2fa/disable`, {}, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setSecurity(prev => ({ ...prev, twoFactor: false }));
+      toast.success('2FA disabled');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Disable failed');
+    }
+  };
+
+  const requestPasswordReset = async () => {
+    try {
+      await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/forgot-password`, { email: profile.email });
+      toast.success('Password‑reset email sent');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to send email');
+    }
+  };
+
+  const submitNotifications = async e => {
     e.preventDefault();
     setSubmitting(true);
     try {
-      const token = localStorage.getItem('token');
-      await axios.put(
-        `${import.meta.env.VITE_API_URL}/api/user/notifications`,
-        notifications,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      toast.success('Notification preferences updated!');
+      await axios.put(`${import.meta.env.VITE_API_URL}/api/user/notifications`, notifications, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      toast.success('Notification preferences saved');
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to update notifications');
+      toast.error(err.response?.data?.message || 'Save failed');
     } finally {
       setSubmitting(false);
     }
   };
 
-  const handlePreferencesSubmit = async (e) => {
+  const submitPreferences = async e => {
     e.preventDefault();
     setSubmitting(true);
     try {
-      const token = localStorage.getItem('token');
-      await axios.put(
-        `${import.meta.env.VITE_API_URL}/api/user/preferences`,
-        preferences,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await axios.put(`${import.meta.env.VITE_API_URL}/api/user/preferences`, preferences, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       document.documentElement.setAttribute('data-theme', preferences.theme);
-      toast.success('Preferences updated!');
+      toast.success('Preferences saved');
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to update preferences');
+      toast.error(err.response?.data?.message || 'Save failed');
     } finally {
       setSubmitting(false);
     }
   };
 
-  const handleLogoutSession = async (sessionId) => {
+  const logoutSession = async sessionId => {
     setSubmitting(true);
     try {
-      const token = localStorage.getItem('token');
       await axios.delete(`${import.meta.env.VITE_API_URL}/api/user/sessions/${sessionId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setSessions(sessions.filter((session) => session._id !== sessionId));
-      toast.success('Session terminated!');
+      setSessions(prev => prev.filter(s => s._id !== sessionId));
+      toast.success('Session terminated');
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to terminate session');
+      toast.error(err.response?.data?.message || 'Terminate failed');
     } finally {
       setSubmitting(false);
     }
   };
 
-  if (loading) {
-    return (
-      <div className="loading-container">
-        <div className="loading-spinner"></div>
-        <p className="loading-message">Processing your request...</p>
-      </div>
-    );
-  }
+  // ────────────────────────────────────── RENDER ──────────────────────────────────────
+  if (loading) return <LoadingSkeleton />;
 
   return (
     <div className="settings">
-      <h2><i className="fas fa-cog"></i> Settings</h2>
+      <h2>
+        <FaCog /> Settings
+      </h2>
+
       <div className="settings-container">
+        {/* ───── PROFILE ───── */}
         <div className="settings-card">
-          <h3><i className="fas fa-user"></i> Profile Information</h3>
-          <form onSubmit={handleProfileSubmit}>
+          <h3>
+            <FaUser /> Profile Information
+          </h3>
+          <form onSubmit={submitProfile}>
             <label>
-              Full Name
-              <input type="text" name="name" value={profile.name} onChange={handleProfileChange} required disabled={submitting} />
+              <FaUser /> Full Name
+              <input name="name" value={profile.name} onChange={handleProfileChange} required disabled={submitting} />
             </label>
             <label>
-              Email
-              <input type="email" name="email" value={profile.email} onChange={handleProfileChange} required disabled={submitting} />
+              <FaEnvelope /> Email
+              <input name="email" type="email" value={profile.email} onChange={handleProfileChange} required disabled={submitting} />
             </label>
             <label>
-              Phone Number
-              <input type="tel" name="phone" value={profile.phone} onChange={handleProfileChange} disabled={submitting} />
+              <FaPhone /> Phone
+              <input name="phone" type="tel" value={profile.phone} onChange={handleProfileChange} disabled={submitting} />
             </label>
             <label>
-              Address
-              <textarea name="address" value={profile.address} onChange={handleProfileChange} rows="3" disabled={submitting} />
+              <FaMapMarkerAlt /> Address
+              <textarea name="address" rows="3" value={profile.address} onChange={handleProfileChange} disabled={submitting} />
             </label>
             <button type="submit" disabled={submitting}>
-              <i className="fas fa-save"></i> {submitting ? 'Saving...' : 'Save Profile'}
+              <FaSave /> {submitting ? 'Saving…' : 'Save Profile'}
             </button>
           </form>
         </div>
+
+        {/* ───── SECURITY ───── */}
         <div className="settings-card">
-          <h3><i className="fas fa-shield-alt"></i> Security</h3>
+          <h3>
+            <FaShieldAlt /> Security
+          </h3>
+
+          {/* 2FA */}
           <div className="settings-toggle">
-            <label>
-              <i className="fas fa-user-shield"></i>
-              <input type="checkbox" checked={security.twoFactor} onChange={handle2FASubmit} disabled={submitting} />
-              Enable Two-Factor Authentication
-            </label>
+            {security.twoFactor ? (
+              <button onClick={disable2FA} disabled={submitting}>
+                Disable 2FA
+              </button>
+            ) : (
+              <button onClick={start2FASetup} disabled={submitting}>
+                {submitting ? 'Setting up…' : 'Enable 2FA'}
+              </button>
+            )}
           </div>
-          <form onSubmit={handlePasswordSubmit}>
+
+     {show2FASetup && (
+  <div className="qrcode-section">
+    <QRCodeSVG value={security.totpUrl} size={128} />
+    <input
+      type="text"
+      placeholder="6-digit code"
+      value={totpCode}
+      onChange={e => setTotpCode(e.target.value)}
+      maxLength={6}
+    />
+    <button onClick={verify2FA}>Verify</button>
+  </div>
+)}
+
+          {/* Password */}
+          <form onSubmit={submitPassword}>
             <label>
-              New Password
-              <input type="password" name="newPassword" value={security.newPassword} onChange={handleSecurityChange} required disabled={submitting} />
+              <FaKey /> New Password
+              <input
+                type="password"
+                name="newPassword"
+                value={security.newPassword}
+                onChange={handleSecurityChange}
+                required
+                disabled={submitting}
+              />
             </label>
             <label>
               Confirm Password
-              <input type="password" name="confirmPassword" value={security.confirmPassword} onChange={handleSecurityChange} required disabled={submitting} />
+              <input
+                type="password"
+                name="confirmPassword"
+                value={security.confirmPassword}
+                onChange={handleSecurityChange}
+                required
+                disabled={submitting}
+              />
             </label>
             <button type="submit" disabled={submitting}>
-              <i className="fas fa-key"></i> {submitting ? 'Changing...' : 'Change Password'}
+              <FaKey /> {submitting ? 'Changing…' : 'Change Password'}
+            </button>
+          </form>
+
+          <button onClick={requestPasswordReset} className="reset-link">
+            Send Password‑Reset Email
+          </button>
+        </div>
+
+        {/* ───── NOTIFICATIONS ───── */}
+        <div className="settings-card">
+          <h3>
+            <FaBell /> Notification Preferences
+          </h3>
+          <form onSubmit={submitNotifications}>
+            <label>
+              <input
+                type="checkbox"
+                name="email"
+                checked={notifications.email}
+                onChange={handleNotificationsChange}
+                disabled={submitting}
+              />
+              Email
+            </label>
+            <label>
+              <input
+                type="checkbox"
+                name="sms"
+                checked={notifications.sms}
+                onChange={handleNotificationsChange}
+                disabled={submitting}
+              />
+              SMS
+            </label>
+            <label>
+              <input
+                type="checkbox"
+                name="push"
+                checked={notifications.push}
+                onChange={handleNotificationsChange}
+                disabled={submitting}
+              />
+              Push
+            </label>
+            <button type="submit" disabled={submitting}>
+              <FaSave /> {submitting ? 'Saving…' : 'Save'}
             </button>
           </form>
         </div>
+
+        {/* ───── PREFERENCES ───── */}
         <div className="settings-card">
-          <h3><i className="fas fa-bell"></i> Notification Preferences</h3>
-          <form onSubmit={handleNotificationsSubmit}>
+          <h3>
+            <FaPalette /> Account Preferences
+          </h3>
+          <form onSubmit={submitPreferences}>
             <label>
-              <input type="checkbox" name="email" checked={notifications.email} onChange={handleNotificationsChange} disabled={submitting} />
-              Email Notifications
-            </label>
-            <label>
-              <input type="checkbox" name="sms" checked={notifications.sms} onChange={handleNotificationsChange} disabled={submitting} />
-              SMS Notifications
-            </label>
-            <label>
-              <input type="checkbox" name="push" checked={notifications.push} onChange={handleNotificationsChange} disabled={submitting} />
-              Push Notifications
-            </label>
-            <button type="submit" disabled={submitting}>
-              <i className="fas fa-save"></i> {submitting ? 'Saving...' : 'Save Notifications'}
-            </button>
-          </form>
-        </div>
-        <div className="settings-card">
-          <h3><i className="fas fa-cogs"></i> Account Preferences</h3>
-          <form onSubmit={handlePreferencesSubmit}>
-            <label>
-              Currency
+              <FaGlobe /> Currency
               <select name="currency" value={preferences.currency} onChange={handlePreferencesChange} disabled={submitting}>
                 <option value="USD">USD</option>
                 <option value="EUR">EUR</option>
@@ -295,26 +382,30 @@ function Settings() {
               </select>
             </label>
             <button type="submit" disabled={submitting}>
-              <i className="fas fa-save"></i> {submitting ? 'Saving...' : 'Save Preferences'}
+              <FaSave /> {submitting ? 'Saving…' : 'Save'}
             </button>
           </form>
         </div>
+
+        {/* ───── SESSIONS ───── */}
         <div className="settings-card">
-          <h3><i className="fas fa-desktop"></i> Active Sessions</h3>
+          <h3>
+            <FaDesktop /> Active Sessions
+          </h3>
           {sessions.length > 0 ? (
             <div className="sessions-list">
-              {sessions.map((session) => (
-                <div key={session._id} className="session-item">
-                  <p>{session.device}</p>
-                  <span>Last Active: {new Date(session.lastActive).toLocaleString()}</span>
-                  <button onClick={() => handleLogoutSession(session._id)} className="logout-session" disabled={submitting}>
-                    <i className="fas fa-sign-out-alt"></i> Log Out
+              {sessions.map(s => (
+                <div key={s._id} className="session-item">
+                  <p>{s.device}</p>
+                  <span>Last active: {new Date(s.lastActive).toLocaleString()}</span>
+                  <button onClick={() => logoutSession(s._id)} disabled={submitting}>
+                    <FaSignOutAlt /> Log out
                   </button>
                 </div>
               ))}
             </div>
           ) : (
-            <p>No active sessions found.</p>
+            <p>No active sessions.</p>
           )}
         </div>
       </div>

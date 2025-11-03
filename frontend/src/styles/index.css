@@ -134,6 +134,33 @@ button:hover {
   color: var(--secondary);
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
+/* src/styles/index.css – append */
+[data-theme="dark"] .transactions-table tr:hover {
+  background: rgba(255, 193, 7, 0.15);
+}
+
+[data-theme="dark"] .notification-card {
+  border-color: var(--gold);
+}
+
+[data-theme="dark"] .export-btn {
+  background: var(--gold);
+  color: #1a1a1a;
+}
+
+[data-theme="dark"] .export-btn:hover {
+  background: var(--gold-dark);
+}
+/* Add to the end of index.css */
+:root {
+  --skeleton-base: #e5e7eb;
+  --skeleton-highlight: #f3f4f6;
+}
+
+[data-theme="dark"] {
+  --skeleton-base: #1f2937;
+  --skeleton-highlight: #374151;
+}
 
 @keyframes spin {
   0% { transform: rotate(0deg); }

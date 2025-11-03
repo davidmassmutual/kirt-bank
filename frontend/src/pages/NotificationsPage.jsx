@@ -1,65 +1,102 @@
 // src/pages/NotificationsPage.jsx
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
+import LoadingSkeleton from '../components/LoadingSkeleton';
+import {
+  FaBell, FaCheckCircle, FaExclamationCircle, FaInfoCircle, FaTimes
+} from 'react-icons/fa';
+import '../styles/NotificationsPage.css';
 
 function NotificationsPage() {
   const [notifications, setNotifications] = useState([]);
+  const [filter, setFilter] = useState('all');
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetch = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/notifications`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setNotifications(res.data);
-      } catch (err) {
-        if (err.response?.status === 401) navigate('/login');
-        else toast.error('Failed to load notifications');
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetch();
-  }, [navigate]);
-
-  const markAsRead = async (id) => {
+  const fetch = useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
-      await axios.put(`${import.meta.env.VITE_API_URL}/api/notifications/read/${id}`, {}, {
+      const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/notifications`, {
         headers: { Authorization: `Bearer ${token}` },
+      });
+      setNotifications(res.data);
+    } catch (err) {
+      toast.error('Failed to load notifications');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetch();
+  }, [fetch]);
+
+  const markAsRead = async ( id ) => {
+    try {
+      await axios.put(`${import.meta.env.VITE_API_URL}/api/notifications/${id}/read`, {}, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       });
       setNotifications(prev => prev.map(n => n._id === id ? { ...n, read: true } : n));
     } catch (err) {
-      toast.error('Failed to mark as read');
+      toast.error('Failed to update');
     }
   };
 
-  if (loading) return <div className="loading">Loading...</div>;
+  const filtered = notifications.filter(n => filter === 'all' || (filter === 'unread' ? !n.read : n.read));
+
+  if (loading) return <LoadingSkeleton />;
+
+  const getPriorityIcon = (priority) => {
+    switch (priority) {
+      case 'high': return <FaExclamationCircle className="priority high" />;
+      case 'medium': return <FaInfoCircle className="priority medium" />;
+      default: return <FaCheckCircle className="priority low" />;
+    }
+  };
 
   return (
     <div className="notifications-page">
-      <h2>Notifications</h2>
-      {notifications.length === 0 ? (
-        <p>No notifications.</p>
-      ) : (
-        <div className="list">
-          {notifications.map(notif => (
-            <div
-              key={notif._id}
-              className={`notification ${notif.read ? 'read' : 'unread'}`}
-              onClick={() => !notif.read && markAsRead(notif._id)}
-            >
-              <p>{notif.message}</p>
-              <span>{new Date(notif.date).toLocaleString()}</span>
-            </div>
-          ))}
+      <header className="page-header">
+        <h1><FaBell /> Notifications</h1>
+        <div className="filter-tabs">
+          <button className={filter === 'all' ? 'active' : ''} onClick={() => setFilter('all')}>All</button>
+          <button className={filter === 'unread' ? 'active' : ''} onClick={() => setFilter('unread')}>Unread</button>
+          <button className={filter === 'read' ? 'active' : ''} onClick={() => setFilter('read')}>Read</button>
         </div>
-      )}
+      </header>
+
+      <div className="notifications-grid">
+        {filtered.length === 0 ? (
+          <div className="empty-state">
+            <FaBell className="empty-icon" />
+            <p>No notifications</p>
+          </div>
+        ) : (
+          filtered.map(notif => (
+            <div key={notif._id} className={`notification-card ${notif.read ? 'read' : 'unread'} priority-${notif.priority}`}>
+              <div className="notif-header">
+                {getPriorityIcon(notif.priority)}
+                <span className="notif-time">
+                  {new Date(notif.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </span>
+                {!notif.read && (
+                  <button onClick={() => markAsRead(notif._id)} className="mark-read">
+                    <FaCheckCircle />
+                  </button>
+                )}
+              </div>
+              <h3>{notif.title}</h3>
+              <p>{notif.message}</p>
+              {notif.action && (
+                <Link to={notif.action} className="action-link">
+                  View Details
+                </Link>
+              )}
+            </div>
+          ))
+        )}
+      </div>
     </div>
   );
 }

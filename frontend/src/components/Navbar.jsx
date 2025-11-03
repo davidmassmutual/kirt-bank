@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { FaHome, FaWallet, FaExchangeAlt, FaCreditCard, FaHistory, FaBell, FaHandHoldingUsd, FaHeadset, FaCog, FaSignOutAlt, FaBars, FaTimes } from 'react-icons/fa';
 import '../styles/Navbar.css';
 import img9 from '../images/WhatsApp Image 2025-10-17 at 16.15.27.jpeg';
 
@@ -9,33 +10,31 @@ function Navbar({ handleLogout, isAuthenticated }) {
 
   if (!isAuthenticated) return null;
 
-  const toggleMenu = () => {
-    setIsMenuOpen(!isMenuOpen);
-  };
+  const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
 
   const navItems = [
-    { path: '/dashboard', label: 'Dashboard', icon: 'fas fa-home' },
-    { path: '/account-summary', label: 'Account Summary', icon: 'fas fa-wallet' },
-    { path: '/deposit-details', label: 'Deposit', icon: 'fas fa-exchange-alt' },
-    { path: '/cards', label: 'Cards', icon: 'fas fa-credit-card' },
-    { path: '/transactions', label: 'Transactions', icon: 'fas fa-history' },
-    { path: '/notifications', label: 'Notifications', icon: 'fas fa-bell' },
-    { path: '/loans', label: 'Loan', icon: 'fas fa-hand-holding-usd' },
-    { path: '/support', label: 'Support', icon: 'fas fa-headset' },
-    { path: '/settings', label: 'Settings', icon: 'fas fa-cog' },
+    { path: '/dashboard', label: 'Dashboard', icon: <FaHome /> },
+    { path: '/account-summary', label: 'Account Summary', icon: <FaWallet /> },
+    { path: '/deposit-details', label: 'Deposit', icon: <FaExchangeAlt /> },
+    { path: '/cards', label: 'Cards', icon: <FaCreditCard /> },
+    { path: '/transactions', label: 'Transactions', icon: <FaHistory /> },
+    { path: '/notifications', label: 'Notifications', icon: <FaBell /> },
+    { path: '/loans', label: 'Loan', icon: <FaHandHoldingUsd /> },
+    { path: '/support', label: 'Support', icon: <FaHeadset /> },
+    { path: '/settings', label: 'Settings', icon: <FaCog /> },
   ];
 
   return (
     <>
       <button className="hamburger" onClick={toggleMenu}>
-        <i className={`fas ${isMenuOpen ? 'fa-times' : 'fa-bars'}`}></i>
+        {isMenuOpen ? <FaTimes /> : <FaBars />}
       </button>
       <nav className={`navbar ${isMenuOpen ? 'active' : ''}`}>
         <div className="navbar-brand">
           <h1>Kirt Bank <img src={img9} alt="" className='navbar-brand-image' /></h1>
           <p>Strength. Security. Stability.</p>
           <button className="close-menu" onClick={toggleMenu}>
-            <i className="fas fa-times"></i>
+            <FaTimes />
           </button>
         </div>
         <ul className="navbar-menu">
@@ -46,14 +45,13 @@ function Navbar({ handleLogout, isAuthenticated }) {
                 className={location.pathname === item.path ? 'active' : ''}
                 onClick={() => setIsMenuOpen(false)}
               >
-                <i className={item.icon}></i> {item.label}
+                {item.icon} {item.label}
               </Link>
             </li>
           ))}
           <li>
-            {/* <DarkModeToggle/> */}
             <button onClick={() => { handleLogout(); setIsMenuOpen(false); }}>
-              <i className="fas fa-sign-out-alt"></i> Logout
+              <FaSignOutAlt /> Logout
             </button>
           </li>
         </ul>
@@ -61,4 +59,5 @@ function Navbar({ handleLogout, isAuthenticated }) {
     </>
   );
 }
+
 export default Navbar;

@@ -1,463 +1,429 @@
-// frontend/src/pages/AdminDashboard.jsx
-import { useEffect, useState } from 'react';
+// src/pages/AdminDashboard.jsx
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'react-toastify';
+import { CSVLink } from 'react-csv';
+import LoadingSkeleton from '../components/LoadingSkeleton';
+import {
+  FaSearch, FaEdit, FaTrash, FaEye, FaFileCsv, FaCheck, FaTimes,
+  FaDollarSign, FaUserCheck, FaUserTimes, FaPlus, FaHistory
+} from 'react-icons/fa';
 import '../styles/AdminDashboard.css';
 
 function AdminDashboard() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [selectedUsers, setSelectedUsers] = useState([]);
+  const [selected, setSelected] = useState([]);
   const [bulkAction, setBulkAction] = useState('');
   const [bulkBalance, setBulkBalance] = useState({ checking: '', savings: '', usdt: '' });
-  const [adminNotifications, setAdminNotifications] = useState([]);
-
-  const [passwordForm, setPasswordForm] = useState({ newPassword: '', confirmPassword: '' });
-  const [passwordLoading, setPasswordLoading] = useState(false);
-  const [editBalance, setEditBalance] = useState(null);
-  const [editTransactions, setEditTransactions] = useState(null);
+  const [adminNotifs, setAdminNotifs] = useState([]);
+  const [editBal, setEditBal] = useState(null);
+  const [editTxUser, setEditTxUser] = useState(null);
   const [transactions, setTransactions] = useState([]);
-  const [newTransaction, setNewTransaction] = useState({
-    type: '', amount: '', method: '', status: 'Posted', date: '',
-  });
+  const [newTx, setNewTx] = useState({ type: '', amount: '', method: '', status: 'Posted', date: '' });
 
   const navigate = useNavigate();
+  const token = localStorage.getItem('token');
 
-  // ──────────────────────────────────────────────────────────────
-  // Fetch Users with Search & Pagination
-  // ──────────────────────────────────────────────────────────────
-  const fetchUsers = async (query = '', pageNum = 1) => {
-    setLoading(true);
-    try {
-      const token = localStorage.getItem('token');
-      const res = await axios.get(
-        `${import.meta.env.VITE_API_URL}/api/user/search?q=${query}&page=${pageNum}&limit=10`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setUsers(res.data.users);
-      setTotalPages(res.data.pagination.pages);
-      setPage(res.data.pagination.page);
-    } catch (err) {
-      if (err.response?.status === 401 || err.response?.status === 403) {
-        toast.error('Session expired. Please log in again.');
-        localStorage.removeItem('token');
-        localStorage.removeItem('isAdmin');
-        navigate('/admin');
-      } else {
-        toast.error(err.response?.data?.message || 'Failed to load users');
+  // ───── FETCH USERS ─────
+  const fetchUsers = useCallback(
+    async (q = '', p = 1) => {
+      setLoading(true);
+      try {
+        const res = await axios.get(
+          `${import.meta.env.VITE_API_URL}/api/user/search?q=${q}&page=${p}&limit=10`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        setUsers(res.data.users.map(u => ({ ...u, selected: false })));
+        setTotalPages(res.data.pagination.pages);
+        setPage(res.data.pagination.page);
+      } catch (err) {
+        if (err.response?.status === 401 || err.response?.status === 403) {
+          toast.error('Session expired');
+          localStorage.removeItem('token');
+          localStorage.removeItem('isAdmin');
+          navigate('/admin');
+        } else toast.error(err.response?.data?.message || 'Load failed');
+      } finally {
+        setLoading(false);
       }
-    } finally {
-      setLoading(false);
-    }
-  };
+    },
+    [token, navigate]
+  );
 
-  // ──────────────────────────────────────────────────────────────
-  // Fetch Admin Notifications
-  // ──────────────────────────────────────────────────────────────
-  const fetchAdminNotifications = async () => {
+  // ───── FETCH NOTIFICATIONS (admin audit) ─────
+  const fetchNotifs = useCallback(async () => {
     try {
-      const token = localStorage.getItem('token');
       const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/user/notifications`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setAdminNotifications(res.data);
+      setAdminNotifs(res.data.slice(0, 5)); // Show latest 5
     } catch (err) {
-      console.error('Failed to load notifications');
+      console.error(err);
     }
-  };
+  }, [token]);
 
-  // ──────────────────────────────────────────────────────────────
-  // Initial Load
-  // ──────────────────────────────────────────────────────────────
+  // ───── INITIAL LOAD ─────
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    const isAdmin = localStorage.getItem('isAdmin') === 'true';
-    if (!token || !isAdmin) {
-      toast.error('Please log in as admin');
+    const isAdm = localStorage.getItem('isAdmin') === 'true';
+    if (!token || !isAdm) {
+      toast.error('Admin login required');
       navigate('/admin');
       return;
     }
     fetchUsers();
-    fetchAdminNotifications();
-  }, [navigate]);
+    fetchNotifs();
+  }, [token, navigate, fetchUsers, fetchNotifs]);
 
-  // ──────────────────────────────────────────────────────────────
-  // Search Handler
-  // ──────────────────────────────────────────────────────────────
+  // ───── SEARCH ─────
   const handleSearch = () => {
     setPage(1);
-    fetchUsers(searchQuery, 1);
+    fetchUsers(search, 1);
   };
 
-  // ──────────────────────────────────────────────────────────────
-  // Bulk Action Handler
-  // ──────────────────────────────────────────────────────────────
-  const handleBulkAction = async () => {
-    if (!bulkAction || selectedUsers.length === 0) {
-      toast.error('Select users and action');
-      return;
-    }
-
+  // ───── BULK ACTIONS ─────
+  const handleBulk = async () => {
+    if (!bulkAction || selected.length === 0) return toast.error('Select users & action');
     try {
-      const token = localStorage.getItem('token');
-      const payload = { action: bulkAction, userIds: selectedUsers };
-
+      const payload = { action: bulkAction, userIds: selected };
       if (bulkAction === 'updateBalance') {
-        const checking = Number(bulkBalance.checking) || 0;
-        const savings = Number(bulkBalance.savings) || 0;
-        const usdt = Number(bulkBalance.usdt) || 0;
-        payload.data = { balance: { checking, savings, usdt } };
+        payload.data = {
+          balance: {
+            checking: Number(bulkBalance.checking) || 0,
+            savings: Number(bulkBalance.savings) || 0,
+            usdt: Number(bulkBalance.usdt) || 0,
+          },
+        };
       }
-
       await axios.post(`${import.meta.env.VITE_API_URL}/api/user/bulk`, payload, {
         headers: { Authorization: `Bearer ${token}` },
       });
-
-      toast.success('Bulk action completed');
-      setSelectedUsers([]);
+      toast.success(`Bulk ${bulkAction} completed`);
+      setSelected([]);
       setBulkAction('');
       setBulkBalance({ checking: '', savings: '', usdt: '' });
-      fetchUsers(searchQuery, page);
-      fetchAdminNotifications();
+      fetchUsers(search, page);
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Bulk action failed');
+      toast.error(err.response?.data?.message || 'Bulk failed');
     }
   };
 
-  // ──────────────────────────────────────────────────────────────
-  // Password Change
-  // ──────────────────────────────────────────────────────────────
-  const handlePasswordSubmit = async (e) => {
-    e.preventDefault();
-    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-      toast.error('Passwords do not match');
-      return;
-    }
-    if (passwordForm.newPassword.length < 6) {
-      toast.error('Password must be at least 6 characters');
-      return;
-    }
-    setPasswordLoading(true);
-    try {
-      const token = localStorage.getItem('token');
-      await axios.put(
-        `${import.meta.env.VITE_API_URL}/api/user/password`,
-        { password: passwordForm.newPassword },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      toast.success('Password updated');
-      setPasswordForm({ newPassword: '', confirmPassword: '' });
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to update password');
-    } finally {
-      setPasswordLoading(false);
-    }
-  };
-
-  // ──────────────────────────────────────────────────────────────
-  // Edit Balance Modal
-  // ──────────────────────────────────────────────────────────────
-  const handleBalanceEdit = (user) => {
-    setEditBalance({
+  // ───── BALANCE EDIT ─────
+  const openBalanceEdit = user => {
+    setEditBal({
       userId: user._id,
       email: user.email,
-      savingsBalance: user.balance?.savings || 0,
-      checkingBalance: user.balance?.checking || 0,
-      usdtBalance: user.balance?.usdt || 0,
+      checking: user.balance?.checking || 0,
+      savings: user.balance?.savings || 0,
+      usdt: user.balance?.usdt || 0,
     });
   };
 
-  const handleBalanceSubmit = async (e) => {
+  const submitBalance = async e => {
     e.preventDefault();
     try {
-      const token = localStorage.getItem('token');
       await axios.put(
-        `${import.meta.env.VITE_API_URL}/api/user/${editBalance.userId}/balances`,
+        `${import.meta.env.VITE_API_URL}/api/user/${editBal.userId}/balances`,
         {
-          savingsBalance: Number(editBalance.savingsBalance),
-          checkingBalance: Number(editBalance.checkingBalance),
-          usdtBalance: Number(editBalance.usdtBalance),
+          checkingBalance: Number(editBal.checking),
+          savingsBalance: Number(editBal.savings),
+          usdtBalance: Number(editBal.usdt),
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      setUsers(users.map(u =>
-        u._id === editBalance.userId
-          ? {
-              ...u,
-              balance: {
-                savings: Number(editBalance.savingsBalance),
-                checking: Number(editBalance.checkingBalance),
-                usdt: Number(editBalance.usdtBalance),
-              },
-            }
-          : u
-      ));
-      setEditBalance(null);
+      setUsers(prev =>
+        prev.map(u =>
+          u._id === editBal.userId
+            ? {
+                ...u,
+                balance: {
+                  checking: Number(editBal.checking),
+                  savings: Number(editBal.savings),
+                  usdt: Number(editBal.usdt),
+                },
+              }
+            : u
+        )
+      );
+      setEditBal(null);
       toast.success('Balances updated');
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to update balances');
+      toast.error(err.response?.data?.message || 'Update failed');
     }
   };
 
-  // ──────────────────────────────────────────────────────────────
-  // Manage Transactions
-  // ──────────────────────────────────────────────────────────────
-  const handleTransactionEdit = async (user) => {
-    setEditTransactions(user._id);
+  // ───── TRANSACTIONS MODAL ─────
+  const openTx = async user => {
+    setEditTxUser(user._id);
     try {
-      const token = localStorage.getItem('token');
       const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/transactions/user/${user._id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setTransactions(res.data);
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to load transactions');
+      toast.error(err.response?.data?.message || 'Load failed');
     }
   };
 
-  const handleTransactionAction = async (txId, action) => {
+  const addTx = async e => {
+    e.preventDefault();
     try {
-      const token = localStorage.getItem('token');
+      const res = await axios.post(
+        `${import.meta.env.VITE_API_URL}/api/transactions/user/${editTxUser}`,
+        { ...newTx, amount: Number(newTx.amount) },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setTransactions(prev => [...prev, res.data]);
+      setNewTx({ type: '', amount: '', method: '', status: 'Posted', date: '' });
+      toast.success('Transaction added');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Add failed');
+    }
+  };
+
+  const deleteTx = async id => {
+    if (!window.confirm('Delete this transaction?')) return;
+    try {
+      await axios.delete(`${import.meta.env.VITE_API_URL}/api/transactions/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setTransactions(prev => prev.filter(t => t._id !== id));
+      toast.success('Deleted');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Delete failed');
+    }
+  };
+
+  const confirmTx = async (id, action) => {
+    try {
       await axios.put(
-        `${import.meta.env.VITE_API_URL}/api/transactions/admin/confirm/${txId}`,
+        `${import.meta.env.VITE_API_URL}/api/transactions/admin/confirm/${id}`,
         { action },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       toast.success(`Transaction ${action}ed`);
-      const userId = editTransactions;
-      const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/transactions/user/${userId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setTransactions(res.data);
+      openTx({ _id: editTxUser });
     } catch (err) {
       toast.error(err.response?.data?.message || 'Action failed');
     }
   };
 
-  const handleNewTransactionSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const token = localStorage.getItem('token');
-      const res = await axios.post(
-        `${import.meta.env.VITE_API_URL}/api/transactions/user/${editTransactions}`,
-        { ...newTransaction, amount: Number(newTransaction.amount) },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setTransactions([...transactions, res.data]);
-      setNewTransaction({ type: '', amount: '', method: '', status: 'Posted', date: '' });
-      toast.success('Transaction added');
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to add transaction');
-    }
+  // ───── CSV DATA ─────
+  const csvData = useMemo(
+    () =>
+      users.map(u => ({
+        Name: u.name,
+        Email: u.email,
+        Checking: u.balance?.checking || 0,
+        Savings: u.balance?.savings || 0,
+        USDT: u.balance?.usdt || 0,
+      })),
+    [users]
+  );
+
+  // ───── SELECT ALL ─────
+  const toggleSelectAll = () => {
+    const allSelected = users.every(u => selected.includes(u._id));
+    setSelected(allSelected ? [] : users.map(u => u._id));
   };
 
-  const handleDeleteTransaction = async (txId) => {
-    try {
-      const token = localStorage.getItem('token');
-      await axios.delete(`${import.meta.env.VITE_API_URL}/api/transactions/${txId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setTransactions(transactions.filter(tx => tx._id !== txId));
-      toast.success('Transaction deleted');
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to delete');
-    }
+  const toggleSelect = (id) => {
+    setSelected(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
   };
+
+  // ───── RENDER ─────
+  if (loading) return <LoadingSkeleton />;
 
   return (
     <div className="admin-dashboard">
-      <h2>Admin Dashboard</h2>
+      {/* HEADER */}
+      <header className="admin-header">
+        <h1>Admin Dashboard</h1>
+        <div className="header-actions">
+          <div className="search-bar">
+            <FaSearch />
+            <input
+              placeholder="Search users..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              onKeyPress={e => e.key === 'Enter' && handleSearch()}
+            />
+          </div>
+          <CSVLink data={csvData} filename="kirtbank-users.csv" className="export-btn">
+            <FaFileCsv /> Export CSV
+          </CSVLink>
+        </div>
+      </header>
 
-      {/* Admin Notifications */}
-      {adminNotifications.length > 0 && (
-        <div className="notifications">
-          <h4>Notifications</h4>
-          {adminNotifications.map((n, i) => (
-            <div key={i} className="notif-item">
-              {n.message} — {new Date(n.date).toLocaleTimeString()}
-            </div>
-          ))}
+      {/* AUDIT LOG */}
+      {adminNotifs.length > 0 && (
+        <div className="audit-log">
+          <h3><FaHistory /> Recent Activity</h3>
+          <div className="log-list">
+            {adminNotifs.map((n, i) => (
+              <div key={i} className="log-item">
+                <span className="log-msg">{n.message}</span>
+                <span className="log-time">{new Date(n.date).toLocaleTimeString()}</span>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
-      {/* Password Change */}
-      <div className="section">
-        <h3>Change Admin Password</h3>
-        <form onSubmit={handlePasswordSubmit} className="form-grid">
-          <input
-            type="password"
-            placeholder="New Password"
-            value={passwordForm.newPassword}
-            onChange={e => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
-            required
-            minLength={6}
-          />
-          <input
-            type="password"
-            placeholder="Confirm Password"
-            value={passwordForm.confirmPassword}
-            onChange={e => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
-            required
-            minLength={6}
-          />
-          <button type="submit" disabled={passwordLoading}>
-            {passwordLoading ? 'Updating...' : 'Update Password'}
-          </button>
-        </form>
-      </div>
-
-      {/* Search & Bulk Actions */}
-      <div className="controls">
-        <input
-          type="text"
-          placeholder="Search users..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-        />
-        <button onClick={handleSearch}>Search</button>
-
-        <select value={bulkAction} onChange={(e) => setBulkAction(e.target.value)}>
+      {/* BULK ACTIONS */}
+      <div className="bulk-controls">
+        <select value={bulkAction} onChange={e => setBulkAction(e.target.value)}>
           <option value="">Bulk Action</option>
-          <option value="delete">Delete</option>
+          <option value="delete">Delete Users</option>
           <option value="updateBalance">Update Balance</option>
         </select>
 
         {bulkAction === 'updateBalance' && (
-          <div className="bulk-balance">
+          <div className="balance-inputs">
             <input placeholder="Checking" value={bulkBalance.checking} onChange={e => setBulkBalance({ ...bulkBalance, checking: e.target.value })} />
             <input placeholder="Savings" value={bulkBalance.savings} onChange={e => setBulkBalance({ ...bulkBalance, savings: e.target.value })} />
             <input placeholder="USDT" value={bulkBalance.usdt} onChange={e => setBulkBalance({ ...bulkBalance, usdt: e.target.value })} />
           </div>
         )}
 
-        <button onClick={handleBulkAction} disabled={!bulkAction || selectedUsers.length === 0}>
-          Apply ({selectedUsers.length})
+        <button onClick={handleBulk} disabled={!bulkAction || selected.length === 0} className="apply-btn">
+          Apply to {selected.length}
         </button>
       </div>
 
-      {/* Users Table */}
-      <div className="section">
-        <h3>Registered Users</h3>
-        {loading ? (
-          <div className="loading">Loading users...</div>
-        ) : (
-          <div className="table-container">
-            <table>
-              <thead>
-                <tr>
-                  <th>
+      {/* USERS TABLE */}
+      <div className="table-card">
+        <div className="table-header">
+          <h3>Registered Users</h3>
+          <div className="select-all">
+            <input type="checkbox" checked={selected.length === users.length && users.length > 0} onChange={toggleSelectAll} />
+            <span>Select All</span>
+          </div>
+        </div>
+
+        <div className="table-wrapper">
+          <table className="admin-table">
+            <thead>
+              <tr>
+                <th></th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Savings</th>
+                <th>Checking</th>
+                <th>USDT</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {users.map(u => (
+                <tr key={u._id} className={selected.includes(u._id) ? 'selected' : ''}>
+                  <td>
                     <input
                       type="checkbox"
-                      onChange={(e) => {
-                        setSelectedUsers(e.target.checked ? users.map(u => u._id) : []);
-                      }}
+                      checked={selected.includes(u._id)}
+                      onChange={() => toggleSelect(u._id)}
                     />
-                  </th>
-                  <th>Name</th>
-                  <th>Email</th>
-                  <th>Savings</th>
-                  <th>Checking</th>
-                  <th>USDT</th>
-                  <th>Actions</th>
+                  </td>
+                  <td className="user-name">
+                    <div className="avatar">{u.name.charAt(0)}</div>
+                    {u.name}
+                  </td>
+                  <td>{u.email}</td>
+                  <td className="amount">${(u.balance?.savings || 0).toLocaleString()}</td>
+                  <td className="amount">${(u.balance?.checking || 0).toLocaleString()}</td>
+                  <td className="amount">${(u.balance?.usdt || 0).toLocaleString()}</td>
+                  <td className="actions">
+                    <button onClick={() => openBalanceEdit(u)} className="edit-btn" title="Edit Balance">
+                      <FaEdit />
+                    </button>
+                    <button onClick={() => openTx(u)} className="view-btn" title="View Transactions">
+                      <FaEye />
+                    </button>
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {users.map((user) => {
-                  const savings = Number(user.balance?.savings) || 0;
-                  const checking = Number(user.balance?.checking) || 0;
-                  const usdt = Number(user.balance?.usdt) || 0;
+              ))}
+            </tbody>
+          </table>
+        </div>
 
-                  return (
-                    <tr key={user._id}>
-                      <td>
-                        <input
-                          type="checkbox"
-                          checked={selectedUsers.includes(user._id)}
-                          onChange={(e) => {
-                            setSelectedUsers(prev =>
-                              e.target.checked
-                                ? [...prev, user._id]
-                                : prev.filter(id => id !== user._id)
-                            );
-                          }}
-                        />
-                      </td>
-                      <td>{user.name}</td>
-                      <td>{user.email}</td>
-                      <td>${savings.toLocaleString()}</td>
-                      <td>${checking.toLocaleString()}</td>
-                      <td>${usdt.toLocaleString()}</td>
-                      <td className="actions">
-                        <button onClick={() => handleBalanceEdit(user)} className="edit">Edit</button>
-                        <button onClick={() => handleTransactionEdit(user)} className="view">Tx</button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-
-            {/* Pagination */}
-            <div className="pagination">
-              <button onClick={() => fetchUsers(searchQuery, page - 1)} disabled={page === 1}>Prev</button>
-              <span>Page {page} of {totalPages}</span>
-              <button onClick={() => fetchUsers(searchQuery, page + 1)} disabled={page === totalPages}>Next</button>
-            </div>
-          </div>
-        )}
+        {/* PAGINATION */}
+        <div className="pagination">
+          <button onClick={() => fetchUsers(search, page - 1)} disabled={page === 1}>
+            Prev
+          </button>
+          <span>Page {page} of {totalPages}</span>
+          <button onClick={() => fetchUsers(search, page + 1)} disabled={page === totalPages}>
+            Next
+          </button>
+        </div>
       </div>
 
-      {/* Edit Balance Modal */}
-      {editBalance && (
-        <div className="modal-overlay" onClick={() => setEditBalance(null)}>
+      {/* BALANCE MODAL */}
+      {editBal && (
+        <div className="modal-overlay" onClick={() => setEditBal(null)}>
           <div className="modal" onClick={e => e.stopPropagation()}>
-            <h3>Edit Balances - {editBalance.email}</h3>
-            <form onSubmit={handleBalanceSubmit} className="form-grid">
-              <label>Savings <input type="number" value={editBalance.savingsBalance} onChange={e => setEditBalance({ ...editBalance, savingsBalance: e.target.value })} /></label>
-              <label>Checking <input type="number" value={editBalance.checkingBalance} onChange={e => setEditBalance({ ...editBalance, checkingBalance: e.target.value })} /></label>
-              <label>USDT <input type="number" value={editBalance.usdtBalance} onChange={e => setEditBalance({ ...editBalance, usdtBalance: e.target.value })} /></label>
+            <div className="modal-header">
+              <h3>Edit Balances – {editBal.email}</h3>
+              <button onClick={() => setEditBal(null)} className="close-btn"><FaTimes /></button>
+            </div>
+            <form onSubmit={submitBalance} className="balance-form">
+              <div className="input-group">
+                <label>Checking</label>
+                <input type="number" value={editBal.checking} onChange={e => setEditBal({ ...editBal, checking: e.target.value })} />
+              </div>
+              <div className="input-group">
+                <label>Savings</label>
+                <input type="number" value={editBal.savings} onChange={e => setEditBal({ ...editBal, savings: e.target.value })} />
+              </div>
+              <div className="input-group">
+                <label>USDT</label>
+                <input type="number" value={editBal.usdt} onChange={e => setEditBal({ ...editBal, usdt: e.target.value })} />
+              </div>
               <div className="modal-actions">
-                <button type="submit">Save</button>
-                <button type="button" onClick={() => setEditBalance(null)}>Cancel</button>
+                <button type="submit" className="save-btn">Save Changes</button>
+                <button type="button" onClick={() => setEditBal(null)} className="cancel-btn">Cancel</button>
               </div>
             </form>
           </div>
         </div>
       )}
 
-      {/* Transactions Modal */}
-      {editTransactions && (
-        <div className="modal-overlay" onClick={() => setEditTransactions(null)}>
+      {/* TRANSACTIONS MODAL */}
+      {editTxUser && (
+        <div className="modal-overlay" onClick={() => setEditTxUser(null)}>
           <div className="modal large" onClick={e => e.stopPropagation()}>
-            <h3>Transactions - {users.find(u => u._id === editTransactions)?.email}</h3>
+            <div className="modal-header">
+              <h3>Transactions – {users.find(u => u._id === editTxUser)?.email}</h3>
+              <button onClick={() => setEditTxUser(null)} className="close-btn"><FaTimes /></button>
+            </div>
 
-            <div className="add-transaction">
-              <h4>Add New Transaction</h4>
-              <form onSubmit={handleNewTransactionSubmit} className="form-grid">
-                <input type="text" placeholder="Type" value={newTransaction.type} onChange={e => setNewTransaction({ ...newTransaction, type: e.target.value })} required />
-                <input type="number" placeholder="Amount" value={newTransaction.amount} onChange={e => setNewTransaction({ ...newTransaction, amount: e.target.value })} required />
-                <input type="text" placeholder="Method" value={newTransaction.method} onChange={e => setNewTransaction({ ...newTransaction, method: e.target.value })} required />
-                <select value={newTransaction.status} onChange={e => setNewTransaction({ ...newTransaction, status: e.target.value })}>
+            {/* ADD NEW */}
+            <div className="add-tx-card">
+              <h4><FaPlus /> Add Transaction</h4>
+              <form onSubmit={addTx} className="tx-form">
+                <input placeholder="Type (e.g. Deposit)" value={newTx.type} onChange={e => setNewTx({ ...newTx, type: e.target.value })} required />
+                <input type="number" placeholder="Amount" value={newTx.amount} onChange={e => setNewTx({ ...newTx, amount: e.target.value })} required />
+                <input placeholder="Method (e.g. Wire)" value={newTx.method} onChange={e => setNewTx({ ...newTx, method: e.target.value })} required />
+                <select value={newTx.status} onChange={e => setNewTx({ ...newTx, status: e.target.value })}>
                   <option value="Posted">Posted</option>
                   <option value="Pending">Pending</option>
                   <option value="Failed">Failed</option>
                 </select>
-                <input type="date" value={newTransaction.date} onChange={e => setNewTransaction({ ...newTransaction, date: e.target.value })} required />
-                <button type="submit">Add</button>
+                <input type="date" value={newTx.date} onChange={e => setNewTx({ ...newTx, date: e.target.value })} required />
+                <button type="submit" className="add-btn">Add</button>
               </form>
             </div>
 
-            <div className="table-container">
-              <h4>Transactions</h4>
+            {/* LIST */}
+            <div className="tx-list">
               {transactions.length === 0 ? (
-                <p>No transactions.</p>
+                <p className="empty">No transactions yet.</p>
               ) : (
-                <table>
+                <table className="tx-table">
                   <thead>
                     <tr>
                       <th>Date</th>
@@ -468,20 +434,30 @@ function AdminDashboard() {
                     </tr>
                   </thead>
                   <tbody>
-                    {transactions.map(tx => (
-                      <tr key={tx._id}>
-                        <td>{new Date(tx.date).toLocaleDateString()}</td>
-                        <td>{tx.type}</td>
-                        <td>${tx.amount.toLocaleString()}</td>
-                        <td className={`status ${tx.status.toLowerCase()}`}>{tx.status}</td>
-                        <td className="actions">
-                          {tx.status === 'Pending' && (
+                    {transactions.map(t => (
+                      <tr key={t._id}>
+                        <td>{new Date(t.date).toLocaleDateString()}</td>
+                        <td>{t.type}</td>
+                        <td className="amount">${t.amount.toLocaleString()}</td>
+                        <td>
+                          <span className={`status-badge ${t.status.toLowerCase()}`}>
+                            {t.status}
+                          </span>
+                        </td>
+                        <td className="tx-actions">
+                          {t.status === 'Pending' && (
                             <>
-                              <button onClick={() => handleTransactionAction(tx._id, 'confirm')} className="confirm">Confirm</button>
-                              <button onClick={() => handleTransactionAction(tx._id, 'fail')} className="fail">Fail</button>
+                              <button onClick={() => confirmTx(t._id, 'confirm')} className="confirm-btn">
+                                <FaCheck />
+                              </button>
+                              <button onClick={() => confirmTx(t._id, 'fail')} className="fail-btn">
+                                <FaTimes />
+                              </button>
                             </>
                           )}
-                          <button onClick={() => handleDeleteTransaction(tx._id)} className="delete">Delete</button>
+                          <button onClick={() => deleteTx(t._id)} className="delete-btn">
+                            <FaTrash />
+                          </button>
                         </td>
                       </tr>
                     ))}
@@ -489,7 +465,6 @@ function AdminDashboard() {
                 </table>
               )}
             </div>
-            <button className="close-modal" onClick={() => setEditTransactions(null)}>Close</button>
           </div>
         </div>
       )}

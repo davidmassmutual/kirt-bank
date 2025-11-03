@@ -1,8 +1,9 @@
-// frontend/src/pages/VirtualCards.jsx
-import { useState, useEffect } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
+import LoadingSkeleton from '../components/LoadingSkeleton';
+import { FaEye, FaEyeSlash, FaLock, FaUnlock, FaTrash, FaCreditCard, FaCopy, FaPlus } from 'react-icons/fa';
 import '../styles/VirtualCards.css';
 
 function VirtualCards() {
@@ -12,148 +13,134 @@ function VirtualCards() {
   const [showDetails, setShowDetails] = useState(null);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchCards = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        if (!token) {
-          toast.error('Please log in to view virtual cards');
-          navigate('/login');
-          return;
-        }
-        const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/virtual-cards`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setCards(res.data);
-        setLoading(false);
-      } catch (err) {
-        console.error('Fetch cards error:', err.response?.status, err.response?.data);
-        if (err.response?.status === 401) {
-          toast.error('Session expired, please log in again');
-          localStorage.removeItem('token');
-          navigate('/login');
-        } else {
-          toast.error(err.response?.data?.message || 'Failed to load virtual cards');
-        }
-        setLoading(false);
-      }
-    };
-    fetchCards();
-  }, [navigate]);
-
-  const createCard = async () => {
-    setSubmitting(true);
+  const fetch = useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await axios.post(
-        `${import.meta.env.VITE_API_URL}/api/virtual-cards`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setCards([...cards, res.data]);
-      toast.success('Virtual card created successfully!');
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to create virtual card');
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const deleteCard = async (cardId) => {
-    setSubmitting(true);
-    try {
-      const token = localStorage.getItem('token');
-      await axios.delete(`${import.meta.env.VITE_API_URL}/api/virtual-cards/${cardId}`, {
+      const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/virtual-cards`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setCards(cards.filter((card) => card._id !== cardId));
-      toast.success('Virtual card deleted successfully!');
+      setCards(res.data);
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to delete virtual card');
+      if (err.response?.status === 401) {
+        toast.error('Session expired');
+        navigate('/login');
+      } else toast.error(err.response?.data?.message || 'Failed to load cards');
+    } finally {
+      setLoading(false);
+    }
+  }, [navigate]);
+
+  useEffect(() => {
+    fetch();
+  }, [fetch]);
+
+  const create = async () => {
+    setSubmitting(true);
+    try {
+      const token = localStorage.getItem('token');
+      const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/virtual-cards`, {}, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setCards(prev => [...prev, res.data]);
+      toast.success('Card created');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Create failed');
     } finally {
       setSubmitting(false);
     }
   };
 
-  const toggleCardStatus = async (cardId, currentStatus) => {
+  const remove = async id => {
     setSubmitting(true);
     try {
       const token = localStorage.getItem('token');
-      const newStatus = currentStatus === 'Active' ? 'Frozen' : 'Active';
+      await axios.delete(`${import.meta.env.VITE_API_URL}/api/virtual-cards/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setCards(prev => prev.filter(c => c._id !== id));
+      toast.success('Card deleted');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Delete failed');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const toggleStatus = async (id, cur) => {
+    setSubmitting(true);
+    const newStatus = cur === 'Active' ? 'Frozen' : 'Active';
+    try {
+      const token = localStorage.getItem('token');
       await axios.put(
-        `${import.meta.env.VITE_API_URL}/api/virtual-cards/${cardId}`,
+        `${import.meta.env.VITE_API_URL}/api/virtual-cards/${id}`,
         { status: newStatus },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      setCards(cards.map((card) => (card._id === cardId ? { ...card, status: newStatus } : card)));
-      toast.success(`Card ${newStatus.toLowerCase()} successfully!`);
+      setCards(prev => prev.map(c => (c._id === id ? { ...c, status: newStatus } : c)));
+      toast.success(`Card ${newStatus.toLowerCase()}`);
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to update card status');
+      toast.error(err.response?.data?.message || 'Toggle failed');
     } finally {
       setSubmitting(false);
     }
   };
 
-  const toggleDetails = (cardId) => {
-    setShowDetails(showDetails === cardId ? null : cardId);
+  const copyToClipboard = text => {
+    navigator.clipboard.writeText(text);
+    toast.success('Copied');
   };
 
-  if (loading) {
-    return (
-      <div className="loading-container">
-        <div className="loading-spinner"></div>
-        <p className="loading-message">Processing your request...</p>
-      </div>
-    );
-  }
+  if (loading) return <LoadingSkeleton />;
 
   return (
     <div className="virtual-cards">
-      <h2><i className="fas fa-credit-card"></i> Virtual Cards</h2>
-      <p>Create and manage your virtual cards for secure online transactions.</p>
-      <button onClick={createCard} disabled={submitting} className="create-card-button">
-        <i className="fas fa-plus"></i> {submitting ? 'Creating...' : 'Create New Card'}
+      <h2>
+        <FaCreditCard /> Virtual Cards
+      </h2>
+      <button onClick={create} disabled={submitting} className="create-btn">
+        <FaPlus /> {submitting ? 'Creating…' : 'Create New Card'}
       </button>
+
       <div className="cards-list">
-        {cards.length > 0 ? (
-          cards.map((card) => (
-            <div key={card._id} className="card-item">
+        {cards.length === 0 ? (
+          <p>No cards. Create one to start.</p>
+        ) : (
+          cards.map(c => (
+            <div key={c._id} className="card-item">
               <div className="card-preview">
                 <div className="visa-card">
-                  <img
-                    src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg"
-                    alt="Visa Logo"
-                    className="visa-logo"
-                  />
+                  <img src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg" alt="Visa" className="visa-logo" />
                   <div className="card-info">
                     <h3>Kirt Bank</h3>
                     <p className="card-number">
-                      {showDetails === card._id ? card.cardNumber : `**** **** **** ${card.cardNumber.slice(-4)}`}
+                      {showDetails === c._id ? c.cardNumber : `**** **** **** ${c.cardNumber.slice(-4)}`}
+                      {showDetails === c._id && (
+                        <button onClick={() => copyToClipboard(c.cardNumber)} className="copy-btn">
+                          <FaCopy />
+                        </button>
+                      )}
                     </p>
                     <div className="card-details">
-                      <p>CVV: {showDetails === card._id ? card.cvv : '***'}</p>
-                      <p>Expiry: {card.expiryDate}</p>
+                      <p>CVV: {showDetails === c._id ? c.cvv : '***'}</p>
+                      <p>Expiry: {c.expiryDate}</p>
                     </div>
                   </div>
                 </div>
               </div>
+
               <div className="card-actions">
-                <button onClick={() => toggleDetails(card._id)} disabled={submitting}>
-                  <i className={`fas ${showDetails === card._id ? 'fa-eye-slash' : 'fa-eye'}`}></i>
-                  {showDetails === card._id ? 'Hide Details' : 'Show Details'}
+                <button onClick={() => setShowDetails(showDetails === c._id ? null : c._id)} disabled={submitting}>
+                  {showDetails === c._id ? <FaEyeSlash /> : <FaEye />} {showDetails === c._id ? 'Hide' : 'Show'}
                 </button>
-                <button onClick={() => toggleCardStatus(card._id, card.status)} disabled={submitting}>
-                  <i className={`fas ${card.status === 'Active' ? 'fa-lock' : 'fa-unlock'}`}></i>
-                  {card.status === 'Active' ? 'Freeze Card' : 'Unfreeze Card'}
+                <button onClick={() => toggleStatus(c._id, c.status)} disabled={submitting}>
+                  {c.status === 'Active' ? <FaLock /> : <FaUnlock />} {c.status === 'Active' ? 'Freeze' : 'Unfreeze'}
                 </button>
-                <button onClick={() => deleteCard(card._id)} disabled={submitting}>
-                  <i className="fas fa-trash"></i> Delete Card
+                <button onClick={() => remove(c._id)} disabled={submitting}>
+                  <FaTrash /> Delete
                 </button>
               </div>
             </div>
           ))
-        ) : (
-          <p>No virtual cards found. Create one to get started!</p>
         )}
       </div>
     </div>
