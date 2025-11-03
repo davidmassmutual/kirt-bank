@@ -1,5 +1,5 @@
 // src/pages/AdminDashboard.jsx
-import { useEffect, useState, useCallback, useMemo } from 'react';
+import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'react-toastify';
@@ -7,9 +7,12 @@ import { CSVLink } from 'react-csv';
 import LoadingSkeleton from '../components/LoadingSkeleton';
 import {
   FaSearch, FaEdit, FaTrash, FaEye, FaFileCsv, FaCheck, FaTimes,
-  FaDollarSign, FaUserCheck, FaUserTimes, FaPlus, FaHistory
+  FaDollarSign, FaHistory, FaPlus, FaBell
 } from 'react-icons/fa';
 import '../styles/AdminDashboard.css';
+
+// Sound file
+const depositSound = new Audio('/sounds/deposit.mp3');
 
 function AdminDashboard() {
   const [users, setUsers] = useState([]);
@@ -25,86 +28,97 @@ function AdminDashboard() {
   const [editTxUser, setEditTxUser] = useState(null);
   const [transactions, setTransactions] = useState([]);
   const [newTx, setNewTx] = useState({ type: '', amount: '', method: '', status: 'Posted', date: '' });
-const [pendingDeposits, setPendingDeposits] = useState([]);
-
+  const [pendingDeposits, setPendingDeposits] = useState([]);
+  const [showPopup, setShowPopup] = useState(false);
+  const [popupMsg, setPopupMsg] = useState('');
   const navigate = useNavigate();
   const token = localStorage.getItem('token');
-
-
+  const pollRef = useRef(null);
+  const prevCount = useRef(0);
 
   // ───── FETCH USERS ─────
-  const fetchUsers = useCallback(
-    async (q = '', p = 1) => {
-      setLoading(true);
-      try {
-        const res = await axios.get(
-          `${import.meta.env.VITE_API_URL}/api/user/search?q=${q}&page=${p}&limit=10`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        setUsers(res.data.users.map(u => ({ ...u, selected: false })));
-        setTotalPages(res.data.pagination.pages);
-        setPage(res.data.pagination.page);
-      } catch (err) {
-        if (err.response?.status === 401 || err.response?.status === 403) {
-          toast.error('Session expired');
-          localStorage.removeItem('token');
-          localStorage.removeItem('isAdmin');
-          navigate('/admin');
-        } else toast.error(err.response?.data?.message || 'Load failed');
-      } finally {
-        setLoading(false);
-      }
-    },
-    [token, navigate]
-  );
+  const fetchUsers = useCallback(async (q = '', p = 1) => {
+    setLoading(true);
+    try {
+      const res = await axios.get(
+        `${import.meta.env.VITE_API_URL}/api/user/search?q=${q}&page=${p}&limit=10`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setUsers(res.data.users.map(u => ({ ...u, selected: false })));
+      setTotalPages(res.data.pagination.pages);
+      setPage(res.data.pagination.page);
+    } catch (err) {
+      if (err.response?.status === 401 || err.response?.status === 403) {
+        toast.error('Session expired');
+        localStorage.removeItem('token');
+        localStorage.removeItem('isAdmin');
+        navigate('/admin');
+      } else toast.error(err.response?.data?.message || 'Load failed');
+    } finally {
+      setLoading(false);
+    }
+  }, [token, navigate]);
 
-  // ───── FETCH NOTIFICATIONS (admin audit) ─────
+  // ───── FETCH NOTIFICATIONS ─────
   const fetchNotifs = useCallback(async () => {
     try {
       const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/user/notifications`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setAdminNotifs(res.data.slice(0, 5)); // Show latest 5
+      setAdminNotifs(res.data.slice(0, 5));
     } catch (err) {
       console.error(err);
     }
   }, [token]);
 
-// Add useEffect
-useEffect(() => {
-  const fetchPending = async () => {
+  // ───── FETCH PENDING DEPOSITS (REAL-TIME) ─────
+  const fetchPendingDeposits = useCallback(async () => {
     try {
       const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/transactions/admin`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setPendingDeposits(res.data.filter(tx => tx.status === 'Pending' && tx.type === 'deposit'));
+      const pending = res.data.filter(tx => tx.status === 'Pending' && tx.type === 'deposit');
+      setPendingDeposits(pending);
+
+      // Real-time popup + sound
+      if (pending.length > prevCount.current) {
+        const latest = pending[0];
+        const msg = `New deposit: $${latest.amount} from ${latest.userId.name}`;
+        if (msg !== popupMsg) {
+          setPopupMsg(msg);
+          setShowPopup(true);
+          depositSound.play().catch(() => {});
+          setTimeout(() => setShowPopup(false), 6000);
+        }
+      }
+      prevCount.current = pending.length;
     } catch (err) {
       console.error(err);
     }
-  };
-  fetchPending();
-}, [token]);
+  }, [token, popupMsg]);
 
-// Add in render, after audit log
-{pendingDeposits.length > 0 && (
-  <div className="pending-deposits">
-    <h3>Pending Deposits</h3>
-    <div className="deposit-list">
-      {pendingDeposits.map(tx => (
-        <div key={tx._id} className="deposit-item">
-          <div>
-            <strong>{tx.userId.name}</strong> • ${tx.amount} • {tx.method}
-            {tx.receipt && <a href={tx.receipt} target="_blank" rel="noopener">View Receipt</a>}
-          </div>
-          <div className="actions">
-            <button onClick={() => confirmTx(tx._id, 'confirm')} className="confirm">Confirm</button>
-            <button onClick={() => confirmTx(tx._id, 'reject')} className="reject">Reject</button>
-          </div>
-        </div>
-      ))}
-    </div>
-  </div>
-)}
+  // POLLING every 5s
+  useEffect(() => {
+    fetchPendingDeposits();
+    pollRef.current = setInterval(fetchPendingDeposits, 5000);
+    return () => clearInterval(pollRef.current);
+  }, [fetchPendingDeposits]);
+
+  // ───── CONFIRM / REJECT DEPOSIT ─────
+  const handleDepositAction = async (txId, action) => {
+    try {
+      await axios.put(
+        `${import.meta.env.VITE_API_URL}/api/transactions/admin/${txId}`,
+        { action },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success(`Deposit ${action}ed`);
+      fetchPendingDeposits();
+      fetchNotifs();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Action failed');
+    }
+  };
 
   // ───── INITIAL LOAD ─────
   useEffect(() => {
@@ -117,8 +131,6 @@ useEffect(() => {
     fetchUsers();
     fetchNotifs();
   }, [token, navigate, fetchUsers, fetchNotifs]);
-
-  
 
   // ───── SEARCH ─────
   const handleSearch = () => {
@@ -242,7 +254,7 @@ useEffect(() => {
   const confirmTx = async (id, action) => {
     try {
       await axios.put(
-        `${import.meta.env.VITE_API_URL}/api/transactions/admin/confirm/${id}`,
+        `${import.meta.env.VITE_API_URL}/api/transactions/admin/${id}`,
         { action },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -272,15 +284,51 @@ useEffect(() => {
     setSelected(allSelected ? [] : users.map(u => u._id));
   };
 
-  const toggleSelect = (id) => {
+  const toggleSelect = id => {
     setSelected(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
   };
 
-  // ───── RENDER ─────
   if (loading) return <LoadingSkeleton />;
 
   return (
     <div className="admin-dashboard">
+
+      {/* REAL-TIME POPUP */}
+      {showPopup && (
+        <div className="deposit-popup">
+          <FaBell className="pulse" /> {popupMsg}
+        </div>
+      )}
+
+      {/* PENDING DEPOSITS CARD */}
+      {pendingDeposits.length > 0 && (
+        <div className="pending-deposits-card">
+          <h3>Pending Deposits ({pendingDeposits.length})</h3>
+          <div className="deposit-list">
+            {pendingDeposits.map(tx => (
+              <div key={tx._id} className="deposit-item">
+                <div>
+                  <strong>{tx.userId.name}</strong> • ${tx.amount.toLocaleString()} • {tx.method}
+                  {tx.receipt && (
+                    <a href={`${import.meta.env.VITE_API_URL}${tx.receipt}`} target="_blank" rel="noopener noreferrer">
+                      View Receipt
+                    </a>
+                  )}
+                </div>
+                <div className="deposit-actions">
+                  <button onClick={() => handleDepositAction(tx._id, 'confirm')} className="confirm-btn">
+                    <FaCheck /> Confirm
+                  </button>
+                  <button onClick={() => handleDepositAction(tx._id, 'reject')} className="reject-btn">
+                    <FaTimes /> Reject
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* HEADER */}
       <header className="admin-header">
         <h1>Admin Dashboard</h1>
@@ -491,7 +539,7 @@ useEffect(() => {
                               <button onClick={() => confirmTx(t._id, 'confirm')} className="confirm-btn">
                                 <FaCheck />
                               </button>
-                              <button onClick={() => confirmTx(t._id, 'fail')} className="fail-btn">
+                              <button onClick={() => confirmTx(t._id, 'reject')} className="fail-btn">
                                 <FaTimes />
                               </button>
                             </>
