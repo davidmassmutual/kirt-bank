@@ -104,21 +104,55 @@ function AdminDashboard() {
     return () => clearInterval(pollRef.current);
   }, [fetchPendingDeposits]);
 
-  // ───── CONFIRM / REJECT DEPOSIT ─────
-  const handleDepositAction = async (txId, action) => {
-    try {
-      await axios.put(
-        `${import.meta.env.VITE_API_URL}/api/transactions/admin/${txId}`,
-        { action },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      toast.success(`Deposit ${action}ed`);
-      fetchPendingDeposits();
-      fetchNotifs();
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Action failed');
-    }
-  };
+// ───── CONFIRM / REJECT (FIXED ENDPOINT) ─────
+const handleDepositAction = async (txId, action) => {
+  try {
+    await axios.put(
+      `${import.meta.env.VITE_API_URL}/api/transactions/admin/${txId}`,
+      { action },
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    toast.success(`Deposit ${action}ed`);
+    fetchPendingDeposits();
+    fetchNotifs();
+  } catch (err) {
+    toast.error(err.response?.data?.message || 'Action failed');
+  }
+};
+
+// ───── BALANCE EDIT (FIXED FIELD NAMES) ─────
+const submitBalance = async e => {
+  e.preventDefault();
+  try {
+    await axios.put(
+      `${import.meta.env.VITE_API_URL}/api/user/${editBal.userId}/balances`,
+      {
+        checkingBalance: Number(editBal.checking),
+        savingsBalance: Number(editBal.savings),
+        usdtBalance: Number(editBal.usdt),
+      },
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    setUsers(prev =>
+      prev.map(u =>
+        u._id === editBal.userId
+          ? {
+              ...u,
+              balance: {
+                checking: Number(editBal.checking),
+                savings: Number(editBal.savings),
+                usdt: Number(editBal.usdt),
+              },
+            }
+          : u
+      )
+    );
+    setEditBal(null);
+    toast.success('Balances updated');
+  } catch (err) {
+    toast.error(err.response?.data?.message || 'Update failed');
+  }
+};
 
   // ───── INITIAL LOAD ─────
   useEffect(() => {
@@ -176,38 +210,6 @@ function AdminDashboard() {
     });
   };
 
-  const submitBalance = async e => {
-    e.preventDefault();
-    try {
-      await axios.put(
-        `${import.meta.env.VITE_API_URL}/api/user/${editBal.userId}/balances`,
-        {
-          checkingBalance: Number(editBal.checking),
-          savingsBalance: Number(editBal.savings),
-          usdtBalance: Number(editBal.usdt),
-        },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setUsers(prev =>
-        prev.map(u =>
-          u._id === editBal.userId
-            ? {
-                ...u,
-                balance: {
-                  checking: Number(editBal.checking),
-                  savings: Number(editBal.savings),
-                  usdt: Number(editBal.usdt),
-                },
-              }
-            : u
-        )
-      );
-      setEditBal(null);
-      toast.success('Balances updated');
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Update failed');
-    }
-  };
 
   // ───── TRANSACTIONS MODAL ─────
   const openTx = async user => {
@@ -251,19 +253,19 @@ function AdminDashboard() {
     }
   };
 
-  const confirmTx = async (id, action) => {
-    try {
-      await axios.put(
-        `${import.meta.env.VITE_API_URL}/api/transactions/admin/${id}`,
-        { action },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      toast.success(`Transaction ${action}ed`);
-      openTx({ _id: editTxUser });
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Action failed');
-    }
-  };
+const confirmTx = async (id, action) => {
+  try {
+    await axios.put(
+      `${import.meta.env.VITE_API_URL}/api/transactions/admin/${id}`,
+      { action: action === 'confirm' ? 'confirm' : 'reject' },
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    toast.success(`Transaction ${action}ed`);
+    openTx({ _id: editTxUser });
+  } catch (err) {
+    toast.error(err.response?.data?.message || 'Action failed');
+  }
+};
 
   // ───── CSV DATA ─────
   const csvData = useMemo(
@@ -315,14 +317,14 @@ function AdminDashboard() {
                     </a>
                   )}
                 </div>
-                <div className="deposit-actions">
-                  <button onClick={() => handleDepositAction(tx._id, 'confirm')} className="confirm-btn">
-                    <FaCheck /> Confirm
-                  </button>
-                  <button onClick={() => handleDepositAction(tx._id, 'reject')} className="reject-btn">
-                    <FaTimes /> Reject
-                  </button>
-                </div>
+               <div className="deposit-actions">
+  <button onClick={() => handleDepositAction(tx._id, 'confirm')} className="confirm-btn">
+    <FaCheck /> Confirm
+  </button>
+  <button onClick={() => handleDepositAction(tx._id, 'reject')} className="reject-btn">
+    <FaTimes /> Reject
+  </button>
+</div>
               </div>
             ))}
           </div>
@@ -534,16 +536,16 @@ function AdminDashboard() {
                           </span>
                         </td>
                         <td className="tx-actions">
-                          {t.status === 'Pending' && (
-                            <>
-                              <button onClick={() => confirmTx(t._id, 'confirm')} className="confirm-btn">
-                                <FaCheck />
-                              </button>
-                              <button onClick={() => confirmTx(t._id, 'reject')} className="fail-btn">
-                                <FaTimes />
-                              </button>
-                            </>
-                          )}
+                         { t.status === 'Pending' && (
+  <>
+    <button onClick={() => confirmTx(t._id, 'confirm')} className="confirm-btn">
+      <FaCheck />
+    </button>
+    <button onClick={() => confirmTx(t._id, 'reject')} className="fail-btn">
+      <FaTimes />
+    </button>
+  </>
+)}
                           <button onClick={() => deleteTx(t._id)} className="delete-btn">
                             <FaTrash />
                           </button>
