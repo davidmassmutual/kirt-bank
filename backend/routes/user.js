@@ -3,10 +3,11 @@ const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
 const User = require('../models/User');
-const Transaction = require('../models/Transaction');
 const verifyToken = require('../middleware/auth');
 
+// ──────────────────────────────────────────────────────────────
 // Middleware: Admin check
+// ──────────────────────────────────────────────────────────────
 const isAdmin = (req, res, next) => {
   if (!req.isAdmin) {
     return res.status(403).json({ message: 'Admin access required' });
@@ -14,7 +15,9 @@ const isAdmin = (req, res, next) => {
   next();
 };
 
+// ──────────────────────────────────────────────────────────────
 // GET: Current user (token validation)
+// ──────────────────────────────────────────────────────────────
 router.get('/', verifyToken, async (req, res) => {
   try {
     const user = await User.findById(req.userId).select('-password');
@@ -26,7 +29,9 @@ router.get('/', verifyToken, async (req, res) => {
   }
 });
 
+// ──────────────────────────────────────────────────────────────
 // GET: All users (Admin only)
+// ──────────────────────────────────────────────────────────────
 router.get('/all', verifyToken, isAdmin, async (req, res) => {
   try {
     const users = await User.find({}).select('-password');
@@ -37,7 +42,10 @@ router.get('/all', verifyToken, isAdmin, async (req, res) => {
   }
 });
 
+// ──────────────────────────────────────────────────────────────
 // SEARCH & FILTER: Users (Admin only)
+// ?q=john&page=1&limit=10
+// ──────────────────────────────────────────────────────────────
 router.get('/search', verifyToken, isAdmin, async (req, res) => {
   try {
     const { q, page = 1, limit = 10 } = req.query;
@@ -54,7 +62,7 @@ router.get('/search', verifyToken, isAdmin, async (req, res) => {
       : {};
 
     const users = await User.find(filter)
-      .select('- Viral')
+      .select('-password')
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(Number(limit));
@@ -76,7 +84,9 @@ router.get('/search', verifyToken, isAdmin, async (req, res) => {
   }
 });
 
-// ADMIN: Edit user balances
+// backend/routes/user.js  (add to your existing user routes)
+
+// ───── ADMIN: Edit user balances ─────
 router.put('/:userId/balances', verifyToken, async (req, res) => {
   if (!req.isAdmin) return res.status(403).json({ message: 'Admin only' });
 
@@ -95,6 +105,7 @@ router.put('/:userId/balances', verifyToken, async (req, res) => {
 
     await user.save();
 
+    // Audit log
     await User.updateMany(
       { isAdmin: true },
       { $push: { adminNotifications: { message: `Updated balance for ${user.name}`, date: new Date(), read: false } } }
@@ -107,7 +118,7 @@ router.put('/:userId/balances', verifyToken, async (req, res) => {
   }
 });
 
-// ADMIN: Bulk actions (delete / update balance)
+// ───── ADMIN: Bulk actions (delete / update balance) ─────
 router.post('/bulk', verifyToken, async (req, res) => {
   if (!req.isAdmin) return res.status(403).json({ message: 'Admin only' });
 
@@ -159,8 +170,9 @@ router.post('/bulk', verifyToken, async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 });
-
+// ──────────────────────────────────────────────────────────────
 // GET: Admin Notifications
+// ──────────────────────────────────────────────────────────────
 router.get('/notifications', verifyToken, isAdmin, async (req, res) => {
   try {
     const admin = await User.findById(req.userId).select('adminNotifications');
@@ -171,7 +183,32 @@ router.get('/notifications', verifyToken, isAdmin, async (req, res) => {
   }
 });
 
+// ──────────────────────────────────────────────────────────────
+// Helper: Log admin notification
+// ──────────────────────────────────────────────────────────────
+async function logAdminNotification(adminId, message) {
+  try {
+    await User.findByIdAndUpdate(
+      adminId,
+      {
+        $push: {
+          adminNotifications: {
+            message,
+            date: new Date(),
+            read: false,
+          },
+        },
+      },
+      { new: true }
+    );
+  } catch (err) {
+    console.error('Failed to log admin notification:', err.message);
+  }
+}
+
+// ──────────────────────────────────────────────────────────────
 // PUT: Update profile
+// ──────────────────────────────────────────────────────────────
 router.put('/profile', verifyToken, async (req, res) => {
   try {
     const { name, email, phone, address } = req.body;
@@ -194,7 +231,9 @@ router.put('/profile', verifyToken, async (req, res) => {
   }
 });
 
+// ──────────────────────────────────────────────────────────────
 // PUT: Change password
+// ──────────────────────────────────────────────────────────────
 router.put('/password', verifyToken, async (req, res) => {
   try {
     const { password } = req.body;
@@ -214,7 +253,9 @@ router.put('/password', verifyToken, async (req, res) => {
   }
 });
 
+// ──────────────────────────────────────────────────────────────
 // PUT: 2FA toggle
+// ──────────────────────────────────────────────────────────────
 router.put('/2fa', verifyToken, async (req, res) => {
   try {
     const { twoFactor } = req.body;
@@ -231,7 +272,9 @@ router.put('/2fa', verifyToken, async (req, res) => {
   }
 });
 
+// ──────────────────────────────────────────────────────────────
 // PUT: Notification settings
+// ──────────────────────────────────────────────────────────────
 router.put('/notifications', verifyToken, async (req, res) => {
   try {
     const { email, sms, push } = req.body;
@@ -248,7 +291,9 @@ router.put('/notifications', verifyToken, async (req, res) => {
   }
 });
 
+// ──────────────────────────────────────────────────────────────
 // PUT: Preferences (currency/theme)
+// ──────────────────────────────────────────────────────────────
 router.put('/preferences', verifyToken, async (req, res) => {
   try {
     const { currency, theme } = req.body;
@@ -269,7 +314,9 @@ router.put('/preferences', verifyToken, async (req, res) => {
   }
 });
 
-// DELETE: Session
+// ──────────────────────────────────────────────────────────────
+// DELETE: Session (optional)
+// ──────────────────────────────────────────────────────────────
 router.delete('/sessions/:sessionId', verifyToken, async (req, res) => {
   try {
     const Session = require('../models/Session');
