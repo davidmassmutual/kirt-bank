@@ -84,92 +84,53 @@ router.get('/search', verifyToken, isAdmin, async (req, res) => {
   }
 });
 
-// backend/routes/user.js  (add to your existing user routes)
-
-// ───── ADMIN: Edit user balances ─────
-router.put('/:userId/balances', verifyToken, async (req, res) => {
-  if (!req.isAdmin) return res.status(403).json({ message: 'Admin only' });
-
-  const { checkingBalance, savingsBalance, usdtBalance } = req.body;
-  if ([checkingBalance, savingsBalance, usdtBalance].every(v => v === undefined)) {
-    return res.status(400).json({ message: 'No balance provided' });
-  }
-
-  try {
-    const user = await User.findById(req.params.userId);
-    if (!user) return res.status(404).json({ message: 'User not found' });
-
-    user.balance.checking = Number(checkingBalance) || user.balance.checking;
-    user.balance.savings = Number(savingsBalance) || user.balance.savings;
-    user.balance.usdt = Number(usdtBalance) || user.balance.usdt;
-
-    await user.save();
-
-    // Audit log
-    await User.updateMany(
-      { isAdmin: true },
-      { $push: { adminNotifications: { message: `Updated balance for ${user.name}`, date: new Date(), read: false } } }
-    );
-
-    res.json({ message: 'Balance updated', balance: user.balance });
-  } catch (err) {
-    console.error('Balance update error:', err);
-    res.status(500).json({ message: 'Server error' });
-  }
-});
-
-// ───── ADMIN: Bulk actions (delete / update balance) ─────
-router.post('/bulk', verifyToken, async (req, res) => {
-  if (!req.isAdmin) return res.status(403).json({ message: 'Admin only' });
-
+// ──────────────────────────────────────────────────────────────
+// BULK ACTIONS: Delete or Update Balance
+// POST { action: 'delete' | 'updateBalance', userIds: [], data: { balance: { checking: 100 } } }
+// ──────────────────────────────────────────────────────────────
+router.post('/bulk', verifyToken, isAdmin, async (req, res) => {
   const { action, userIds, data } = req.body;
-  if (!action || !userIds || !Array.isArray(userIds)) {
-    return res.status(400).json({ message: 'Invalid payload' });
+
+  if (!action || !Array.isArray(userIds) || userIds.length === 0) {
+    return res.status(400).json({ message: 'Invalid bulk request' });
   }
 
   try {
-    if (action === 'delete') {
-      await User.deleteMany({ _id: { $in: userIds }, isAdmin: false });
-      await Transaction.deleteMany({ userId: { $in: userIds } });
+    switch (action) {
+      case 'delete':
+        await User.deleteMany({ _id: { $in: userIds } });
+        await logAdminNotification(req.userId, `Bulk deleted ${userIds.length} users`);
+        return res.json({ message: `${userIds.length} users deleted` });
 
-      await User.updateMany(
-        { isAdmin: true },
-        { $push: { adminNotifications: { message: `Bulk deleted ${userIds.length} users`, date: new Date(), read: false } } }
-      );
-
-      res.json({ message: 'Users deleted' });
-    }
-
-    else if (action === 'updateBalance') {
-      const { checking = 0, savings = 0, usdt = 0 } = data.balance || {};
-
-      await User.updateMany(
-        { _id: { $in: userIds } },
-        {
-          $inc: {
-            'balance.checking': Number(checking),
-            'balance.savings': Number(savings),
-            'balance.usdt': Number(usdt),
-          },
+      case 'updateBalance':
+        if (!data?.balance) {
+          return res.status(400).json({ message: 'Balance data required' });
         }
-      );
+        const result = await User.updateMany(
+          { _id: { $in: userIds } },
+          {
+            $set: {
+              'balance.checking': data.balance.checking || 0,
+              'balance.savings': data.balance.savings || 0,
+              'balance.usdt': data.balance.usdt || 0,
+            },
+          }
+        );
+        await logAdminNotification(req.userId, `Bulk updated balance for ${userIds.length} users`);
+        return res.json({
+          message: `Updated ${result.modifiedCount} user(s)`,
+          modified: result.modifiedCount,
+        });
 
-      await User.updateMany(
-        { isAdmin: true },
-        { $push: { adminNotifications: { message: `Bulk balance update on ${userIds.length} users`, date: new Date(), read: false } } }
-      );
-
-      res.json({ message: 'Balances updated' });
-    }
-
-    else {
-      return res.status(400).json({ message: 'Invalid action' });
+      default:
+        return res.status(400).json({ message: 'Invalid action' });
     }
   } catch (err) {
-    console.error('Bulk error:', err);
+    console.error('Bulk action error:', err.message);
     res.status(500).json({ message: 'Server error' });
   }
 });
+
 // ──────────────────────────────────────────────────────────────
 // GET: Admin Notifications
 // ──────────────────────────────────────────────────────────────
