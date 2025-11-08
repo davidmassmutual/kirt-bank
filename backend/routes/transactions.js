@@ -108,14 +108,16 @@ router.post('/deposit', verifyToken, upload.single('receipt'), async (req, res) 
   }
 });
 
-// ADMIN: Confirm or Reject deposit (FIXED 100%)
+// ADMIN: Confirm or Reject deposit (100% FIXED)
 router.put('/admin/:txId', verifyToken, async (req, res) => {
   const { txId } = req.params;
   let { action } = req.body;
 
-  // Accept any case
-  action = action?.toLowerCase().trim();
-  if (!['confirm', 'reject'].includes(action)) {
+  if (typeof action === 'string') {
+    action = action.toLowerCase().replace(/\s+/g, '');
+  }
+
+  if (action !== 'confirm' && action !== 'reject') {
     return res.status(400).json({ message: 'Invalid action. Must be "confirm" or "reject"' });
   }
 
