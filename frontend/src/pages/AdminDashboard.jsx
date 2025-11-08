@@ -109,12 +109,12 @@ const handleDepositAction = async (txId, action) => {
   try {
     await axios.put(
       `${import.meta.env.VITE_API_URL}/api/transactions/admin/${txId}`,
-      { action },
+      { action: action.toLowerCase() },  // ← FIXED: 'Confirm' → 'confirm'
       { headers: { Authorization: `Bearer ${token}` } }
     );
     toast.success(`Deposit ${action}ed`);
-    fetchPendingDeposits();
-    fetchNotifs();
+    fetchPendingDeposits();  // Refresh pending list
+    fetchNotifs();           // Refresh audit log
   } catch (err) {
     toast.error(err.response?.data?.message || 'Action failed');
   }
@@ -252,12 +252,11 @@ const submitBalance = async e => {
       toast.error(err.response?.data?.message || 'Delete failed');
     }
   };
-
 const confirmTx = async (id, action) => {
   try {
     await axios.put(
       `${import.meta.env.VITE_API_URL}/api/transactions/admin/${id}`,
-      { action: action === 'confirm' ? 'confirm' : 'reject' },
+      { action: action },  // ← 'confirm' or 'reject' (already correct)
       { headers: { Authorization: `Bearer ${token}` } }
     );
     toast.success(`Transaction ${action}ed`);
@@ -317,11 +316,11 @@ const confirmTx = async (id, action) => {
                     </a>
                   )}
                 </div>
-               <div className="deposit-actions">
-  <button onClick={() => handleDepositAction(tx._id, 'confirm')} className="confirm-btn">
+   <div className="deposit-actions">
+  <button onClick={() => handleDepositAction(tx._id, 'Confirm')} className="confirm-btn">
     <FaCheck /> Confirm
   </button>
-  <button onClick={() => handleDepositAction(tx._id, 'reject')} className="reject-btn">
+  <button onClick={() => handleDepositAction(tx._id, 'Reject')} className="reject-btn">
     <FaTimes /> Reject
   </button>
 </div>
