@@ -5,10 +5,10 @@ const Transaction = require('../models/Transaction');
 const User = require('../models/User');
 const verifyToken = require('../middleware/auth');
 const upload = require('../middleware/upload');
-const nodemailer = require('nodemailer');
+const nodemailer = require('nodemailer'); // <-- v7+ compatible
 
-// ───── EMAIL TRANSPORTER (Gmail or SMTP) ─────
-const transporter = nodemailer.createTransporter({
+// ───── EMAIL TRANSPORTER (FIXED FOR NODEMAILER v7+) ─────
+const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
     user: process.env.EMAIL_USER,
