@@ -150,7 +150,7 @@ function AdminDashboard() {
     fetchUsers(search, 1);
   };
 
-  // BULK ACTIONS (WAS MISSING — NOW FIXED)
+  // BULK ACTIONS
   const handleBulk = async () => {
     if (!bulkAction || selected.length === 0) {
       toast.error('Select users and action');
@@ -183,7 +183,7 @@ function AdminDashboard() {
     }
   };
 
-  // EDIT BALANCE (WAS COMMENTED — NOW FIXED)
+  // EDIT BALANCE
   const openBalanceEdit = (user) => {
     setEditBal({
       userId: user._id,
@@ -295,10 +295,10 @@ function AdminDashboard() {
         </div>
       )}
 
-      {/* PENDING DEPOSITS */}
+      {/* PENDING DEPOSITS - FIXED: pendingFinal → pendingDeposits */}
       {pendingDeposits.length > 0 && (
         <div className="pending-deposits-card">
-          <h3><FaUserShield /> Pending Deposits ({pendingFinal.length})</h3>
+          <h3><FaUserShield /> Pending Deposits ({pendingDeposits.length})</h3>
           <div className="deposit-list">
             {pendingDeposits.map(tx => (
               <div key={tx._id} className="deposit-item">
@@ -466,7 +466,7 @@ function AdminDashboard() {
         <div className="modal-overlay" onClick={() => setEditTxUser(null)}>
           <div className="modal large" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>Transactions - {users.find(u => u._id === editTxUser)?.name}</h3>
+              <h3>Transactions - {users.find(u => u._id === editTxUser)?.name || 'User'}</h3>
               <button onClick={() => setEditTxUser(null)} className="close-btn"><FaTimes /></button>
             </div>
 
