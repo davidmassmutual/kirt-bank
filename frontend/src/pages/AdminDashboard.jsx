@@ -7,11 +7,11 @@ import { CSVLink } from 'react-csv';
 import LoadingSkeleton from '../components/LoadingSkeleton';
 import {
   FaSearch, FaEdit, FaTrash, FaEye, FaFileCsv, FaCheck, FaTimes,
-  FaHistory, FaPlus, FaBell
+  FaHistory, FaPlus, FaBell, FaUserShield
 } from 'react-icons/fa';
 import '../styles/AdminDashboard.css';
 
-// Deposit alert sound
+// Deposit alert sound (place deposit.mp3 in public/sounds/)
 const depositSound = new Audio('/sounds/deposit.mp3');
 
 function AdminDashboard() {
@@ -27,7 +27,7 @@ function AdminDashboard() {
   const [editBal, setEditBal] = useState(null);
   const [editTxUser, setEditTxUser] = useState(null);
   const [transactions, setTransactions] = useState([]);
-  const [newTx, setNewTx] = useState({ type: '', amount: '', method: '', status: 'Completed', date: '' });
+  const [newTx, setNewTx] = useState({ type: '', amount: '', method: '', status: 'Completed', account: 'checking', date: '' });
   const [pendingDeposits, setPendingDeposits] = useState([]);
   const [showPopup, setShowPopup] = useState(false);
   const [popupMsg, setPopupMsg] = useState('');
@@ -36,9 +36,9 @@ function AdminDashboard() {
   const pollRef = useRef(null);
   const prevPendingCount = useRef(0);
 
-  const API = import.meta.env.VITE_API_URL;
+  const API = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
-  // ───── FETCH USERS ─────
+  // FETCH USERS
   const fetchUsers = useCallback(async (q = '', p = 1) => {
     setLoading(true);
     try {
@@ -46,45 +46,51 @@ function AdminDashboard() {
         `${API}/api/user/search?q=${q}&page=${p}&limit=10`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      setUsers(res.data.users.map(u => ({ ...u, selected: false })));
-      setTotalPages(res.data.pagination.pages);
-      setPage(res.data.pagination.page);
+      setUsers(res.data.users);
+      setTotalPages(res.data.pagination.pages || 1);
+      setPage(res.data.pagination.page || 1);
     } catch (err) {
       if (err.response?.status === 401 || err.response?.status === 403) {
-        toast.error('Session expired');
+        toast.error('Session expired. Login again.');
         localStorage.clear();
         navigate('/admin');
-      } else toast.error(err.response?.data?.message || 'Load failed');
+      } else {
+        toast.error(err.response?.data?.message || 'Failed to load users');
+      }
     } finally {
       setLoading(false);
     }
   }, [token, navigate, API]);
 
-  // ───── FETCH NOTIFICATIONS ─────
+  // FETCH ADMIN NOTIFICATIONS
   const fetchNotifs = useCallback(async () => {
     try {
       const res = await axios.get(`${API}/api/user/notifications`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setAdminNotifs(res.data.slice(0, 5));
+      setAdminNotifs(res.data.slice(0, 8));
     } catch (err) {
-      console.error(err);
+      console.error('Notif fetch error:', err);
     }
   }, [token, API]);
 
-  // ───── FETCH PENDING DEPOSITS + REAL-TIME POLLING ─────
+  // FETCH PENDING DEPOSITS + REAL-TIME POLLING
   const fetchPendingDeposits = useCallback(async () => {
     try {
       const res = await axios.get(`${API}/api/transactions/admin`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      const pending = res.data.filter(tx => tx.status === 'Pending' && tx.type === 'deposit');
+
+      const pending = res.data
+        .filter(tx => tx.status === 'Pending' && tx.type === 'deposit')
+        .sort((a, b) => new Date(b.date) - new Date(a.date));
+
       setPendingDeposits(pending);
 
-      // Real-time popup + sound for NEW deposits
-      if (pending.length > prevPendingCount.current && prevPendingCount.current > 0) {
+      // Real-time popup + sound for NEW deposits only
+      if (pending.length > prevPendingCount.current) {
         const latest = pending[0];
-        const msg = `New deposit: $${latest.amount.toLocaleString()} from ${latest.userId.name}`;
+        const msg = `New deposit: $${latest.amount.toLocaleString()} from ${latest.userId?.name || 'User'}`;
         setPopupMsg(msg);
         setShowPopup(true);
         depositSound.play().catch(() => {});
@@ -92,54 +98,69 @@ function AdminDashboard() {
       }
       prevPendingCount.current = pending.length;
     } catch (err) {
-      console.error(err);
+      console.error('Pending deposits error:', err);
     }
   }, [token, API]);
 
+  // POLLING
   useEffect(() => {
     fetchPendingDeposits();
     pollRef.current = setInterval(fetchPendingDeposits, 5000);
     return () => clearInterval(pollRef.current);
   }, [fetchPendingDeposits]);
 
-  // ───── CONFIRM / REJECT DEPOSIT ─────
+  // CONFIRM / REJECT DEPOSIT (FULLY FIXED)
   const handleDepositAction = async (txId, action) => {
     try {
-      await axios.put(
+      const res = await axios.put(
         `${API}/api/transactions/admin/${txId}`,
         { action },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      toast.success(`Deposit ${action}ed`);
-      fetchPendingDeposits();
+
+      toast.success(`Deposit ${action}ed successfully!`);
+
+      // Remove from pending list
+      setPendingDeposits(prev => prev.filter(tx => tx._id !== txId));
+
+      // Update user balance in table if returned
+      if (res.data.user) {
+        setUsers(prev => prev.map(u => 
+          u._id === res.data.user._id 
+            ? { ...u, balance: res.data.user.balance }
+            : u
+        ));
+      }
+
       fetchNotifs();
-      fetchUsers(search, page); // Refresh balances
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Action failed');
+      toast.error(err.response?.data?.message || `Failed to ${action} deposit`);
+      console.error(err);
     }
   };
 
-  // ───── INITIAL LOAD ─────
+  // INITIAL LOAD
   useEffect(() => {
     const isAdm = localStorage.getItem('isAdmin') === 'true';
     if (!token || !isAdm) {
-      toast.error('Admin login required');
+      toast.error('Admin access required');
       navigate('/admin');
       return;
     }
     fetchUsers();
     fetchNotifs();
-  }, [token, navigate, fetchUsers, fetchNotifs]);
+  }, []);
 
-  // ───── SEARCH ─────
+  // SEARCH
   const handleSearch = () => {
     setPage(1);
     fetchUsers(search, 1);
   };
 
-  // ───── BULK ACTIONS ─────
+  // BULK ACTIONS
   const handleBulk = async () => {
     if (!bulkAction || selected.length === 0) return toast.error('Select users & action');
+    
     try {
       const payload = { action: bulkAction, userIds: selected };
       if (bulkAction === 'updateBalance') {
@@ -151,23 +172,26 @@ function AdminDashboard() {
           },
         };
       }
+
       await axios.post(`${API}/api/user/bulk`, payload, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      toast.success(`Bulk ${bulkAction} completed`);
+
+      toast.success('Bulk action completed');
       setSelected([]);
       setBulkAction('');
       setBulkBalance({ checking: '', savings: '', usdt: '' });
       fetchUsers(search, page);
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Bulk failed');
+      toast.error(err.response?.data?.message || 'Bulk action failed');
     }
   };
 
-  // ───── BALANCE EDIT MODAL ─────
-  const openBalanceEdit = user => {
+  // EDIT BALANCE MODAL (FULLY FIXED)
+  const openBalanceEdit = (user) => {
     setEditBal({
       userId: user._id,
+      name: user.name,
       email: user.email,
       checking: user.balance?.checking || 0,
       savings: user.balance?.savings || 0,
@@ -175,10 +199,10 @@ function AdminDashboard() {
     });
   };
 
-  const submitBalance = async e => {
+  const submitBalance = async (e) => {
     e.preventDefault();
     try {
-      await axios.put(
+      const res = await axios.put(
         `${API}/api/user/${editBal.userId}/balances`,
         {
           checkingBalance: Number(editBal.checking),
@@ -187,29 +211,23 @@ function AdminDashboard() {
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      setUsers(prev =>
-        prev.map(u =>
-          u._id === editBal.userId
-            ? {
-                ...u,
-                balance: {
-                  checking: Number(editBal.checking),
-                  savings: Number(editBal.savings),
-                  usdt: Number(editBal.usdt),
-                },
-              }
-            : u
-        )
-      );
+
+      setUsers(prev => prev.map(u => 
+        u._id === editBal.userId 
+          ? { ...u, balance: res.data.balance }
+          : u
+      ));
+
       setEditBal(null);
-      toast.success('Balances updated');
+      toast.success('Balance updated successfully');
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Update failed');
+      toast.error(err.response?.data?.message || 'Failed to update balance');
+      console.error(err);
     }
   };
 
-  // ───── TRANSACTIONS MODAL ─────
-  const openTx = async user => {
+  // TRANSACTIONS MODAL
+  const openTx = async (user) => {
     setEditTxUser(user._id);
     try {
       const res = await axios.get(`${API}/api/transactions/user/${user._id}`, {
@@ -217,11 +235,11 @@ function AdminDashboard() {
       });
       setTransactions(res.data);
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Load failed');
+      toast.error('Failed to load transactions');
     }
   };
 
-  const addTx = async e => {
+  const addTx = async (e) => {
     e.preventDefault();
     try {
       const res = await axios.post(
@@ -230,15 +248,15 @@ function AdminDashboard() {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setTransactions(prev => [...prev, res.data]);
-      setNewTx({ type: '', amount: '', method: '', status: 'Completed', date: '' });
+      setNewTx({ type: '', amount: '', method: '', status: 'Completed', account: 'checking', date: '' });
       toast.success('Transaction added');
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Add failed');
+      toast.error(err.response?.data?.message || 'Failed to add');
     }
   };
 
-  const deleteTx = async id => {
-    if (!window.confirm('Delete this transaction?')) return;
+  const deleteTx = async (id) => {
+    if (!window.confirm('Delete transaction?')) return;
     try {
       await axios.delete(`${API}/api/transactions/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -246,30 +264,26 @@ function AdminDashboard() {
       setTransactions(prev => prev.filter(t => t._id !== id));
       toast.success('Deleted');
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Delete failed');
+      toast.error('Delete failed');
     }
   };
 
-  // ───── CSV EXPORT ─────
-  const csvData = useMemo(
-    () =>
-      users.map(u => ({
-        Name: u.name,
-        Email: u.email,
-        Checking: u.balance?.checking || 0,
-        Savings: u.balance?.savings || 0,
-        USDT: u.balance?.usdt || 0,
-      })),
-    [users]
-  );
+  // CSV EXPORT
+  const csvData = useMemo(() => users.map(u => ({
+    Name: u.name,
+    Email: u.email,
+    Checking: u.balance?.checking || 0,
+    Savings: u.balance?.savings || 0,
+    USDT: u.balance?.usdt || 0,
+    Joined: new Date(u.createdAt).toLocaleDateString(),
+  })), [users]);
 
-  // ───── SELECT ALL ─────
+  // SELECT
   const toggleSelectAll = () => {
-    const allSelected = users.every(u => selected.includes(u._id));
-    setSelected(allSelected ? [] : users.map(u => u._id));
+    setSelected(prev => prev.length === users.length ? [] : users.map(u => u._id));
   };
 
-  const toggleSelect = id => {
+  const toggleSelect = (id) => {
     setSelected(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
   };
 
@@ -278,7 +292,7 @@ function AdminDashboard() {
   return (
     <div className="admin-dashboard">
 
-      {/* REAL-TIME DEPOSIT POPUP */}
+      {/* REAL-TIME POPUP */}
       {showPopup && (
         <div className="deposit-popup">
           <FaBell className="pulse" /> {popupMsg}
@@ -288,12 +302,12 @@ function AdminDashboard() {
       {/* PENDING DEPOSITS CARD */}
       {pendingDeposits.length > 0 && (
         <div className="pending-deposits-card">
-          <h3>Pending Deposits ({pendingDeposits.length})</h3>
+          <h3><FaUserShield /> Pending Deposits ({pendingDeposits.length})</h3>
           <div className="deposit-list">
             {pendingDeposits.map(tx => (
               <div key={tx._id} className="deposit-item">
                 <div>
-                  <strong>{tx.userId.name}</strong> • ${tx.amount.toLocaleString()} • {tx.method}
+                  <strong>{tx.userId?.name || 'Unknown'}</strong> • ${tx.amount.toLocaleString()} • {tx.method}
                   {tx.receipt && (
                     <a href={`${API}${tx.receipt}`} target="_blank" rel="noopener noreferrer">
                       View Receipt
@@ -316,7 +330,7 @@ function AdminDashboard() {
 
       {/* HEADER */}
       <header className="admin-header">
-        <h1>Admin Dashboard</h1>
+        <h1><FaUserShield /> Admin Dashboard</h1>
         <div className="header-actions">
           <div className="search-bar">
             <FaSearch />
@@ -336,43 +350,43 @@ function AdminDashboard() {
       {/* AUDIT LOG */}
       {adminNotifs.length > 0 && (
         <div className="audit-log">
-          <h3><FaHistory /> Recent Activity</h3>
+          <h3><FaHistory /> Recent Admin Activity</h3>
           <div className="log-list">
             {adminNotifs.map((n, i) => (
               <div key={i} className="log-item">
                 <span className="log-msg">{n.message}</span>
-                <span className="log-time">{new Date(n.date).toLocaleTimeString()}</span>
+                <span className="log-time">{new Date(n.date).toLocaleString()}</span>
               </div>
             ))}
           </div>
         </div>
       )}
 
-      {/* BULK ACTIONS */}
+      {/* BULK CONTROLS */}
       <div className="bulk-controls">
         <select value={bulkAction} onChange={e => setBulkAction(e.target.value)}>
           <option value="">Bulk Action</option>
           <option value="delete">Delete Users</option>
-          <option value="updateBalance">Update Balance</option>
+          <option value="updateBalance">Add Balance</option>
         </select>
 
         {bulkAction === 'updateBalance' && (
           <div className="balance-inputs">
-            <input placeholder="Checking" value={bulkBalance.checking} onChange={e => setBulkBalance({ ...bulkBalance, checking: e.target.value })} />
-            <input placeholder="Savings" value={bulkBalance.savings} onChange={e => setBulkBalance({ ...bulkBalance, savings: e.target.value })} />
-            <input placeholder="USDT" value={bulkBalance.usdt} onChange={e => setBulkBalance({ ...bulkBalance, usdt: e.target.value })} />
+            <input placeholder="Checking +" value={bulkBalance.checking} onChange={e => setBulkBalance({...bulkBalance, checking: e.target.value})} />
+            <input placeholder="Savings +" value={bulkBalance.savings} onChange={e => setBulkBalance({...bulkBalance, savings: e.target.value})} />
+            <input placeholder="USDT +" value={bulkBalance.usdt} onChange={e => setBulkBalance({...bulkBalance, usdt: e.target.value})} />
           </div>
         )}
 
         <button onClick={handleBulk} disabled={!bulkAction || selected.length === 0} className="apply-btn">
-          Apply to {selected.length}
+          Apply to {selected.length} user{selected.length > 1 ? 's' : ''}
         </button>
       </div>
 
       {/* USERS TABLE */}
       <div className="table-card">
         <div className="table-header">
-          <h3>Registered Users</h3>
+          <h3>Users ({users.length})</h3>
           <div className="select-all">
             <input type="checkbox" checked={selected.length === users.length && users.length > 0} onChange={toggleSelectAll} />
             <span>Select All</span>
@@ -384,10 +398,10 @@ function AdminDashboard() {
             <thead>
               <tr>
                 <th></th>
-                <th>Name</th>
+                <th>User</th>
                 <th>Email</th>
-                <th>Savings</th>
                 <th>Checking</th>
+                <th>Savings</th>
                 <th>USDT</th>
                 <th>Actions</th>
               </tr>
@@ -395,28 +409,18 @@ function AdminDashboard() {
             <tbody>
               {users.map(u => (
                 <tr key={u._id} className={selected.includes(u._id) ? 'selected' : ''}>
-                  <td>
-                    <input
-                      type="checkbox"
-                      checked={selected.includes(u._id)}
-                      onChange={() => toggleSelect(u._id)}
-                    />
-                  </td>
+                  <td><input type="checkbox" checked={selected.includes(u._id)} onChange={() => toggleSelect(u._id)} /></td>
                   <td className="user-name">
-                    <div className="avatar">{u.name.charAt(0)}</div>
+                    <div className="avatar">{u.name.charAt(0).toUpperCase()}</div>
                     {u.name}
                   </td>
                   <td>{u.email}</td>
-                  <td className="amount">${(u.balance?.savings || 0).toLocaleString()}</td>
                   <td className="amount">${(u.balance?.checking || 0).toLocaleString()}</td>
+                  <td className="amount">${(u.balance?.savings || 0).toLocaleString()}</td>
                   <td className="amount">${(u.balance?.usdt || 0).toLocaleString()}</td>
                   <td className="actions">
-                    <button onClick={() => openBalanceEdit(u)} className="edit-btn" title="Edit Balance">
-                      <FaEdit />
-                    </button>
-                    <button onClick={() => openTx(u)} className="view-btn" title="View Transactions">
-                      <FaEye />
-                    </button>
+                    <button onClick={() => openBalanceEdit(u)} className="edit-btn" title="Edit Balance"><FaEdit /></button>
+                    <button onClick={() => openTx(u)} className="view-btn" title="Transactions"><FaEye /></button>
                   </td>
                 </tr>
               ))}
@@ -424,38 +428,33 @@ function AdminDashboard() {
           </table>
         </div>
 
-        {/* PAGINATION */}
         <div className="pagination">
-          <button onClick={() => fetchUsers(search, page - 1)} disabled={page === 1}>
-            Prev
-          </button>
+          <button onClick={() => fetchUsers(search, page - 1)} disabled={page === 1}>Previous</button>
           <span>Page {page} of {totalPages}</span>
-          <button onClick={() => fetchUsers(search, page + 1)} disabled={page === totalPages}>
-            Next
-          </button>
+          <button onClick={() => fetchUsers(search, page + 1)} disabled={page === totalPages}>Next</button>
         </div>
       </div>
 
-      {/* BALANCE EDIT MODAL */}
+      {/* BALANCE MODAL */}
       {editBal && (
         <div className="modal-overlay" onClick={() => setEditBal(null)}>
           <div className="modal" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>Edit Balances – {editBal.email}</h3>
+              <h3>Edit Balance - {editBal.name}</h3>
               <button onClick={() => setEditBal(null)} className="close-btn"><FaTimes /></button>
             </div>
             <form onSubmit={submitBalance} className="balance-form">
               <div className="input-group">
-                <label>Checking</label>
-                <input type="number" value={editBal.checking} onChange={e => setEditBal({ ...editBal, checking: e.target.value })} />
+                <label>Checking Balance</label>
+                <input type="number" value={editBal.checking} onChange={e => setEditBal({...editBal, checking: e.target.value})} required />
               </div>
               <div className="input-group">
-                <label>Savings</label>
-                <input type="number" value={editBal.savings} onChange={e => setEditBal({ ...editBal, savings: e.target.value })} />
+                <label>Savings Balance</label>
+                <input type="number" value={editBal.savings} onChange={e => setEditBal({...editBal, savings: e.target.value})} required />
               </div>
               <div className="input-group">
-                <label>USDT</label>
-                <input type="number" value={editBal.usdt} onChange={e => setEditBal({ ...editBal, usdt: e.target.value })} />
+                <label>USDT Balance</label>
+                <input type="number" value={editBal.usdt} onChange={e => setEditBal({...editBal, usdt: e.target.value})} required />
               </div>
               <div className="modal-actions">
                 <button type="submit" className="save-btn">Save Changes</button>
@@ -471,29 +470,33 @@ function AdminDashboard() {
         <div className="modal-overlay" onClick={() => setEditTxUser(null)}>
           <div className="modal large" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>Transactions – {users.find(u => u._id === editTxUser)?.email}</h3>
+              <h3>Transactions History</h3>
               <button onClick={() => setEditTxUser(null)} className="close-btn"><FaTimes /></button>
             </div>
 
             <div className="add-tx-card">
-              <h4><FaPlus /> Add Transaction</h4>
               <form onSubmit={addTx} className="tx-form">
-                <input placeholder="Type (Deposit/Withdraw)" value={newTx.type} onChange={e => setNewTx({ ...newTx, type: e.target.value })} required />
-                <input type="number" placeholder="Amount" value={newTx.amount} onChange={e => setNewTx({ ...newTx, amount: e.target.value })} required />
-                <input placeholder="Method" value={newTx.method} onChange={e => setNewTx({ ...newTx, method: e.target.value })} required />
-                <select value={newTx.status} onChange={e => setNewTx({ ...newTx, status: e.target.value })}>
-                  <option value="Completed">Completed</option>
-                  <option value="Pending">Pending</option>
-                  <option value="Failed">Failed</option>
+                <input placeholder="Type" value={newTx.type} onChange={e => setNewTx({...newTx, type: e.target.value})} required />
+                <input type="number" placeholder="Amount" value={newTx.amount} onChange={e => setNewTx({...newTx, amount: e.target.value})} required />
+                <input placeholder="Method" value={newTx.method} onChange={e => setNewTx({...newTx, method: e.target.value})} />
+                <select value={newTx.status} onChange={e => setNewTx({...newTx, status: e.target.value})}>
+                  <option>Completed</option>
+                  <option>Pending</option>
+                  <option>Failed</option>
                 </select>
-                <input type="date" value={newTx.date} onChange={e => setNewTx({ ...newTx, date: e.target.value })} required />
-                <button type="submit" className="add-btn">Add</button>
+                <select value={newTx.account} onChange={e => setNewTx({...newTx, account: e.target.value})}>
+                  <option value="checking">Checking</option>
+                  <option value="savings">Savings</option>
+                  <option value="usdt">USDT</option>
+                </select>
+                <input type="date" value={newTx.date} onChange={e => setNewTx({...newTx, date: e.target.value})} required />
+                <button type="submit" className="add-btn"><FaPlus /> Add</button>
               </form>
             </div>
 
             <div className="tx-list">
               {transactions.length === 0 ? (
-                <p className="empty">No transactions yet.</p>
+                <p className="empty">No transactions</p>
               ) : (
                 <table className="tx-table">
                   <thead>
@@ -502,6 +505,7 @@ function AdminDashboard() {
                       <th>Type</th>
                       <th>Amount</th>
                       <th>Status</th>
+                      <th>Account</th>
                       <th>Actions</th>
                     </tr>
                   </thead>
@@ -511,25 +515,16 @@ function AdminDashboard() {
                         <td>{new Date(t.date).toLocaleDateString()}</td>
                         <td>{t.type}</td>
                         <td className="amount">${t.amount.toLocaleString()}</td>
-                        <td>
-                          <span className={`status-badge ${t.status.toLowerCase()}`}>
-                            {t.status}
-                          </span>
-                        </td>
+                        <td><span className={`status-badge ${t.status.toLowerCase()}`}>{t.status}</span></td>
+                        <td>{t.account}</td>
                         <td className="tx-actions">
                           {t.status === 'Pending' && (
                             <>
-                              <button onClick={() => handleDepositAction(t._id, 'confirm')} className="confirm-btn">
-                                <FaCheck />
-                              </button>
-                              <button onClick={() => handleDepositAction(t._id, 'reject')} className="fail-btn">
-                                <FaTimes />
-                              </button>
+                              <button onClick={() => handleDepositAction(t._id, 'confirm')} className="confirm-btn"><FaCheck /></button>
+                              <button onClick={() => handleDepositAction(t._id, 'reject')} className="fail-btn"><FaTimes /></button>
                             </>
                           )}
-                          <button onClick={() => deleteTx(t._id)} className="delete-btn">
-                            <FaTrash />
-                          </button>
+                          <button onClick={() => deleteTx(t._id)} className="delete-btn"><FaTrash /></button>
                         </td>
                       </tr>
                     ))}

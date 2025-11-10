@@ -292,4 +292,27 @@ router.delete('/sessions/:sessionId', verifyToken, async (req, res) => {
   }
 });
 
+// ADD THIS TO YOUR user.js ROUTES FILE
+router.put('/:userId/balances', verifyToken, async (req, res) => {
+  if (!req.isAdmin) return res.status(403).json({ message: 'Admin only' });
+
+  const { checkingBalance, savingsBalance, usdtBalance } = req.body;
+
+  try {
+    const user = await User.findById(req.params.userId);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    user.balance.checking = Number(checkingBalance) || user.balance.checking || 0;
+    user.balance.savings = Number(savingsBalance) || user.balance.savings || 0;
+    user.balance.usdt = Number(usdtBalance) || user.balance.usdt || 0;
+
+    await user.save();
+
+    res.json({ message: 'Balance updated', balance: user.balance });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 module.exports = router;
