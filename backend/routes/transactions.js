@@ -6,6 +6,7 @@ const User = require('../models/User');
 const verifyToken = require('../middleware/auth');
 const upload = require('../middleware/upload');
 const nodemailer = require('nodemailer');
+const mongoose = require('mongoose');
 
 // Email setup
 const transporter = nodemailer.createTransport({
@@ -25,34 +26,31 @@ const sendEmail = async (to, subject, text) => {
       text,
     });
   } catch (err) {
-    console.error('Email error:', err);
+    console.error('Email send failed:', err);
   }
 };
 
-// GET user transactions
-router.get('/', verifyToken, async (req, res) => {
-  try {
-    const transactions = await Transaction.find({ userId: req.userId }).sort({ date: -1 });
-    res.json(transactions);
-  } catch (err) {
-    res.status(500).json({ message: 'Server error' });
-  }
-});
-
-// GET all transactions (Admin)
+// GET: All transactions (Admin only) - FIXED POPULATE
 router.get('/admin', verifyToken, async (req, res) => {
   try {
-    if (!req.isAdmin) return res.status(403).json({ message: 'Admin only' });
+    if (!req.isAdmin) return res.status(403).json({ message: 'Admin access required' });
+
     const transactions = await Transaction.find()
-      .populate('userId', 'name email phone balance')
-      .sort({ date: -1 });
+      .populate({
+        path: 'userId',
+        select: 'name email phone balance'
+      })
+      .sort({ date: -1 })
+      .lean();
+
     res.json(transactions);
   } catch (err) {
-    res.status(500).json({ message: 'Server error' });
+    console.error('Admin transactions fetch error:', err);
+    res.status(500).json({ message: 'Server error', error: err.message });
   }
 });
 
-// POST deposit (Pending)
+// POST: Create deposit
 router.post('/deposit', verifyToken, upload.single('receipt'), async (req, res) => {
   const { amount, method, account } = req.body;
   if (!amount || amount <= 0) return res.status(400).json({ message: 'Invalid amount' });
@@ -74,126 +72,183 @@ router.post('/deposit', verifyToken, upload.single('receipt'), async (req, res) 
 
     await transaction.save();
 
-    // Notify user
     user.notifications.push({
-      message: `Deposit $${amount} pending`,
+      message: `Deposit of $${amount} via ${method} is pending approval.`,
       type: 'deposit',
       date: new Date(),
     });
-    await sendEmail(user.email, 'Deposit Pending', `Your $${amount} deposit is pending approval.`);
 
-    // Notify admins
     await User.updateMany(
       { isAdmin: true },
-      { $push: { adminNotifications: { message: `New deposit $${amount} from ${user.name}`, date: new Date(), read: false } } }
+      { $push: { adminNotifications: { message: `New deposit: $${amount} from ${user.name}`, date: new Date(), read: false } } }
     );
 
     await user.save();
+    await sendEmail(user.email, 'Deposit Pending', `Your deposit of $${amount} is under review.`);
+
     res.status(201).json({ message: 'Deposit submitted', transaction });
+  } catch (err) {
+    console.error('Deposit creation error:', err);
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+});
+
+// ADMIN: CONFIRM OR REJECT DEPOSIT - 100% FIXED
+router.put('/admin/:txId', verifyToken, async (req, res) => {
+  const { txId } = req.params;
+  const { action } = req.body;
+
+  if (!['confirm', 'reject'].includes(action)) {
+    return res.status(400).json({ message: 'Action must be "confirm" or "reject"' });
+  }
+
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    if (!req.isAdmin) {
+      await session.abortTransaction();
+      return res.status(403).json({ message: 'Admin access required' });
+    }
+
+    const tx = await Transaction.findById(txId).session(session);
+    if (!tx) {
+      await session.abortTransaction();
+      return res.status(404).json({ message: 'Transaction not found' });
+    }
+    if (tx.type !== 'deposit') {
+      await session.abortTransaction();
+      return res.status(400).json({ message: 'Not a deposit transaction' });
+    }
+    if (tx.status !== 'Pending') {
+      await session.abortTransaction();
+      return res.status(400).json({ message: 'Transaction already processed' });
+    }
+
+    const user = await User.findById(tx.userId).session(session);
+    if (!user) {
+      await session.abortTransaction();
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    let userMsg = '';
+    let adminMsg = '';
+
+    if (action === 'confirm') {
+      tx.status = 'Completed';
+      user.balance[tx.account] = (user.balance[tx.account] || 0) + tx.amount;
+
+      userMsg = `Your deposit of $${tx.amount} has been CONFIRMED and added to ${tx.account}.`;
+      adminMsg = `Confirmed deposit #${tx._id.toString().slice(-6)} (+$${tx.amount}) for ${user.name}`;
+    } else {
+      tx.status = 'Failed';
+      userMsg = `Your deposit of $${tx.amount} has been REJECTED.`;
+      adminMsg = `Rejected deposit #${tx._id.toString().slice(-6)} ($${tx.amount}) for ${user.name}`;
+    }
+
+    // Update user notifications
+    user.notifications.push({
+      message: userMsg,
+      type: action === 'confirm' ? 'deposit_success' : 'deposit_failed',
+      date: new Date(),
+    });
+
+    // Update admin notifications
+    await User.updateMany(
+      { isAdmin: true },
+      { $push: { adminNotifications: { message: adminMsg, date: new Date(), read: false } } },
+      { session }
+    );
+
+    await tx.save({ session });
+    await user.save({ session });
+    await session.commitTransaction();
+
+    // Send email
+    await sendEmail(user.email, action === 'confirm' ? 'Deposit Confirmed ✅' : 'Deposit Rejected ❌', userMsg);
+
+    res.json({
+      message: `Deposit ${action}ed successfully`,
+      transaction: tx,
+      user: {
+        _id: user._id,
+        balance: user.balance
+      }
+    });
+  } catch (err) {
+    await session.abortTransaction();
+    console.error('Confirm/Reject error:', err);
+    res.status(500).json({ message: 'Server error', error: err.message });
+  } finally {
+    session.endSession();
+  }
+});
+
+// GET user transactions by ID
+router.get('/user/:userId', verifyToken, async (req, res) => {
+  try {
+    if (!req.isAdmin && req.userId !== req.params.userId) {
+      return res.status(403).json({ message: 'Unauthorized' });
+    }
+    const transactions = await Transaction.find({ userId: req.params.userId })
+      .sort({ date: -1 });
+    res.json(transactions);
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error' });
   }
 });
 
-// ADMIN: Confirm/Reject deposit (100% FIXED)
-router.put('/admin/:txId', verifyToken, async (req, res) => {
-  const { txId } = req.params;
-  const { action } = req.body;
-
-  if (!['confirm', 'reject'].includes(action)) {
-    return res.status(400).json({ message: 'Invalid action' });
-  }
-
-  try {
-    if (!req.isAdmin) return res.status(403).json({ message: 'Admin only' });
-
-    const tx = await Transaction.findById(txId);
-    if (!tx || tx.type !== 'deposit' || tx.status !== 'Pending') {
-      return res.status(400).json({ message: 'Invalid transaction' });
-    }
-
-    const user = await User.findById(tx.userId);
-    if (!user) return res.status(404).json({ message: 'User not found' });
-
-    if (action === 'confirm') {
-      tx.status = 'Completed';
-      user.balance[tx.account] = (user.balance[tx.account] || 0) + tx.amount;
-
-      user.notifications.push({
-        message: `Deposit $${tx.amount} confirmed!`,
-        type: 'deposit_success',
-        date: new Date(),
-      });
-      await sendEmail(user.email, 'Deposit Confirmed ✅', `Your deposit of $${tx.amount} has been approved.`);
-
-      await User.updateMany(
-        { isAdmin: true },
-        { $push: { adminNotifications: { message: `Confirmed deposit #${tx._id.slice(-6)} +$${tx.amount} for ${user.name}`, date: new Date() } } }
-      );
-    } else {
-      tx.status = 'Failed';
-      user.notifications.push({
-        message: `Deposit $${tx.amount} rejected`,
-        type: 'deposit_failed',
-        date: new Date(),
-      });
-      await sendEmail(user.email, 'Deposit Rejected ❌', `Your deposit of $${tx.amount} was rejected.`);
-
-      await User.updateMany(
-        { isAdmin: true },
-        { $push: { adminNotifications: { message: `Rejected deposit #${tx._id.slice(-6)} $${tx.amount} for ${user.name}`, date: new Date() } } }
-      );
-    }
-
-    await tx.save();
-    await user.save();
-
-    res.json({
-      message: `Deposit ${action}ed`,
-      transaction: tx,
-      user: { _id: user._id, balance: user.balance },
-    });
-  } catch (err) {
-    console.error('Admin action error:', err);
-    res.status(500).json({ message: 'Server error', error: err.message });
-  }
-});
-
-// Other routes (user tx, add tx, delete)
-router.get('/user/:userId', verifyToken, async (req, res) => {
-  try {
-    if (!req.isAdmin && req.userId !== req.params.userId) return res.status(403).json({ message: 'Unauthorized' });
-    const transactions = await Transaction.find({ userId: req.params.userId }).sort({ date: -1 });
-    res.json(transactions);
-  } catch (err) {
-    res.status(500).json({ message: 'Server error' });
-  }
-});
-
+// POST: Add manual transaction (Admin)
 router.post('/user/:userId', verifyToken, async (req, res) => {
   if (!req.isAdmin) return res.status(403).json({ message: 'Admin only' });
+
   const { type, amount, method, status = 'Completed', account = 'checking', date } = req.body;
+  if (!type || !amount) return res.status(400).json({ message: 'Type and amount required' });
 
   try {
     const transaction = new Transaction({
       userId: req.params.userId,
-      type, amount: parseFloat(amount), method, status, account,
+      type,
+      amount: parseFloat(amount),
+      method,
+      status,
+      account,
       date: date || new Date(),
     });
+
     await transaction.save();
+
+    const user = await User.findById(req.params.userId);
+    if (user) {
+      user.notifications.push({
+        message: `Admin added: $${amount} ${type}`,
+        type: 'admin_tx',
+        date: new Date(),
+      });
+      await user.save();
+    }
+
     res.status(201).json(transaction);
   } catch (err) {
+    console.error(err);
     res.status(500).json({ message: 'Server error' });
   }
 });
 
+// DELETE transaction
 router.delete('/:id', verifyToken, async (req, res) => {
-  if (!req.isAdmin) return res.status(403).json({ message: 'Admin only' });
   try {
-    await Transaction.deleteOne({ _id: req.params.id });
-    res.json({ message: 'Deleted' });
+    if (!req.isAdmin) return res.status(403).json({ message: 'Admin only' });
+
+    const result = await Transaction.deleteOne({ _id: req.params.id });
+    if (result.deletedCount === 0) {
+      return res.status(404).json({ message: 'Transaction not found' });
+    }
+
+    res.json({ message: 'Transaction deleted successfully' });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ message: 'Server error' });
   }
 });

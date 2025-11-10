@@ -315,4 +315,33 @@ router.put('/:userId/balances', verifyToken, async (req, res) => {
   }
 });
 
+// ADD THIS TO YOUR EXISTING user.js ROUTES FILE
+
+// ADMIN: Update user balance manually
+router.put('/:userId/balances', verifyToken, async (req, res) => {
+  if (!req.isAdmin) return res.status(403).json({ message: 'Admin access required' });
+
+  const { checkingBalance, savingsBalance, usdtBalance } = req.body;
+
+  try {
+    const user = await User.findById(req.params.userId);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    // Update only if provided
+    if (checkingBalance !== undefined) user.balance.checking = Number(checkingBalance);
+    if (savingsBalance !== undefined) user.balance.savings = Number(savingsBalance);
+    if (usdtBalance !== undefined) user.balance.usdt = Number(usdtBalance);
+
+    await user.save();
+
+    res.json({
+      message: 'Balance updated successfully',
+      balance: user.balance
+    });
+  } catch (err) {
+    console.error('Balance update error:', err);
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+});
+
 module.exports = router;

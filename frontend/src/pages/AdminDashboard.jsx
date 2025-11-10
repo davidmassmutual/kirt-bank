@@ -11,7 +11,6 @@ import {
 } from 'react-icons/fa';
 import '../styles/AdminDashboard.css';
 
-// Deposit alert sound (place deposit.mp3 in public/sounds/)
 const depositSound = new Audio('/sounds/deposit.mp3');
 
 function AdminDashboard() {
@@ -38,57 +37,50 @@ function AdminDashboard() {
 
   const API = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
-  // FETCH USERS
   const fetchUsers = useCallback(async (q = '', p = 1) => {
     setLoading(true);
     try {
-      const res = await axios.get(
-        `${API}/api/user/search?q=${q}&page=${p}&limit=10`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setUsers(res.data.users);
-      setTotalPages(res.data.pagination.pages || 1);
-      setPage(res.data.pagination.page || 1);
+      const res = await axios.get(`${API}/api/user/search?q=${q}&page=${p}&limit=10`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setUsers(res.data.users || []);
+      setTotalPages(res.data.pagination?.pages || 1);
+      setPage(res.data.pagination?.page || 1);
     } catch (err) {
-      if (err.response?.status === 401 || err.response?.status === 403) {
-        toast.error('Session expired. Login again.');
+      toast.error(err.response?.data?.message || 'Failed to load users');
+      if (err.response?.status === 401) {
         localStorage.clear();
         navigate('/admin');
-      } else {
-        toast.error(err.response?.data?.message || 'Failed to load users');
       }
     } finally {
       setLoading(false);
     }
   }, [token, navigate, API]);
 
-  // FETCH ADMIN NOTIFICATIONS
   const fetchNotifs = useCallback(async () => {
     try {
       const res = await axios.get(`${API}/api/user/notifications`, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${token}` }
       });
       setAdminNotifs(res.data.slice(0, 8));
     } catch (err) {
-      console.error('Notif fetch error:', err);
+      console.error(err);
     }
   }, [token, API]);
 
-  // FETCH PENDING DEPOSITS + REAL-TIME POLLING
   const fetchPendingDeposits = useCallback(async () => {
     try {
       const res = await axios.get(`${API}/api/transactions/admin`, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${token}` }
       });
 
-      const pending = res.data
+      const pending = (res.data || [])
         .filter(tx => tx.status === 'Pending' && tx.type === 'deposit')
         .sort((a, b) => new Date(b.date) - new Date(a.date));
 
       setPendingDeposits(pending);
 
-      // Real-time popup + sound for NEW deposits only
-      if (pending.length > prevPendingCount.current) {
+      if (pending.length > prevPendingCount.current && pending.length > 0) {
         const latest = pending[0];
         const msg = `New deposit: $${latest.amount.toLocaleString()} from ${latest.userId?.name || 'User'}`;
         setPopupMsg(msg);
@@ -98,18 +90,17 @@ function AdminDashboard() {
       }
       prevPendingCount.current = pending.length;
     } catch (err) {
-      console.error('Pending deposits error:', err);
+      console.error('Pending fetch error:', err);
     }
   }, [token, API]);
 
-  // POLLING
   useEffect(() => {
     fetchPendingDeposits();
     pollRef.current = setInterval(fetchPendingDeposits, 5000);
     return () => clearInterval(pollRef.current);
   }, [fetchPendingDeposits]);
 
-  // CONFIRM / REJECT DEPOSIT (FULLY FIXED)
+  // FIXED: Confirm/Reject with proper balance update
   const handleDepositAction = async (txId, action) => {
     try {
       const res = await axios.put(
@@ -118,15 +109,15 @@ function AdminDashboard() {
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      toast.success(`Deposit ${action}ed successfully!`);
+      toast.success(`Deposit ${action}ed!`);
 
-      // Remove from pending list
+      // Remove from pending
       setPendingDeposits(prev => prev.filter(tx => tx._id !== txId));
 
-      // Update user balance in table if returned
+      // Update user balance in table
       if (res.data.user) {
-        setUsers(prev => prev.map(u => 
-          u._id === res.data.user._id 
+        setUsers(prev => prev.map(u =>
+          u._id === res.data.user._id
             ? { ...u, balance: res.data.user.balance }
             : u
         ));
@@ -135,15 +126,12 @@ function AdminDashboard() {
       fetchNotifs();
     } catch (err) {
       toast.error(err.response?.data?.message || `Failed to ${action} deposit`);
-      console.error(err);
+      console.error('Action error:', err.response?.data || err);
     }
   };
 
-  // INITIAL LOAD
   useEffect(() => {
-    const isAdm = localStorage.getItem('isAdmin') === 'true';
-    if (!token || !isAdm) {
-      toast.error('Admin access required');
+    if (!token || localStorage.getItem('isAdmin') !== 'true') {
       navigate('/admin');
       return;
     }
@@ -151,54 +139,12 @@ function AdminDashboard() {
     fetchNotifs();
   }, []);
 
-  // SEARCH
   const handleSearch = () => {
     setPage(1);
     fetchUsers(search, 1);
   };
 
-  // BULK ACTIONS
-  const handleBulk = async () => {
-    if (!bulkAction || selected.length === 0) return toast.error('Select users & action');
-    
-    try {
-      const payload = { action: bulkAction, userIds: selected };
-      if (bulkAction === 'updateBalance') {
-        payload.data = {
-          balance: {
-            checking: Number(bulkBalance.checking) || 0,
-            savings: Number(bulkBalance.savings) || 0,
-            usdt: Number(bulkBalance.usdt) || 0,
-          },
-        };
-      }
-
-      await axios.post(`${API}/api/user/bulk`, payload, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      toast.success('Bulk action completed');
-      setSelected([]);
-      setBulkAction('');
-      setBulkBalance({ checking: '', savings: '', usdt: '' });
-      fetchUsers(search, page);
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Bulk action failed');
-    }
-  };
-
-  // EDIT BALANCE MODAL (FULLY FIXED)
-  const openBalanceEdit = (user) => {
-    setEditBal({
-      userId: user._id,
-      name: user.name,
-      email: user.email,
-      checking: user.balance?.checking || 0,
-      savings: user.balance?.savings || 0,
-      usdt: user.balance?.usdt || 0,
-    });
-  };
-
+  // FIXED: Balance edit
   const submitBalance = async (e) => {
     e.preventDefault();
     try {
@@ -212,19 +158,29 @@ function AdminDashboard() {
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      setUsers(prev => prev.map(u => 
-        u._id === editBal.userId 
+      setUsers(prev => prev.map(u =>
+        u._id === editBal.userId
           ? { ...u, balance: res.data.balance }
           : u
       ));
 
       setEditBal(null);
-      toast.success('Balance updated successfully');
+      toast.success('Balance updated!');
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to update balance');
       console.error(err);
     }
   };
+  // const openBalanceEdit = (user) => {
+  //   setEditBal({
+  //     userId: user._id,
+  //     name: user.name,
+  //     checking: user.balance?.checking || 0,
+  //     savings: user.balance?.savings || 0,
+  //     usdt: user.balance?.usdt || 0,
+  //   });
+  // }
+
 
   // TRANSACTIONS MODAL
   const openTx = async (user) => {
