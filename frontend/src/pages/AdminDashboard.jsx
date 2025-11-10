@@ -67,11 +67,11 @@ function AdminDashboard() {
       });
       setAdminNotifs(res.data.slice(0, 8));
     } catch (err) {
-      console.error('Notif error:', err);
+      console.error('Notif fetch error:', err);
     }
   }, [token, API]);
 
-  // FETCH PENDING DEPOSITS + POLLING
+  // FETCH PENDING DEPOSITS
   const fetchPendingDeposits = useCallback(async () => {
     try {
       const res = await axios.get(`${API}/api/transactions/admin`, {
@@ -98,13 +98,14 @@ function AdminDashboard() {
     }
   }, [token, API]);
 
+  // POLLING
   useEffect(() => {
     fetchPendingDeposits();
     pollRef.current = setInterval(fetchPendingDeposits, 5000);
     return () => clearInterval(pollRef.current);
   }, [fetchPendingDeposits]);
 
-  // CONFIRM / REJECT DEPOSIT (100% WORKING)
+  // CONFIRM / REJECT DEPOSIT
   const handleDepositAction = async (txId, action) => {
     try {
       const res = await axios.put(
@@ -128,14 +129,32 @@ function AdminDashboard() {
       fetchNotifs();
     } catch (err) {
       toast.error(err.response?.data?.message || `Failed to ${action} deposit`);
-      console.error(err.response?.data || err);
+      console.error(err);
     }
   };
 
-  // BULK ACTIONS (RESTORED & FIXED)
+  // INITIAL LOAD
+  useEffect(() => {
+    if (!token || localStorage.getItem('isAdmin') !== 'true') {
+      toast.error('Admin access required');
+      navigate('/admin');
+      return;
+    }
+    fetchUsers();
+    fetchNotifs();
+  }, [fetchUsers, fetchNotifs, token, navigate]);
+
+  // SEARCH
+  const handleSearch = () => {
+    setPage(1);
+    fetchUsers(search, 1);
+  };
+
+  // BULK ACTIONS (WAS MISSING — NOW FIXED)
   const handleBulk = async () => {
     if (!bulkAction || selected.length === 0) {
-      return toast.error('Select users and action');
+      toast.error('Select users and action');
+      return;
     }
 
     try {
@@ -164,24 +183,7 @@ function AdminDashboard() {
     }
   };
 
-  // INITIAL LOAD
-  useEffect(() => {
-    if (!token || localStorage.getItem('isAdmin') !== 'true') {
-      toast.error('Admin access required');
-      navigate('/admin');
-      return;
-    }
-    fetchUsers();
-    fetchNotifs();
-  }, [token, navigate, fetchUsers, fetchNotifs]);
-
-  // SEARCH
-  const handleSearch = () => {
-    setPage(1);
-    fetchUsers(search, 1);
-  };
-
-  // OPEN BALANCE EDIT MODAL (FIXED & RESTORED)
+  // EDIT BALANCE (WAS COMMENTED — NOW FIXED)
   const openBalanceEdit = (user) => {
     setEditBal({
       userId: user._id,
@@ -193,7 +195,6 @@ function AdminDashboard() {
     });
   };
 
-  // SUBMIT BALANCE EDIT
   const submitBalance = async (e) => {
     e.preventDefault();
     try {
@@ -214,27 +215,26 @@ function AdminDashboard() {
       ));
 
       setEditBal(null);
-      toast.success('Balance updated successfully!');
+      toast.success('Balance updated successfully');
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to update balance');
       console.error(err);
     }
   };
 
-  // OPEN TRANSACTIONS MODAL
+  // TRANSACTIONS MODAL
   const openTx = async (user) => {
     setEditTxUser(user._id);
     try {
       const res = await axios.get(`${API}/api/transactions/user/${user._id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setTransactions(res.data || []);
+      setTransactions(res.data);
     } catch (err) {
       toast.error('Failed to load transactions');
     }
   };
 
-  // ADD TRANSACTION
   const addTx = async (e) => {
     e.preventDefault();
     try {
@@ -251,7 +251,6 @@ function AdminDashboard() {
     }
   };
 
-  // DELETE TRANSACTION
   const deleteTx = async (id) => {
     if (!window.confirm('Delete this transaction?')) return;
     try {
@@ -265,7 +264,7 @@ function AdminDashboard() {
     }
   };
 
-  // CSV EXPORT
+  // CSV DATA
   const csvData = useMemo(() => users.map(u => ({
     Name: u.name,
     Email: u.email,
@@ -275,7 +274,7 @@ function AdminDashboard() {
     Joined: new Date(u.createdAt).toLocaleDateString(),
   })), [users]);
 
-  // SELECT ALL / INDIVIDUAL
+  // SELECT ALL
   const toggleSelectAll = () => {
     setSelected(prev => prev.length === users.length ? [] : users.map(u => u._id));
   };
@@ -299,7 +298,7 @@ function AdminDashboard() {
       {/* PENDING DEPOSITS */}
       {pendingDeposits.length > 0 && (
         <div className="pending-deposits-card">
-          <h3><FaUserShield /> Pending Deposits ({pendingDeposits.length})</h3>
+          <h3><FaUserShield /> Pending Deposits ({pendingFinal.length})</h3>
           <div className="deposit-list">
             {pendingDeposits.map(tx => (
               <div key={tx._id} className="deposit-item">
@@ -347,12 +346,12 @@ function AdminDashboard() {
       {/* AUDIT LOG */}
       {adminNotifs.length > 0 && (
         <div className="audit-log">
-          <h3><FaHistory /> Recent Admin Activity</h3>
+          <h3><FaHistory /> Recent Activity</h3>
           <div className="log-list">
             {adminNotifs.map((n, i) => (
               <div key={i} className="log-item">
                 <span className="log-msg">{n.message}</span>
-                <span className="log-time">{new Date(n.date).toLocaleString()}</span>
+                <span className="log-time">{new Date(n.date).toLocaleTimeString()}</span>
               </div>
             ))}
           </div>
@@ -364,7 +363,7 @@ function AdminDashboard() {
         <select value={bulkAction} onChange={e => setBulkAction(e.target.value)}>
           <option value="">Bulk Action</option>
           <option value="delete">Delete Users</option>
-          <option value="updateBalance">Add Balance</option>
+          <option value="updateBalance">Update Balance</option>
         </select>
 
         {bulkAction === 'updateBalance' && (
@@ -376,7 +375,7 @@ function AdminDashboard() {
         )}
 
         <button onClick={handleBulk} disabled={!bulkAction || selected.length === 0} className="apply-btn">
-          Apply to {selected.length} user{selected.length > 1 ? 's' : ''}
+          Apply to {selected.length} user{selected.length !== 1 ? 's' : ''}
         </button>
       </div>
 
@@ -437,7 +436,7 @@ function AdminDashboard() {
         <div className="modal-overlay" onClick={() => setEditBal(null)}>
           <div className="modal" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>Edit Balance - {editBal.name}</h3>
+              <h3>Edit Balance - {editBal.name} ({editBal.email})</h3>
               <button onClick={() => setEditBal(null)} className="close-btn"><FaTimes /></button>
             </div>
             <form onSubmit={submitBalance} className="balance-form">
@@ -467,13 +466,14 @@ function AdminDashboard() {
         <div className="modal-overlay" onClick={() => setEditTxUser(null)}>
           <div className="modal large" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>Transactions History</h3>
+              <h3>Transactions - {users.find(u => u._id === editTxUser)?.name}</h3>
               <button onClick={() => setEditTxUser(null)} className="close-btn"><FaTimes /></button>
             </div>
 
             <div className="add-tx-card">
+              <h4><FaPlus /> Add Manual Transaction</h4>
               <form onSubmit={addTx} className="tx-form">
-                <input placeholder="Type" value={newTx.type} onChange={e => setNewTx({...newTx, type: e.target.value})} required />
+                <input placeholder="Type (deposit/withdraw)" value={newTx.type} onChange={e => setNewTx({...newTx, type: e.target.value})} required />
                 <input type="number" placeholder="Amount" value={newTx.amount} onChange={e => setNewTx({...newTx, amount: e.target.value})} required />
                 <input placeholder="Method" value={newTx.method} onChange={e => setNewTx({...newTx, method: e.target.value})} />
                 <select value={newTx.status} onChange={e => setNewTx({...newTx, status: e.target.value})}>
@@ -487,13 +487,13 @@ function AdminDashboard() {
                   <option value="usdt">USDT</option>
                 </select>
                 <input type="date" value={newTx.date} onChange={e => setNewTx({...newTx, date: e.target.value})} required />
-                <button type="submit" className="add-btn"><FaPlus /> Add</button>
+                <button type="submit" className="add-btn">Add Transaction</button>
               </form>
             </div>
 
             <div className="tx-list">
               {transactions.length === 0 ? (
-                <p className="empty">No transactions</p>
+                <p className="empty">No transactions found.</p>
               ) : (
                 <table className="tx-table">
                   <thead>
@@ -515,7 +515,7 @@ function AdminDashboard() {
                         <td><span className={`status-badge ${t.status.toLowerCase()}`}>{t.status}</span></td>
                         <td>{t.account}</td>
                         <td className="tx-actions">
-                          {t.status === 'Pending' && (
+                          {t.status === 'Pending' && t.type === 'deposit' && (
                             <>
                               <button onClick={() => handleDepositAction(t._id, 'confirm')} className="confirm-btn"><FaCheck /></button>
                               <button onClick={() => handleDepositAction(t._id, 'reject')} className="fail-btn"><FaTimes /></button>
