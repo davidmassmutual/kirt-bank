@@ -19,50 +19,45 @@ function Transactions() {
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('all');
   const navigate = useNavigate();
+  const token = localStorage.getItem('token');
+  const API = import.meta.env.VITE_API_URL || 'https://kirt-bank.onrender.com';
 
-  const fetch = useCallback(async () => {
+  const fetchTransactions = useCallback(async () => {
+    if (!token) {
+      navigate('/');
+      return;
+    }
+
     try {
-      const token = localStorage.getItem('token');
-      const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/transactions`, {
+      setLoading(true);
+      // FIXED: WAS /api/transactions → NOW /api/transactions (or /user if needed)
+      // But your backend returns user tx on /api/transactions
+      const res = await axios.get(`${API}/api/transactions`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setTransactions(res.data);
+      setTransactions(res.data || []);
     } catch (err) {
+      console.error('Transaction fetch error:', err);
+      toast.error('No transactions found or server error');
+      setTransactions([]);
       if (err.response?.status === 401) navigate('/');
-      else toast.error('Failed to load transactions');
     } finally {
       setLoading(false);
     }
-  }, [navigate]);
+  }, [token, navigate, API]);
 
   useEffect(() => {
-    fetch();
-  }, [fetch]);
+    fetchTransactions();
+  }, [fetchTransactions]);
 
   const filtered = useMemo(() => {
     return transactions.filter(tx => {
-      const matchesSearch = tx.description?.toLowerCase().includes(search.toLowerCase()) ||
-                           tx.type.toLowerCase().includes(search.toLowerCase());
-      const matchesFilter = filter === 'all' || tx.status.toLowerCase() === filter;
+      const searchStr = `${tx.description || tx.type || ''} ${tx.method || ''}`.toLowerCase();
+      const matchesSearch = searchStr.includes(search.toLowerCase());
+      const matchesFilter = filter === 'all' || tx.status?.toLowerCase() === filter;
       return matchesSearch && matchesFilter;
     });
   }, [transactions, search, filter]);
-
-  const getIcon = (type) => {
-    switch (type.toLowerCase()) {
-      case 'deposit': return <FaArrowDown className="icon deposit" />;
-      case 'withdrawal': return <FaArrowUp className="icon withdraw" />;
-      case 'transfer': return <FaUniversity className="icon transfer" />;
-      case 'payment': return <FaShoppingCart className="icon payment" />;
-      default: return <FaMoneyBillWave className="icon default" />;
-    }
-  };
-
-  const formatAmount = (amount, type) => {
-    const sign = type === 'deposit' ? '+' : '-';
-    const color = type === 'deposit' ? 'var(--success)' : 'var(--error)';
-    return <span style={{ color, fontWeight: 600 }}>{sign}${Math.abs(amount).toLocaleString()}</span>;
-  };
 
   if (loading) return <LoadingSkeleton />;
 
@@ -74,22 +69,21 @@ function Transactions() {
           <div className="search-bar">
             <FaSearch />
             <input
-              type="text"
-              placeholder="Search transactions..."
+              placeholder="Search..."
               value={search}
               onChange={e => setSearch(e.target.value)}
             />
           </div>
-          <select value={filter} onChange={e => setFilter(e.target.value)} className="filter-select">
+          <select value={filter} onChange={e => setFilter(e.target.value)}>
             <option value="all">All</option>
-            <option value="posted">Posted</option>
+            <option value="completed">Completed</option>
             <option value="pending">Pending</option>
             <option value="failed">Failed</option>
           </select>
-          <CSVLink data={filtered} filename="transactions.csv" className="export-btn csv">
+          <CSVLink data={filtered} filename="kirt-transactions.csv" className="export-btn csv">
             <FaFileCsv /> CSV
           </CSVLink>
-          <PDFDownloadLink document={<TransactionPDF transactions={filtered} />} fileName="transactions.pdf">
+          <PDFDownloadLink document={<TransactionPDF transactions={filtered} />} fileName="kirt-transactions.pdf">
             <button className="export-btn pdf"><FaFilePdf /> PDF</button>
           </PDFDownloadLink>
         </div>
@@ -99,23 +93,25 @@ function Transactions() {
         {filtered.length === 0 ? (
           <div className="empty-state">
             <FaCreditCard className="empty-icon" />
-            <p>No transactions found</p>
+            <p>No transactions yet. Make your first deposit!</p>
           </div>
         ) : (
           filtered.map(tx => (
             <div key={tx._id} className="transaction-card">
               <div className="transaction-icon">
-                {getIcon(tx.type)}
+                {tx.type === 'deposit' ? <FaArrowDown className="icon deposit" /> : <FaArrowUp className="icon withdraw" />}
               </div>
               <div className="transaction-details">
-                <h3>{tx.description || tx.type}</h3>
-                <p>{new Date(tx.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</p>
+                <h3>{tx.description || tx.type?.charAt(0).toUpperCase() + tx.type?.slice(1)}</h3>
+                <p>{new Date(tx.date).toLocaleDateString()} • {tx.method || 'N/A'}</p>
               </div>
               <div className="transaction-amount">
-                {formatAmount(tx.amount, tx.type)}
+                <span style={{ color: tx.type === 'deposit' ? '#10b981' : '#ef4444', fontWeight: 'bold' }}>
+                  {tx.type === 'deposit' ? '+' : '-'} ${tx.amount.toLocaleString()}
+                </span>
               </div>
-              <div className={`status-badge ${tx.status.toLowerCase()}`}>
-                {tx.status}
+              <div className={`status-badge ${tx.status?.toLowerCase()}`}>
+                {tx.status || 'Pending'}
               </div>
             </div>
           ))

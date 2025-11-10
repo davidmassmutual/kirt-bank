@@ -4,6 +4,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import { FaCheckCircle, FaCopy, FaUpload, FaQrcode } from 'react-icons/fa';
+import LoadingSpinner from '../components/LoadingSpinner'; // NEW
 import '../styles/DepositDetails.css';
 
 function DepositDetails() {
@@ -12,7 +13,6 @@ function DepositDetails() {
   const [method, setMethod] = useState('');
   const [amount, setAmount] = useState('');
   const [account, setAccount] = useState('checking');
-  const [currency] = useState(localStorage.getItem('currency') || 'USD');
   const [file, setFile] = useState(null);
   const [filePreview, setFilePreview] = useState(null);
   const [copied, setCopied] = useState(false);
@@ -26,13 +26,6 @@ function DepositDetails() {
     setAccount(state.account || 'checking');
   }, [location]);
 
-  useEffect(() => {
-    if (copied) {
-      const timer = setTimeout(() => setCopied(false), 2000);
-      return () => clearTimeout(timer);
-    }
-  }, [copied]);
-
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -43,14 +36,10 @@ function DepositDetails() {
     }
   };
 
-  const handleCopy = (text) => {
-    navigator.clipboard.writeText(text);
-    setCopied(true);
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+
     try {
       const formData = new FormData();
       formData.append('amount', amount);
@@ -58,29 +47,29 @@ function DepositDetails() {
       formData.append('account', account);
       if (file) formData.append('receipt', file);
 
-      const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/transactions/deposit`, formData, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
+      await axios.post(`${import.meta.env.VITE_API_URL}/api/transactions/deposit`, formData, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
 
+      // INSTANT SUCCESS
       setSuccess(true);
-      toast.success('Deposit submitted! Awaiting approval.');
+      toast.success('Deposit submitted!');
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to submit');
+      toast.error('Submission failed');
     } finally {
       setLoading(false);
     }
   };
+
+  if (loading) return <LoadingSpinner />;
 
   if (success) {
     return (
       <div className="success-screen">
         <div className="success-card">
           <FaCheckCircle className="checkmark" />
-          <h2>Deposit Submitted</h2>
-          <p>Your deposit of <strong>{currency === 'USD' ? '$' : currency}{amount}</strong> via <strong>{method.replace('-', ' ').toUpperCase()}</strong> is now pending approval.</p>
-          <p>You'll be notified when it's processed.</p>
+          <h2>Success!</h2>
+          <p>${amount} via {method} submitted.</p>
           <button onClick={() => navigate('/dashboard')} className="home-btn">
             Back to Dashboard
           </button>
