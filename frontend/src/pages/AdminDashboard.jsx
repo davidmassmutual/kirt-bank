@@ -7,11 +7,11 @@ import { CSVLink } from 'react-csv';
 import LoadingSkeleton from '../components/LoadingSkeleton';
 import {
   FaSearch, FaEdit, FaTrash, FaEye, FaFileCsv, FaCheck, FaTimes,
-  FaDollarSign, FaHistory, FaPlus, FaBell
+  FaHistory, FaPlus, FaBell
 } from 'react-icons/fa';
 import '../styles/AdminDashboard.css';
 
-// Sound file
+// Deposit alert sound
 const depositSound = new Audio('/sounds/deposit.mp3');
 
 function AdminDashboard() {
@@ -27,21 +27,23 @@ function AdminDashboard() {
   const [editBal, setEditBal] = useState(null);
   const [editTxUser, setEditTxUser] = useState(null);
   const [transactions, setTransactions] = useState([]);
-  const [newTx, setNewTx] = useState({ type: '', amount: '', method: '', status: 'Posted', date: '' });
+  const [newTx, setNewTx] = useState({ type: '', amount: '', method: '', status: 'Completed', date: '' });
   const [pendingDeposits, setPendingDeposits] = useState([]);
   const [showPopup, setShowPopup] = useState(false);
   const [popupMsg, setPopupMsg] = useState('');
   const navigate = useNavigate();
   const token = localStorage.getItem('token');
   const pollRef = useRef(null);
-  const prevCount = useRef(0);
+  const prevPendingCount = useRef(0);
+
+  const API = import.meta.env.VITE_API_URL;
 
   // ───── FETCH USERS ─────
   const fetchUsers = useCallback(async (q = '', p = 1) => {
     setLoading(true);
     try {
       const res = await axios.get(
-        `${import.meta.env.VITE_API_URL}/api/user/search?q=${q}&page=${p}&limit=10`,
+        `${API}/api/user/search?q=${q}&page=${p}&limit=10`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setUsers(res.data.users.map(u => ({ ...u, selected: false })));
@@ -50,110 +52,72 @@ function AdminDashboard() {
     } catch (err) {
       if (err.response?.status === 401 || err.response?.status === 403) {
         toast.error('Session expired');
-        localStorage.removeItem('token');
-        localStorage.removeItem('isAdmin');
+        localStorage.clear();
         navigate('/admin');
       } else toast.error(err.response?.data?.message || 'Load failed');
     } finally {
       setLoading(false);
     }
-  }, [token, navigate]);
+  }, [token, navigate, API]);
 
   // ───── FETCH NOTIFICATIONS ─────
   const fetchNotifs = useCallback(async () => {
     try {
-      const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/user/notifications`, {
+      const res = await axios.get(`${API}/api/user/notifications`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setAdminNotifs(res.data.slice(0, 5));
     } catch (err) {
       console.error(err);
     }
-  }, [token]);
+  }, [token, API]);
 
-  // ───── FETCH PENDING DEPOSITS (REAL-TIME) ─────
+  // ───── FETCH PENDING DEPOSITS + REAL-TIME POLLING ─────
   const fetchPendingDeposits = useCallback(async () => {
     try {
-      const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/transactions/admin`, {
+      const res = await axios.get(`${API}/api/transactions/admin`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const pending = res.data.filter(tx => tx.status === 'Pending' && tx.type === 'deposit');
       setPendingDeposits(pending);
 
-      // Real-time popup + sound
-      if (pending.length > prevCount.current) {
+      // Real-time popup + sound for NEW deposits
+      if (pending.length > prevPendingCount.current && prevPendingCount.current > 0) {
         const latest = pending[0];
-        const msg = `New deposit: $${latest.amount} from ${latest.userId.name}`;
-        if (msg !== popupMsg) {
-          setPopupMsg(msg);
-          setShowPopup(true);
-          depositSound.play().catch(() => {});
-          setTimeout(() => setShowPopup(false), 6000);
-        }
+        const msg = `New deposit: $${latest.amount.toLocaleString()} from ${latest.userId.name}`;
+        setPopupMsg(msg);
+        setShowPopup(true);
+        depositSound.play().catch(() => {});
+        setTimeout(() => setShowPopup(false), 6000);
       }
-      prevCount.current = pending.length;
+      prevPendingCount.current = pending.length;
     } catch (err) {
       console.error(err);
     }
-  }, [token, popupMsg]);
+  }, [token, API]);
 
-  // POLLING every 5s
   useEffect(() => {
     fetchPendingDeposits();
     pollRef.current = setInterval(fetchPendingDeposits, 5000);
     return () => clearInterval(pollRef.current);
   }, [fetchPendingDeposits]);
 
-// ───── CONFIRM / REJECT (FIXED ENDPOINT) ─────
-const handleDepositAction = async (txId, action) => {
-  try {
-    await axios.put(
-      `${import.meta.env.VITE_API_URL}/api/transactions/admin/${txId}`,
-      { action: action.toLowerCase() },
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-    toast.success(`Deposit ${action}ed`);
-    fetchPendingDeposits();
-    fetchNotifs();
-  } catch (err) {
-    toast.error(err.response?.data?.message || 'Action failed');
-    console.error('Confirm/Reject error:', err.response?.data);
-  }
-};
-
-// ───── BALANCE EDIT (FIXED FIELD NAMES) ─────
-const submitBalance = async e => {
-  e.preventDefault();
-  try {
-    await axios.put(
-      `${import.meta.env.VITE_API_URL}/api/user/${editBal.userId}/balances`,
-      {
-        checkingBalance: Number(editBal.checking),
-        savingsBalance: Number(editBal.savings),
-        usdtBalance: Number(editBal.usdt),
-      },
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-    setUsers(prev =>
-      prev.map(u =>
-        u._id === editBal.userId
-          ? {
-              ...u,
-              balance: {
-                checking: Number(editBal.checking),
-                savings: Number(editBal.savings),
-                usdt: Number(editBal.usdt),
-              },
-            }
-          : u
-      )
-    );
-    setEditBal(null);
-    toast.success('Balances updated');
-  } catch (err) {
-    toast.error(err.response?.data?.message || 'Update failed');
-  }
-};
+  // ───── CONFIRM / REJECT DEPOSIT ─────
+  const handleDepositAction = async (txId, action) => {
+    try {
+      await axios.put(
+        `${API}/api/transactions/admin/${txId}`,
+        { action },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success(`Deposit ${action}ed`);
+      fetchPendingDeposits();
+      fetchNotifs();
+      fetchUsers(search, page); // Refresh balances
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Action failed');
+    }
+  };
 
   // ───── INITIAL LOAD ─────
   useEffect(() => {
@@ -187,7 +151,7 @@ const submitBalance = async e => {
           },
         };
       }
-      await axios.post(`${import.meta.env.VITE_API_URL}/api/user/bulk`, payload, {
+      await axios.post(`${API}/api/user/bulk`, payload, {
         headers: { Authorization: `Bearer ${token}` },
       });
       toast.success(`Bulk ${bulkAction} completed`);
@@ -200,7 +164,7 @@ const submitBalance = async e => {
     }
   };
 
-  // ───── BALANCE EDIT ─────
+  // ───── BALANCE EDIT MODAL ─────
   const openBalanceEdit = user => {
     setEditBal({
       userId: user._id,
@@ -211,12 +175,44 @@ const submitBalance = async e => {
     });
   };
 
+  const submitBalance = async e => {
+    e.preventDefault();
+    try {
+      await axios.put(
+        `${API}/api/user/${editBal.userId}/balances`,
+        {
+          checkingBalance: Number(editBal.checking),
+          savingsBalance: Number(editBal.savings),
+          usdtBalance: Number(editBal.usdt),
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setUsers(prev =>
+        prev.map(u =>
+          u._id === editBal.userId
+            ? {
+                ...u,
+                balance: {
+                  checking: Number(editBal.checking),
+                  savings: Number(editBal.savings),
+                  usdt: Number(editBal.usdt),
+                },
+              }
+            : u
+        )
+      );
+      setEditBal(null);
+      toast.success('Balances updated');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Update failed');
+    }
+  };
 
   // ───── TRANSACTIONS MODAL ─────
   const openTx = async user => {
     setEditTxUser(user._id);
     try {
-      const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/transactions/user/${user._id}`, {
+      const res = await axios.get(`${API}/api/transactions/user/${user._id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setTransactions(res.data);
@@ -229,12 +225,12 @@ const submitBalance = async e => {
     e.preventDefault();
     try {
       const res = await axios.post(
-        `${import.meta.env.VITE_API_URL}/api/transactions/user/${editTxUser}`,
+        `${API}/api/transactions/user/${editTxUser}`,
         { ...newTx, amount: Number(newTx.amount) },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setTransactions(prev => [...prev, res.data]);
-      setNewTx({ type: '', amount: '', method: '', status: 'Posted', date: '' });
+      setNewTx({ type: '', amount: '', method: '', status: 'Completed', date: '' });
       toast.success('Transaction added');
     } catch (err) {
       toast.error(err.response?.data?.message || 'Add failed');
@@ -244,7 +240,7 @@ const submitBalance = async e => {
   const deleteTx = async id => {
     if (!window.confirm('Delete this transaction?')) return;
     try {
-      await axios.delete(`${import.meta.env.VITE_API_URL}/api/transactions/${id}`, {
+      await axios.delete(`${API}/api/transactions/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setTransactions(prev => prev.filter(t => t._id !== id));
@@ -253,24 +249,8 @@ const submitBalance = async e => {
       toast.error(err.response?.data?.message || 'Delete failed');
     }
   };
-const confirmTx = async (id, action) => {
-  try {
-    await axios.put(
-      `${import.meta.env.VITE_API_URL}/api/transactions/admin/${id}`,
-      { action: action.toLowerCase() },
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-    toast.success(`Transaction ${action}ed`);
-    openTx({ _id: editTxUser });
-    fetchPendingDeposits();
-    fetchNotifs();
-  } catch (err) {
-    toast.error(err.response?.data?.message || 'Action failed');
-    console.error('Modal action error:', err.response?.data);
-  }
-};
 
-  // ───── CSV DATA ─────
+  // ───── CSV EXPORT ─────
   const csvData = useMemo(
     () =>
       users.map(u => ({
@@ -298,7 +278,7 @@ const confirmTx = async (id, action) => {
   return (
     <div className="admin-dashboard">
 
-      {/* REAL-TIME POPUP */}
+      {/* REAL-TIME DEPOSIT POPUP */}
       {showPopup && (
         <div className="deposit-popup">
           <FaBell className="pulse" /> {popupMsg}
@@ -315,19 +295,19 @@ const confirmTx = async (id, action) => {
                 <div>
                   <strong>{tx.userId.name}</strong> • ${tx.amount.toLocaleString()} • {tx.method}
                   {tx.receipt && (
-                    <a href={`${import.meta.env.VITE_API_URL}${tx.receipt}`} target="_blank" rel="noopener noreferrer">
+                    <a href={`${API}${tx.receipt}`} target="_blank" rel="noopener noreferrer">
                       View Receipt
                     </a>
                   )}
                 </div>
-   <div className="deposit-actions">
-  <button onClick={() => handleDepositAction(tx._id, 'confirm')} className="confirm-btn">
-    <FaCheck /> Confirm
-  </button>
-  <button onClick={() => handleDepositAction(tx._id, 'reject')} className="reject-btn">
-    <FaTimes /> Reject
-  </button>
-</div>
+                <div className="deposit-actions">
+                  <button onClick={() => handleDepositAction(tx._id, 'confirm')} className="confirm-btn">
+                    <FaCheck /> Confirm
+                  </button>
+                  <button onClick={() => handleDepositAction(tx._id, 'reject')} className="reject-btn">
+                    <FaTimes /> Reject
+                  </button>
+                </div>
               </div>
             ))}
           </div>
@@ -456,7 +436,7 @@ const confirmTx = async (id, action) => {
         </div>
       </div>
 
-      {/* BALANCE MODAL */}
+      {/* BALANCE EDIT MODAL */}
       {editBal && (
         <div className="modal-overlay" onClick={() => setEditBal(null)}>
           <div className="modal" onClick={e => e.stopPropagation()}>
@@ -495,15 +475,14 @@ const confirmTx = async (id, action) => {
               <button onClick={() => setEditTxUser(null)} className="close-btn"><FaTimes /></button>
             </div>
 
-            {/* ADD NEW */}
             <div className="add-tx-card">
               <h4><FaPlus /> Add Transaction</h4>
               <form onSubmit={addTx} className="tx-form">
-                <input placeholder="Type (e.g. Deposit)" value={newTx.type} onChange={e => setNewTx({ ...newTx, type: e.target.value })} required />
+                <input placeholder="Type (Deposit/Withdraw)" value={newTx.type} onChange={e => setNewTx({ ...newTx, type: e.target.value })} required />
                 <input type="number" placeholder="Amount" value={newTx.amount} onChange={e => setNewTx({ ...newTx, amount: e.target.value })} required />
-                <input placeholder="Method (e.g. Wire)" value={newTx.method} onChange={e => setNewTx({ ...newTx, method: e.target.value })} required />
+                <input placeholder="Method" value={newTx.method} onChange={e => setNewTx({ ...newTx, method: e.target.value })} required />
                 <select value={newTx.status} onChange={e => setNewTx({ ...newTx, status: e.target.value })}>
-                  <option value="Posted">Posted</option>
+                  <option value="Completed">Completed</option>
                   <option value="Pending">Pending</option>
                   <option value="Failed">Failed</option>
                 </select>
@@ -512,7 +491,6 @@ const confirmTx = async (id, action) => {
               </form>
             </div>
 
-            {/* LIST */}
             <div className="tx-list">
               {transactions.length === 0 ? (
                 <p className="empty">No transactions yet.</p>
@@ -539,16 +517,16 @@ const confirmTx = async (id, action) => {
                           </span>
                         </td>
                         <td className="tx-actions">
-   { t.status === 'Pending' && (
-  <>
-    <button onClick={() => confirmTx(t._id, 'confirm')} className="confirm-btn">
-      <FaCheck />
-    </button>
-    <button onClick={() => confirmTx(t._id, 'reject')} className="fail-btn">
-      <FaTimes />
-    </button>
-  </>
-)}
+                          {t.status === 'Pending' && (
+                            <>
+                              <button onClick={() => handleDepositAction(t._id, 'confirm')} className="confirm-btn">
+                                <FaCheck />
+                              </button>
+                              <button onClick={() => handleDepositAction(t._id, 'reject')} className="fail-btn">
+                                <FaTimes />
+                              </button>
+                            </>
+                          )}
                           <button onClick={() => deleteTx(t._id)} className="delete-btn">
                             <FaTrash />
                           </button>
