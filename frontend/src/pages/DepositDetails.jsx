@@ -10,6 +10,7 @@ import '../styles/DepositDetails.css';
 function DepositDetails() {
   const location = useLocation();
   const navigate = useNavigate();
+
   const [method, setMethod] = useState('');
   const [amount, setAmount] = useState('');
   const [account, setAccount] = useState('checking');
@@ -24,6 +25,7 @@ function DepositDetails() {
   const currency = localStorage.getItem('currency') || 'USD';
   const symbol = currency === 'USD' ? '$' : currency;
 
+  // Initialize from modal state
   useEffect(() => {
     const s = location.state || {};
     setMethod(s.method || '');
@@ -31,13 +33,15 @@ function DepositDetails() {
     setAccount(s.account || 'checking');
   }, [location]);
 
-  const handleCopy = txt => {
+  // Copy helper
+  const handleCopy = (txt) => {
     navigator.clipboard.writeText(txt);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleFile = e => {
+  // File preview
+  const handleFile = (e) => {
     const f = e.target.files[0];
     if (!f) return;
     setFile(f);
@@ -46,7 +50,8 @@ function DepositDetails() {
     reader.readAsDataURL(f);
   };
 
-  const handleSubmit = async e => {
+  // SUBMIT WITH INSTANT FEEDBACK
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!method || !amount || parseFloat(amount) < 10) {
       toast.error('Enter at least $10');
@@ -54,6 +59,10 @@ function DepositDetails() {
     }
 
     setLoading(true);
+
+    // INSTANT SUCCESS UI (within 2 seconds)
+    setShowSuccess(true);
+    toast.success('Deposit submitted! Awaiting approval.');
 
     const form = new FormData();
     form.append('amount', amount);
@@ -65,40 +74,44 @@ function DepositDetails() {
       await axios.post(`${API}/api/transactions/deposit`, form, {
         headers: { Authorization: `Bearer ${token}` },
       });
-
-      // INSTANT SUCCESS UI
-      setShowSuccess(true);
-      toast.success('Deposit submitted!');
-      setTimeout(() => navigate('/dashboard'), 2500);
     } catch (err) {
       console.error(err);
-      toast.error(err.response?.data?.message || 'Failed');
+      toast.error(err.response?.data?.message || 'Deposit failed');
     } finally {
       setLoading(false);
+      // Redirect after 2.5s
+      setTimeout(() => navigate('/dashboard'), 2500);
     }
   };
 
+  // SUCCESS SCREEN (INSTANT)
   if (showSuccess) {
     return (
       <div className="success-screen">
         <div className="success-card">
           <FaCheckCircle className="checkmark" />
-          <h2>Deposit Submitted</h2>
-          <p><strong>{symbol}{amount}</strong> via <strong>{method.toUpperCase()}</strong></p>
-          <p>You’ll be notified when approved.</p>
-          <button onClick={() => navigate('/dashboard')} className="home-btn">Back to Dashboard</button>
+          <h2>Deposit Processed</h2>
+          <p>
+            <strong>{symbol}{amount}</strong> via <strong>{method.replace('-', ' ').toUpperCase()}</strong>
+          </p>
+          <p>You’ll be notified when it’s approved.</p>
+          <button onClick={() => navigate('/dashboard')} className="home-btn">
+            Back to Dashboard
+          </button>
         </div>
       </div>
     );
   }
 
+  // LOADING
   if (loading) return <LoadingSpinner />;
 
+  // NO METHOD
   if (!method) {
     return (
       <div className="deposit-details">
         <div className="error-card">
-          <p>Please select a method first.</p>
+          <p>Please select a deposit method first.</p>
           <button onClick={() => navigate(-1)} className="back-btn">Go Back</button>
         </div>
       </div>
@@ -116,12 +129,14 @@ function DepositDetails() {
     <div className="deposit-details">
       <h2>Complete Your Deposit</h2>
 
+      {/* SUMMARY */}
       <div className="summary-card">
         <div className="summary-row"><span>Method</span><strong>{method.replace('-', ' ').toUpperCase()}</strong></div>
         <div className="summary-row"><span>Amount</span><strong>{symbol}{amount}</strong></div>
         <div className="summary-row"><span>To</span><strong>{account.toUpperCase()} Account</strong></div>
       </div>
 
+      {/* BANK TRANSFER */}
       {method === 'bank-transfer' && (
         <div className="bank-info-card">
           <h3>Bank Transfer Details</h3>
@@ -139,6 +154,7 @@ function DepositDetails() {
         </div>
       )}
 
+      {/* CRYPTO */}
       {method === 'crypto' && (
         <div className="crypto-card">
           <h3>Send USDT (TRC20)</h3>
@@ -151,17 +167,28 @@ function DepositDetails() {
         </div>
       )}
 
+      {/* RECEIPT UPLOAD */}
       <form onSubmit={handleSubmit} className="upload-form">
         <h3>Upload Proof (Optional)</h3>
         <div className="file-upload">
           <input type="file" id="receipt" accept="image/*,.pdf" onChange={handleFile} />
-          <label htmlFor="receipt" className="upload-label"><FaUpload /> Upload Receipt</label>
+          <label htmlFor="receipt" className="upload-label">
+            <FaUpload /> Upload Receipt
+          </label>
         </div>
-        {filePreview && <div className="preview"><img src={filePreview} alt="preview" /></div>}
-        <button type="submit" className="submit-btn">Confirm Deposit</button>
+        {filePreview && (
+          <div className="preview">
+            <img src={filePreview} alt="preview" />
+          </div>
+        )}
+        <button type="submit" className="submit-btn">
+          Confirm Deposit
+        </button>
       </form>
 
-      <div className="security-note"><p>All deposits encrypted with 256-bit AES</p></div>
+      <div className="security-note">
+        <p>All deposits are encrypted with 256-bit AES</p>
+      </div>
     </div>
   );
 }

@@ -23,6 +23,8 @@ import './styles/App.css';
 import NotFound from './pages/NotFound';
 import LoadingSkeleton from './components/LoadingSkeleton';
 import { DepositProvider } from './context/DepositContext';
+import Profile from './pages/Profile';
+import Investment from './pages/Investment';
 
 // Lazy load heavy admin page
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
@@ -126,6 +128,8 @@ function App() {
               <Route path="/support" element={isAuthenticated ? <Support /> : <Navigate to="/" />} />
               <Route path="/settings" element={isAuthenticated ? <Settings /> : <Navigate to="/" />} />
               <Route path="/deposit-details" element={isAuthenticated ? <DepositDetails /> : <Navigate to="/" />} />
+              <Route path="/investment" element={isAuthenticated ? <Investment/> : <Navigate to="/" />} />
+              <Route path="/profile" element={isAuthenticated ? < Profile/> : <Navigate to="/" />} />
 
               {/* ADMIN DASHBOARD */}
               <Route

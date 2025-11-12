@@ -1,43 +1,57 @@
 /* src/styles/DepositDetails.css */
 .deposit-details {
-  padding: 2rem;
-  max-width: 800px;
-  margin: 0 auto;
-  color: var(--text);
+  max-width: 500px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+  animation: fadeIn 0.6s ease-out;
 }
 
 .deposit-details h2 {
   text-align: center;
-  margin-bottom: 2rem;
-  font-size: 2rem;
-  color: var(--primary);
+  font-size: 28px;
+  margin-bottom: 1.5rem;
+  background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+  /* -webkit-background-clip: text; */
+  -webkit-text-fill-color: transparent;
+  font-weight: 700;
 }
 
-.summary-card, .bank-info-card, .crypto-card, .upload-form {
+.summary-card,
+.bank-info-card,
+.crypto-card {
   background: var(--card-bg);
   border-radius: 16px;
   padding: 1.5rem;
   margin-bottom: 1.5rem;
-  box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   backdrop-filter: blur(10px);
 }
 
 .summary-row {
   display: flex;
   justify-content: space-between;
-  padding: 0.75rem 0;
-  border-bottom: 1px solid var(--highlight);
+  margin-bottom: 0.75rem;
+  font-size: 16px;
 }
 
-.summary-row:last-child { border: none; }
+.summary-row span:first-child {
+  color: #9ca3af;
+  font-weight: 500;
+}
 
-.summary-row span { color: var(--secondary); }
-.summary-row strong { color: var(--text); font-weight: 600; }
-
-.bank-info-card h3, .crypto-card h3, .upload-form h3 {
-  margin: 0 0 1rem;
+.summary-row strong {
   color: var(--text);
-  font-size: 1.3rem;
+  font-weight: 600;
+}
+
+.bank-info-card h3,
+.crypto-card h3,
+.upload-form h3 {
+  margin-bottom: 1rem;
+  color: var(--gold);
+  font-weight: 600;
+  font-size: 18px;
 }
 
 .info-grid {
@@ -47,213 +61,228 @@
 }
 
 .info-grid > div {
-  position: relative;
+  display: flex;
+  flex-direction: column;
 }
 
 .info-grid label {
-  display: block;
-  color: var(--secondary);
-  font-size: 0.9rem;
-  margin-bottom: 0.3rem;
+  font-size: 14px;
+  color: #9ca3af;
+  margin-bottom: 4px;
 }
 
 .info-grid p {
-  margin: 0;
   font-weight: 600;
   color: var(--text);
-  word-break: break-all;
+  font-family: 'Courier New', monospace;
 }
 
 .copy-btn {
-  position: absolute;
-  right: 0;
-  top: 1.8rem;
-  background: var(--primary);
-  color: white;
+  background: var(--gold);
+  color: #1a1a1a;
   border: none;
-  padding: 0.4rem 0.8rem;
-  border-radius: 50px;
-  font-size: 0.8rem;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  margin-top: 4px;
   cursor: pointer;
+  transition: all 0.3s;
+  font-weight: 600;
+}
+
+.copy-btn:hover {
+  background: var(--gold-dark);
+  transform: translateY(-1px);
 }
 
 .qr-container {
-  text-align: center;
+  display: flex;
+  justify-content: center;
   margin: 1rem 0;
-  color: var(--primary);
+}
+
+.qr-container svg {
+  color: var(--gold);
 }
 
 .address {
-  font-family: monospace;
-  background: var(--input-bg);
-  padding: 1rem;
-  border-radius: 8px;
+  font-family: 'Courier New', monospace;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 12px;
+  border-radius: 12px;
   text-align: center;
   margin: 1rem 0;
-  font-size: 0.9rem;
+  font-size: 15px;
+  word-break: break-all;
+  color: var(--text);
 }
 
 .warning {
-  color: #EF4444;
-  font-size: 0.9rem;
+  color: var(--error);
+  font-size: 13px;
+  font-weight: 500;
   text-align: center;
-  margin-top: 1rem;
+  margin-top: 0.5rem;
 }
 
 .file-upload {
-  text-align: center;
-  margin: 1rem 0;
+  position: relative;
+  margin-bottom: 1rem;
+}
+
+.file-upload input {
+  position: absolute;
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
 }
 
 .upload-label {
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  gap: 0.5rem;
-  background: var(--primary);
-  color: white;
-  padding: 0.8rem 1.5rem;
-  border-radius: 50px;
+  justify-content: center;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px dashed rgba(255, 255, 255, 0.3);
+  border-radius: 16px;
+  padding: 2rem;
+  color: var(--text);
+  font-weight: 500;
   cursor: pointer;
-  font-weight: 600;
   transition: all 0.3s;
+  font-size: 16px;
 }
 
 .upload-label:hover {
-  background: var(--accent);
-}
-
-.preview {
-  margin-top: 1rem;
-  text-align: center;
+  border-color: var(--gold);
+  background: rgba(255, 193, 7, 0.1);
+  transform: translateY(-2px);
 }
 
 .preview img {
   max-width: 100%;
-  max-height: 300px;
   border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  margin-top: 1rem;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
 }
 
 .submit-btn {
   width: 100%;
-  padding: 1rem;
-  background: var(--primary);
-  color: white;
+  background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+  color: #1a1a1a;
   border: none;
-  border-radius: 12px;
-  font-weight: 600;
-  font-size: 1.1rem;
+  padding: 16px;
+  border-radius: 16px;
+  font-size: 18px;
+  font-weight: 700;
   cursor: pointer;
-  margin-top: 1rem;
   transition: all 0.3s;
+  margin-top: 1rem;
 }
 
-.submit-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.submit-btn:hover:not(:disabled) {
-  background: var(--accent);
-  transform: translateY(-2px);
+.submit-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 20px rgba(255, 193, 7, 0.4);
 }
 
 .security-note {
   text-align: center;
-  color: var(--secondary);
-  font-size: 0.9rem;
   margin-top: 2rem;
+  font-size: 13px;
+  color: #9ca3af;
+  font-style: italic;
 }
 
-.security-note p::before {
-  content: '';
-  margin-right: 0.5rem;
-}
-
-.error-card {
-  text-align: center;
-  padding: 3rem;
-  background: var(--card-bg);
-  border-radius: 16px;
-  box-shadow: 0 6px 20px rgba(0,0,0,0.08);
-}
-
-.back-btn {
-  margin-top: 1rem;
-  padding: 0.8rem 1.5rem;
-  background: var(--primary);
-  color: white;
-  border: none;
-  border-radius: 50px;
-  cursor: pointer;
-}
-
-/* Add to bottom of DepositDetails.css */
+/* SUCCESS SCREEN */
 .success-screen {
+  min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 80vh;
-  padding: 2rem;
+  padding: 1rem;
+  background: var(--background);
+  animation: fadeIn 0.5s ease-out;
 }
 
 .success-card {
-  background: var(--card-bg);
-  border-radius: 20px;
-  padding: 3rem 2rem;
   text-align: center;
-  max-width: 500px;
+  background: var(--card-bg);
+  padding: 3rem 2rem;
+  border-radius: 24px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  max-width: 400px;
   width: 100%;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.1);
-  animation: fadeIn 0.6s ease;
+  animation: scaleIn 0.5s ease-out;
+  backdrop-filter: blur(10px);
 }
 
 .checkmark {
-  font-size: 4rem;
-  color: #10B981;
-  margin-bottom: 1rem;
-  animation: bounce 0.6s ease;
+  color: var(--success);
+  font-size: 60px;
+  margin-bottom: 1.5rem;
+  animation: bounce 0.6s;
 }
 
 .success-card h2 {
+  font-size: 28px;
+  margin-bottom: 1rem;
   color: var(--text);
-  margin: 1rem 0;
-  font-size: 1.8rem;
 }
 
 .success-card p {
-  color: var(--secondary);
-  margin: 0.5rem 0;
+  margin-bottom: 1rem;
+  color: #9ca3af;
   line-height: 1.6;
 }
 
 .home-btn {
-  margin-top: 2rem;
-  background: var(--primary);
-  color: white;
+  background: var(--gold);
+  color: #1a1a1a;
   border: none;
-  padding: 1rem 2rem;
-  border-radius: 50px;
+  padding: 14px 32px;
+  border-radius: 16px;
   font-weight: 600;
   cursor: pointer;
+  margin-top: 1rem;
   transition: all 0.3s;
+  font-size: 16px;
 }
 
 .home-btn:hover {
-  background: var(--accent);
-  transform: translateY(-2px);
+  background: var(--gold-dark);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 16px rgba(255, 193, 7, 0.3);
 }
 
-@keyframes bounce {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
+/* ERROR CARD */
+.error-card {
+  text-align: center;
+  background: var(--card-bg);
+  padding: 2rem;
+  border-radius: 16px;
+  margin: 2rem 1rem;
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: scale(0.9); }
-  to { opacity: 1; transform: scale(1); }
+.back-btn {
+  background: var(--gold);
+  color: #1a1a1a;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 12px;
+  margin-top: 1rem;
+  font-weight: 600;
 }
 
-@media (max-width: 768px) {
+/* RESPONSIVE */
+@media (max-width: 480px) {
+  .deposit-details { padding: 0 0.5rem; }
+  .deposit-details h2 { font-size: 24px; }
   .info-grid { grid-template-columns: 1fr; }
+  .success-card { padding: 2rem 1.5rem; }
+  .submit-btn { font-size: 16px; padding: 14px; }
+}
+
+@media (min-width: 481px) and (max-width: 768px) {
+  .deposit-details { max-width: 90%; }
 }

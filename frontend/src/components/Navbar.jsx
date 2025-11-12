@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { FaHome, FaWallet, FaExchangeAlt, FaCreditCard, FaHistory, FaBell, 
-         FaHandHoldingUsd, FaHeadset, FaCog, FaSignOutAlt, FaBars, FaTimes } from 'react-icons/fa';
+         FaHandHoldingUsd, FaHeadset, FaCog, FaSignOutAlt, FaBars, FaTimes, FaUserTie, FaChartBar} from 'react-icons/fa';
 import { useDeposit } from '../context/DepositContext';
 import '../styles/Navbar.css';
 import img9 from '../images/WhatsApp Image 2025-10-17 at 16.15.27.jpeg';
@@ -20,10 +20,12 @@ function Navbar({ handleLogout, isAuthenticated }) {
     { path: '/dashboard', label: 'Dashboard', icon: <FaHome /> },
     { path: '/account-summary', label: 'Account Summary', icon: <FaWallet /> },
     { path: '#', label: 'Deposit', icon: <FaExchangeAlt />, onClick: openDepositModal },
+    { path: '/loans', label: 'Loan', icon: <FaHandHoldingUsd /> },
+    { path: '/investment', label: 'Investment', icon: <FaChartBar/> },
     { path: '/cards', label: 'Cards', icon: <FaCreditCard /> },
     { path: '/transactions', label: 'Transactions', icon: <FaHistory /> },
     { path: '/notifications', label: 'Notifications', icon: <FaBell /> },
-    { path: '/loans', label: 'Loan', icon: <FaHandHoldingUsd /> },
+    { path: '/profile', label: 'Profile', icon: <FaUserTie /> },
     { path: '/support', label: 'Support', icon: <FaHeadset /> },
     { path: '/settings', label: 'Settings', icon: <FaCog /> },
   ];
