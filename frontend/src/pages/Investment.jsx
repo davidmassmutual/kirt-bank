@@ -1,68 +1,41 @@
-// src/pages/Investment.jsx
-import { useState } from 'react';
-import '../styles/Investment.css';
-import { FaChartLine, FaPiggyBank, FaLock, FaArrowRight, FaCheck } from 'react-icons/fa';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { useAuth } from '../context/AuthContext';
 
-function Investment() {
-  const [amount, setAmount] = useState('');
-  const plans = [
-    { name: 'Starter', apy: '8.5%', min: 100, term: '6 months', color: '#4361ee' },
-    { name: 'Growth', apy: '12.0%', min: 1000, term: '12 months', color: '#7209b7' },
-    { name: 'Premium', apy: '15.5%', min: 5000, term: '24 months', color: '#f7931a' },
-  ];
+export default function Investments() {
+  const [plans, setPlans] = useState([]);
+  const navigate = useNavigate();
+  const { token } = useAuth();
+
+  useEffect(() => {
+    axios.get('/api/investments/plans').then(res => setPlans(res.data));
+  }, []);
+
+  const handleInvest = (plan) => {
+    navigate('/invest', { state: { plan } });
+  };
 
   return (
-    <div className="investment-page">
-      <header className="inv-header">
-        <h1>Grow Your Wealth</h1>
-        <p>High-yield investment plans with guaranteed returns</p>
-      </header>
+    <div className="max-w-6xl mx-auto p-6">
+      <h1 className="text-4xl font-bold text-center mb-4">Investment Plans</h1>
+      <p className="text-center text-secondary mb-12 max-w-2xl mx-auto">
+        Grow your wealth with guaranteed returns. Choose a plan and start earning up to <strong>28% ROI</strong>.
+      </p>
 
-      <div className="stats-grid">
-        <div className="stat-card">
-          <FaChartLine />
-          <h3>15.5%</h3>
-          <p>Max APY</p>
-        </div>
-        <div className="stat-card">
-          <FaPiggyBank />
-          <h3>100K+</h3>
-          <p>Active Investors</p>
-        </div>
-        <div className="stat-card">
-          <FaLock />
-          <h3>FDIC Insured</h3>
-          <p>Up to $250K</p>
-        </div>
-      </div>
-
-      <div className="plans-grid">
+      <div className="grid md:grid-cols-3 gap-8">
         {plans.map(plan => (
-          <div key={plan.name} className="plan-card" style={{ '--plan-color': plan.color }}>
-            <div className="plan-header">
-              <h3>{plan.name}</h3>
-              <div className="apy">{plan.apy} <span>APY</span></div>
-            </div>
-            <div className="plan-details">
-              <p><FaCheck /> Min: ${plan.min}</p>
-              <p><FaCheck /> Term: {plan.term}</p>
-              <p><FaCheck /> Compounded Monthly</p>
-            </div>
-            <button className="invest-btn">Invest Now <FaArrowRight /></button>
+          <div key={plan.name} className="bg-card rounded-2xl p-8 text-center transform hover:scale-105 transition">
+            <div className="text-6xl mb-4">{plan.rate * 100}%</div>
+            <h3 className="text-2xl font-bold mb-2">{plan.name} Plan</h3>
+            <p className="text-secondary mb-4">{plan.term}</p>
+            <p className="text-sm mb-6">From ${plan.min} to ${plan.max}</p>
+            <button onClick={() => handleInvest(plan)} className="btn-primary w-full">
+              Invest Now
+            </button>
           </div>
         ))}
-      </div>
-
-      <div className="calculator">
-        <h2>Return Calculator</h2>
-        <input type="number" placeholder="Enter amount" value={amount} onChange={e => setAmount(e.target.value)} />
-        <div className="results">
-          <div><strong>After 12 months:</strong> ${(parseFloat(amount) * 1.12 || 0).toFixed(2)}</div>
-          <div><strong>Profit:</strong> ${(parseFloat(amount) * 0.12 || 0).toFixed(2)}</div>
-        </div>
       </div>
     </div>
   );
 }
-
-export default Investment;

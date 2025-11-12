@@ -1,126 +1,62 @@
-// src/pages/Profile.jsx
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { toast } from 'react-toastify';
-import { useNavigate } from 'react-router-dom';
-import LoadingSkeleton from '../components/LoadingSkeleton';
-import '../styles/Profile.css';
-import { FaUser, FaEnvelope, FaPhone, FaHome, FaLock, FaBell, FaGlobe, FaMoon, FaSun } from 'react-icons/fa';
+import { useAuth } from '../context/AuthContext';
 
-function Profile() {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [editMode, setEditMode] = useState(false);
-  const [form, setForm] = useState({});
-  const token = localStorage.getItem('token');
-  const API = import.meta.env.VITE_API_URL;
-  const navigate = useNavigate();
+export default function Profile() {
+  const { user, token } = useAuth();
+  const [form, setForm] = useState({ name: '', email: '', phone: '', address: '' });
+  const [image, setImage] = useState(null);
+  const [preview, setPreview] = useState(user?.profileImage || '');
 
   useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const res = await axios.get(`${API}/api/auth/me`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setUser(res.data);
-        setForm({
-          name: res.data.name,
-          email: res.data.email,
-          phone: res.data.phone || '',
-          address: res.data.address || '',
-        });
-      } catch (err) {
-        toast.error('Failed to load profile');
-        if (err.response?.status === 401) navigate('/');
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchUser();
-  }, [token, API, navigate]);
+    if (user) setForm({ name: user.name, email: user.email, phone: user.phone || '', address: user.address || '' });
+  }, [user]);
 
-  const handleSave = async () => {
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    setImage(file);
+    setPreview(URL.createObjectURL(file));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const formData = new FormData();
+    if (image) formData.append('profileImage', image);
+
     try {
-      await axios.put(`${API}/api/users/profile`, form, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      toast.success('Profile updated');
-      setEditMode(false);
-      setUser({ ...user, ...form });
+      if (image) {
+        await axios.put('/api/user/profile/image', formData, {
+          headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' }
+        });
+      }
+      await axios.put('/api/user/profile', form, { headers: { Authorization: `Bearer ${token}` } });
+      alert('Profile updated!');
     } catch (err) {
-      toast.error('Update failed');
+      alert(err.response?.data?.message || 'Error');
     }
   };
 
-  if (loading) return <LoadingSkeleton />;
-
   return (
-    <div className="profile-page">
-      <div className="profile-header">
-        <div className="avatar"><FaUser size={60} /></div>
-        <h1>{user.name}</h1>
-        <p>Member since {new Date(user.createdAt).toLocaleDateString()}</p>
-      </div>
+    <div className="max-w-2xl mx-auto p-6">
+      <h1 className="text-3xl font-bold mb-8 text-center">Profile Settings</h1>
 
-      <div className="profile-sections">
-        <div className="section">
-          <h2><FaUser /> Personal Info</h2>
-          {editMode ? (
-            <div className="edit-form">
-              <input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="Name" />
-              <input value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} placeholder="Email" />
-              <input value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} placeholder="Phone" />
-              <input value={form.address} onChange={e => setForm({ ...form, address: e.target.value })} placeholder="Address" />
-              <button onClick={handleSave} className="save-btn">Save</button>
-              <button onClick={() => setEditMode(false)} className="cancel-btn">Cancel</button>
-            </div>
-          ) : (
-            <div className="info-grid">
-              <div><FaEnvelope /> {user.email}</div>
-              <div><FaPhone /> {user.phone || 'Not set'}</div>
-              <div><FaHome /> {user.address || 'Not set'}</div>
-              <button onClick={() => setEditMode(true)} className="edit-btn">Edit</button>
-            </div>
-          )}
+      <div className="bg-card rounded-2xl p-6 mb-6">
+        <div className="flex flex-col items-center mb-6">
+          <img src={preview || '/default-avatar.png'} alt="Profile" className="w-32 h-32 rounded-full object-cover border-4 border-gold mb-4" />
+          <label className="cursor-pointer bg-gold text-black px-6 py-2 rounded-lg font-bold hover:bg-gold-dark transition">
+            Change Photo
+            <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
+          </label>
         </div>
 
-        <div className="section">
-          <h2><FaLock /> Security</h2>
-          <div className="security-item">
-            <span>Two-Factor Auth</span>
-            <label className="switch">
-              <input type="checkbox" checked={user.twoFactorEnabled} readOnly />
-              <span className="slider"></span>
-            </label>
-          </div>
-        </div>
-
-        <div className="section">
-          <h2><FaBell /> Notifications</h2>
-          <div className="notif-item">
-            <span>Email</span>
-            <label className="switch"><input type="checkbox" checked={user.notificationsSettings?.email} readOnly /><span className="slider"></span></label>
-          </div>
-        </div>
-
-        <div className="section">
-          <h2><FaGlobe /> Preferences</h2>
-          <div className="pref-item">
-            <span>Currency</span>
-            <select value={user.currency} readOnly>
-              <option>USD</option>
-            </select>
-          </div>
-          <div className="pref-item">
-            <span>Theme</span>
-            <div className="theme-toggle">
-              <FaSun /> <span>{user.theme === 'dark' ? 'Dark' : 'Light'}</span> <FaMoon />
-            </div>
-          </div>
-        </div>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <input type="text" placeholder="Name" value={form.name} onChange={e => setForm({...form, name: e.target.value})} className="input" required />
+          <input type="email" placeholder="Email" value={form.email} onChange={e => setForm({...form, email: e.target.value})} className="input" required />
+          <input type="tel" placeholder="Phone" value={form.phone} onChange={e => setForm({...form, phone: e.target.value})} className="input" />
+          <textarea placeholder="Address" value={form.address} onChange={e => setForm({...form, address: e.target.value})} className="input h-24" />
+          <button type="submit" className="btn-primary w-full">Save Changes</button>
+        </form>
       </div>
     </div>
   );
 }
-
-export default Profile;

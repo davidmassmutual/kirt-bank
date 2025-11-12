@@ -4,6 +4,10 @@ const router = express.Router();
 const bcrypt = require('bcryptjs');
 const User = require('../models/User');
 const verifyToken = require('../middleware/auth');
+// ADD TO TOP
+const upload = require('../middleware/upload');
+const path = require('path');
+const fs = require('fs');
 
 // ──────────────────────────────────────────────────────────────
 // Middleware: Admin check
@@ -188,6 +192,30 @@ router.put('/profile', verifyToken, async (req, res) => {
     res.json({ message: 'Profile updated successfully' });
   } catch (err) {
     console.error('Profile update error:', err.message);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// ADD NEW ROUTE
+router.put('/profile/image', verifyToken, upload.single('profileImage'), async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ message: 'No image uploaded' });
+
+    const user = await User.findById(req.userId);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    // Delete old image
+    if (user.profileImage) {
+      const oldPath = path.join(__dirname, '..', user.profileImage);
+      if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+    }
+
+    user.profileImage = `/uploads/${req.file.filename}`;
+    await user.save();
+
+    res.json({ message: 'Profile image updated', profileImage: user.profileImage });
+  } catch (err) {
+    console.error(err);
     res.status(500).json({ message: 'Server error' });
   }
 });

@@ -25,6 +25,7 @@ import LoadingSkeleton from './components/LoadingSkeleton';
 import { DepositProvider } from './context/DepositContext';
 import Profile from './pages/Profile';
 import Investment from './pages/Investment';
+import InvestNow from './pages/InvestNow';
 
 // Lazy load heavy admin page
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
@@ -130,6 +131,8 @@ function App() {
               <Route path="/deposit-details" element={isAuthenticated ? <DepositDetails /> : <Navigate to="/" />} />
               <Route path="/investment" element={isAuthenticated ? <Investment/> : <Navigate to="/" />} />
               <Route path="/profile" element={isAuthenticated ? < Profile/> : <Navigate to="/" />} />
+              <Route path="/invest" element={isAuthenticated ? < InvestNow/> : <Navigate to="/" />} />
+              
 
               {/* ADMIN DASHBOARD */}
               <Route

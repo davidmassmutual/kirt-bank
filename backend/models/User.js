@@ -18,6 +18,17 @@ const userSchema = new mongoose.Schema({
   twoFactorEnabled: { type: Boolean, default: false },
   currency: { type: String, default: 'USD' },
   theme: { type: String, default: 'light' },
+  // ADD TO userSchema
+profileImage: { type: String, default: '' },
+investments: [{
+  plan: String,
+  amount: Number,
+  rate: Number,
+  startDate: Date,
+  maturityDate: Date,
+  status: { type: String, default: 'Active' },
+  expectedReturn: Number
+}],
   notificationsSettings: {
     email: { type: Boolean, default: true },
     sms: { type: Boolean, default: false },
@@ -28,6 +39,7 @@ const userSchema = new mongoose.Schema({
     savings: { type: Number, default: 0 },
     usdt: { type: Number, default: 0 },
   },
+  
   createdAt: { type: Date, default: Date.now },
 
   // Added fields
