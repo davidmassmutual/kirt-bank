@@ -1,15 +1,36 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
+import '../styles/Profile.css';
 
 export default function Profile() {
-  const { user, token } = useAuth();
+  const { user, token, fetchUser } = useAuth();
+
+  // ADD THIS CHECK
+  if (!token) {
+    return (
+      <div className="profile-container text-center p-8">
+        <p>Please log in to view your profile.</p>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="profile-container text-center p-8">
+        <p>Loading profile...</p>
+      </div>
+    );
+  }
+
   const [form, setForm] = useState({ name: '', email: '', phone: '', address: '' });
   const [image, setImage] = useState(null);
-  const [preview, setPreview] = useState(user?.profileImage || '');
+  const [preview, setPreview] = useState(user?.profileImage ? `http://localhost:5000${user.profileImage}` : '/default-avatar.png');
 
   useEffect(() => {
-    if (user) setForm({ name: user.name, email: user.email, phone: user.phone || '', address: user.address || '' });
+    if (user) {
+      setForm({ name: user.name, email: user.email, phone: user.phone || '', address: user.address || '' });
+    }
   }, [user]);
 
   const handleImageChange = (e) => {
@@ -30,6 +51,7 @@ export default function Profile() {
         });
       }
       await axios.put('/api/user/profile', form, { headers: { Authorization: `Bearer ${token}` } });
+      await fetchUser();
       alert('Profile updated!');
     } catch (err) {
       alert(err.response?.data?.message || 'Error');
@@ -37,26 +59,41 @@ export default function Profile() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-8 text-center">Profile Settings</h1>
+    <div className="profile-container">
+      <div className="profile-header">
+        <h1>Profile Settings</h1>
+      </div>
 
-      <div className="bg-card rounded-2xl p-6 mb-6">
-        <div className="flex flex-col items-center mb-6">
-          <img src={preview || '/default-avatar.png'} alt="Profile" className="w-32 h-32 rounded-full object-cover border-4 border-gold mb-4" />
-          <label className="cursor-pointer bg-gold text-black px-6 py-2 rounded-lg font-bold hover:bg-gold-dark transition">
-            Change Photo
-            <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
+      <form onSubmit={handleSubmit} className="profile-form">
+        <div className="profile-image-wrapper">
+          <img src={preview} alt="Profile" className="profile-image" />
+          <label className="upload-btn">
+            <input type="file" accept="image/*" onChange={handleImageChange} style={{ display: 'none' }} />
           </label>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <input type="text" placeholder="Name" value={form.name} onChange={e => setForm({...form, name: e.target.value})} className="input" required />
-          <input type="email" placeholder="Email" value={form.email} onChange={e => setForm({...form, email: e.target.value})} className="input" required />
-          <input type="tel" placeholder="Phone" value={form.phone} onChange={e => setForm({...form, phone: e.target.value})} className="input" />
-          <textarea placeholder="Address" value={form.address} onChange={e => setForm({...form, address: e.target.value})} className="input h-24" />
-          <button type="submit" className="btn-primary w-full">Save Changes</button>
-        </form>
-      </div>
+        <div className="form-group">
+          <label>Name</label>
+          <input type="text" value={form.name} onChange={e => setForm({...form, name: e.target.value})} required />
+        </div>
+
+        <div className="form-group">
+          <label>Email</label>
+          <input type="email" value={form.email} onChange={e => setForm({...form, email: e.target.value})} required />
+        </div>
+
+        <div className="form-group">
+          <label>Phone</label>
+          <input type="tel" value={form.phone} onChange={e => setForm({...form, phone: e.target.value})} />
+        </div>
+
+        <div className="form-group">
+          <label>Address</label>
+          <textarea value={form.address} onChange={e => setForm({...form, address: e.target.value})} />
+        </div>
+
+        <button type="submit" className="save-btn">Save Changes</button>
+      </form>
     </div>
   );
 }

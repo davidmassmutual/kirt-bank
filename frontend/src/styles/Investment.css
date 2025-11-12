@@ -1,82 +1,46 @@
-/* src/styles/Investment.css */
-.investment-page {
+/* src/styles/Investments.css */
+.investments-container {
   max-width: 1200px;
   margin: 2rem auto;
-  padding: 0 1rem;
-  margin-top: 3rem;
-
+  padding: 1.5rem;
 }
 
-.inv-header {
+.investments-header {
   text-align: center;
   margin-bottom: 3rem;
 }
 
-.inv-header h1 {
-  font-size: 36px;
+.investments-header h1 {
+  font-size: 3rem;
   font-weight: 700;
-}
-
-.inv-header p {
-  color: #9ca3af;
-  font-size: 17px;
-  max-width: 600px;
-  margin: 0.2rem auto 0;
-}
-
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1.5rem;
-  margin-bottom: 3rem;
-}
-
-.stat-card {
-  background: var(--card-bg);
-  padding: 2rem;
-  border-radius: 20px;
-  text-align: center;
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  transition: all 0.3s;
-}
-
-.stat-card:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
-}
-
-.stat-card svg {
-  font-size: 36px;
-  color: var(--gold);
+  background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
   margin-bottom: 1rem;
 }
 
-.stat-card h3 {
-  font-size: 28px;
+.investments-header p {
   color: var(--secondary);
-  margin-bottom: 0.5rem;
-}
-
-.stat-card p {
-  color: #9ca3af;
-  font-size: 15px;
+  font-size: 1.1rem;
+  max-width: 700px;
+  margin: 0 auto;
 }
 
 .plans-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 2rem;
-  margin-bottom: 4rem;
 }
 
 .plan-card {
   background: var(--card-bg);
+  backdrop-filter: blur(15px);
   border-radius: 24px;
   padding: 2rem;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
-  border: 2px solid transparent;
-  transition: all 0.4s;
+  text-align: center;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.4s ease;
   position: relative;
   overflow: hidden;
 }
@@ -84,124 +48,66 @@
 .plan-card::before {
   content: '';
   position: absolute;
-  top: 0; left: 0;
-  width: 100%; height: 4px;
-  background: linear-gradient(90deg, var(--plan-color), var(--gold-dark));
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: radial-gradient(circle at top right, rgba(255, 193, 7, 0.1), transparent 70%);
+  pointer-events: none;
 }
 
 .plan-card:hover {
-  transform: translateY(-10px);
-  border-color: var(--plan-color);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+  transform: translateY(-12px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+  border-color: var(--gold);
 }
 
-.plan-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+.plan-rate {
+  font-size: 3.5rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin: 0.5rem 0;
+}
+
+.plan-name {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--secondary);
+  margin-bottom: 0.5rem;
+}
+
+.plan-term {
+  color: var(--gold);
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.plan-range {
+  color: #9ca3af;
+  font-size: 0.95rem;
   margin-bottom: 1.5rem;
 }
 
-.plan-header h3 {
-  font-size: 22px;
-  color: var(--text);
-  font-weight: 600;
-}
-
-.apy {
-  font-size: 28px;
-  font-weight: 700;
-  color: var(--plan-color);
-}
-
-.apy span {
-  font-size: 14px;
-  color: #9ca3af;
-}
-
-.plan-details p {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 0.75rem;
-  color: var(--text);
-  font-size: 15px;
-}
-
-.plan-details svg {
-  color: var(--success);
-  font-size: 18px;
-}
-
 .invest-btn {
-  width: 100%;
-  background: linear-gradient(135deg, var(--plan-color), var(--gold-dark));
-  color: #fff;
+  background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+  color: #1a1a1a;
   border: none;
-  padding: 14px;
-  border-radius: 16px;
-  font-weight: 600;
-  font-size: 16px;
+  padding: 1rem 2rem;
+  border-radius: 14px;
+  font-weight: bold;
+  font-size: 1.1rem;
   cursor: pointer;
-  margin-top: 1.5rem;
+  width: 100%;
   transition: all 0.3s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
 }
 
 .invest-btn:hover {
   transform: translateY(-3px);
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 10px 25px rgba(255, 193, 7, 0.4);
 }
 
-.calculator {
-  background: var(--card-bg);
-  padding: 2rem;
-  border-radius: 24px;
-  text-align: center;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-}
-
-.calculator h2 {
-  color: var(--gold);
-  margin-bottom: 1.5rem;
-  font-size: 24px;
-}
-
-.calculator input {
-  width: 100%;
-  max-width: 300px;
-  padding: 16px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.1);
-  color: var(--text);
-  font-size: 18px;
-  text-align: center;
-  margin-bottom: 1.5rem;
-}
-
-.results {
-  background: rgba(16, 185, 129, 0.1);
-  padding: 1rem;
-  border-radius: 16px;
-  border: 1px solid var(--success);
-}
-
-.results div {
-  margin-bottom: 0.75rem;
-  font-size: 16px;
-}
-
-.results strong {
-  color: var(--success);
-}
-
-/* RESPONSIVE */
-@media (max-width: 768px) {
-  .inv-header h1 { font-size: 28px; }
-  .plans-grid { grid-template-columns: 1fr; }
-  .stats-grid { grid-template-columns: 1fr; }
+/* Mobile */
+@media (max-width: 576px) {
+  .investments-header h1 { font-size: 2.2rem; }
+  .plan-rate { font-size: 2.8rem; }
+  .plan-card { padding: 1.5rem; }
 }
