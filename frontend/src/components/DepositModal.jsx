@@ -17,7 +17,6 @@ const DepositModal = ({ isOpen, onClose }) => {
   const currency = localStorage.getItem('currency') || 'USD';
   const symbol = currency === 'USD' ? '$' : currency;
 
-  // ALL useEffect MOVED TO TOP — NO CONDITIONALS
   useEffect(() => {
     if (isOpen && depositMethod) {
       setTimeout(() => amountInputRef.current?.focus(), 300);
@@ -46,10 +45,7 @@ const DepositModal = ({ isOpen, onClose }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!depositMethod || !amount || parseFloat(amount) < 10) {
-      toast.error('Minimum $10');
-      return;
-    }
+    if (!depositMethod || !amount || parseFloat(amount) < 10) return;
 
     setLoading(true);
     setTimeout(() => {

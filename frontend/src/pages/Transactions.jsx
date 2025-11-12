@@ -8,8 +8,8 @@ import { PDFDownloadLink } from '@react-pdf/renderer';
 import TransactionPDF from '../components/TransactionPDF';
 import LoadingSkeleton from '../components/LoadingSkeleton';
 import {
-  FaSearch, FaFilter, FaFileCsv, FaFilePdf,
-  FaArrowDown, FaArrowUp, FaUniversity, FaShoppingCart, FaMoneyBillWave
+  FaSearch, FaFilter, FaFileCsv, FaFilePdf, FaArrowDown, FaArrowUp,
+  FaUniversity, FaShoppingCart, FaCreditCard, FaMoneyBillWave
 } from 'react-icons/fa';
 import '../styles/Transactions.css';
 
@@ -23,14 +23,23 @@ function Transactions() {
   const API = import.meta.env.VITE_API_URL || 'https://kirt-bank.onrender.com';
 
   const fetchTransactions = useCallback(async () => {
-    if (!token) { navigate('/'); return; }
+    if (!token) {
+      navigate('/');
+      return;
+    }
 
     try {
       setLoading(true);
-      // CORRECT ENDPOINT – works for normal users
-      const res = await axios.get(`${API}/api/transactions/user`, {
+      // FIXED: Use /api/transactions/user/:id OR just /api/transactions for user
+      const userRes = await axios.get(`${API}/api/auth/me`, {
         headers: { Authorization: `Bearer ${token}` },
       });
+      const userId = userRes.data._id;
+
+      const res = await axios.get(`${API}/api/transactions/user/${userId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
       setTransactions(res.data || []);
     } catch (err) {
       console.error('Transaction fetch error:', err);
@@ -42,7 +51,9 @@ function Transactions() {
     }
   }, [token, navigate, API]);
 
-  useEffect(() => { fetchTransactions(); }, [fetchTransactions]);
+  useEffect(() => {
+    fetchTransactions();
+  }, [fetchTransactions]);
 
   const filtered = useMemo(() => {
     return transactions.filter(tx => {
@@ -82,8 +93,8 @@ function Transactions() {
       <div className="transactions-list">
         {filtered.length === 0 ? (
           <div className="empty-state">
-            <FaMoneyBillWave className="empty-icon" />
-            <p>No transactions yet – make your first deposit!</p>
+            <FaCreditCard className="empty-icon" />
+            <p>No transactions yet. Make your first deposit!</p>
           </div>
         ) : (
           filtered.map(tx => (
@@ -100,7 +111,9 @@ function Transactions() {
                   {tx.type === 'deposit' ? '+' : '-'}${tx.amount.toLocaleString()}
                 </span>
               </div>
-              <div className={`status-badge ${tx.status?.toLowerCase()}`}>{tx.status || 'Pending'}</div>
+              <div className={`status-badge ${tx.status?.toLowerCase()}`}>
+                {tx.status || 'Pending'}
+              </div>
             </div>
           ))
         )}
