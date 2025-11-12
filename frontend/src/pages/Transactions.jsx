@@ -8,8 +8,8 @@ import { PDFDownloadLink } from '@react-pdf/renderer';
 import TransactionPDF from '../components/TransactionPDF';
 import LoadingSkeleton from '../components/LoadingSkeleton';
 import {
-  FaSearch, FaFilter, FaFileCsv, FaFilePdf, FaArrowDown, FaArrowUp,
-  FaUniversity, FaShoppingCart, FaCreditCard, FaMoneyBillWave
+  FaSearch, FaFilter, FaFileCsv, FaFilePdf,
+  FaArrowDown, FaArrowUp, FaUniversity, FaShoppingCart, FaMoneyBillWave
 } from 'react-icons/fa';
 import '../styles/Transactions.css';
 
@@ -23,22 +23,18 @@ function Transactions() {
   const API = import.meta.env.VITE_API_URL || 'https://kirt-bank.onrender.com';
 
   const fetchTransactions = useCallback(async () => {
-    if (!token) {
-      navigate('/');
-      return;
-    }
+    if (!token) { navigate('/'); return; }
 
     try {
       setLoading(true);
-      // FIXED: WAS /api/transactions → NOW /api/transactions (or /user if needed)
-      // But your backend returns user tx on /api/transactions
-      const res = await axios.get(`${API}/api/transactions`, {
+      // CORRECT ENDPOINT – works for normal users
+      const res = await axios.get(`${API}/api/transactions/user`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setTransactions(res.data || []);
     } catch (err) {
       console.error('Transaction fetch error:', err);
-      toast.error('No transactions found or server error');
+      toast.error('Unable to load transactions');
       setTransactions([]);
       if (err.response?.status === 401) navigate('/');
     } finally {
@@ -46,16 +42,14 @@ function Transactions() {
     }
   }, [token, navigate, API]);
 
-  useEffect(() => {
-    fetchTransactions();
-  }, [fetchTransactions]);
+  useEffect(() => { fetchTransactions(); }, [fetchTransactions]);
 
   const filtered = useMemo(() => {
     return transactions.filter(tx => {
-      const searchStr = `${tx.description || tx.type || ''} ${tx.method || ''}`.toLowerCase();
-      const matchesSearch = searchStr.includes(search.toLowerCase());
-      const matchesFilter = filter === 'all' || tx.status?.toLowerCase() === filter;
-      return matchesSearch && matchesFilter;
+      const txt = `${tx.description || tx.type || ''} ${tx.method || ''}`.toLowerCase();
+      const matchSearch = txt.includes(search.toLowerCase());
+      const matchFilter = filter === 'all' || tx.status?.toLowerCase() === filter;
+      return matchSearch && matchFilter;
     });
   }, [transactions, search, filter]);
 
@@ -68,11 +62,7 @@ function Transactions() {
         <div className="header-actions">
           <div className="search-bar">
             <FaSearch />
-            <input
-              placeholder="Search..."
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-            />
+            <input placeholder="Search…" value={search} onChange={e => setSearch(e.target.value)} />
           </div>
           <select value={filter} onChange={e => setFilter(e.target.value)}>
             <option value="all">All</option>
@@ -92,8 +82,8 @@ function Transactions() {
       <div className="transactions-list">
         {filtered.length === 0 ? (
           <div className="empty-state">
-            <FaCreditCard className="empty-icon" />
-            <p>No transactions yet. Make your first deposit!</p>
+            <FaMoneyBillWave className="empty-icon" />
+            <p>No transactions yet – make your first deposit!</p>
           </div>
         ) : (
           filtered.map(tx => (
@@ -103,16 +93,14 @@ function Transactions() {
               </div>
               <div className="transaction-details">
                 <h3>{tx.description || tx.type?.charAt(0).toUpperCase() + tx.type?.slice(1)}</h3>
-                <p>{new Date(tx.date).toLocaleDateString()} • {tx.method || 'N/A'}</p>
+                <p>{new Date(tx.date).toLocaleDateString()} • {tx.method || '—'}</p>
               </div>
               <div className="transaction-amount">
-                <span style={{ color: tx.type === 'deposit' ? '#10b981' : '#ef4444', fontWeight: 'bold' }}>
-                  {tx.type === 'deposit' ? '+' : '-'} ${tx.amount.toLocaleString()}
+                <span style={{ color: tx.type === 'deposit' ? '#10b981' : '#ef4444', fontWeight: 600 }}>
+                  {tx.type === 'deposit' ? '+' : '-'}${tx.amount.toLocaleString()}
                 </span>
               </div>
-              <div className={`status-badge ${tx.status?.toLowerCase()}`}>
-                {tx.status || 'Pending'}
-              </div>
+              <div className={`status-badge ${tx.status?.toLowerCase()}`}>{tx.status || 'Pending'}</div>
             </div>
           ))
         )}

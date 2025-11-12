@@ -1,225 +1,244 @@
-/* src/styles/DepositModal.css */
 .deposit-modal-overlay {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,0.7);
-  backdrop-filter: blur(8px);
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(10px);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
-  padding: 1rem;
+  z-index: 9999;
+  animation: fadeIn 0.3s ease-out;
 }
 
 .deposit-modal {
-  background: var(--card-bg);
-  border-radius: 20px;
-  width: 100%;
-  max-width: 500px;
-  max-height: 90vh;
-  overflow-y: auto;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 24px;
+  width: 90%;
+  max-width: 420px;
+  padding: 24px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.4s ease-out;
   position: relative;
-  animation: modalIn 0.3s ease;
+  overflow: hidden;
+}
+
+.deposit-modal.glass {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .close-btn {
   position: absolute;
-  top: 1rem; right: 1rem;
+  top: 16px; right: 16px;
   background: none;
   border: none;
-  font-size: 1.8rem;
-  color: var(--secondary);
+  font-size: 24px;
+  color: #999;
   cursor: pointer;
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  transition: all 0.2s;
+  z-index: 10;
 }
 
-.close-btn:hover {
-  background: rgba(239,68,68,0.2);
-  color: var(--error);
-}
-
-.deposit-modal h2 {
-  margin: 2rem 2rem 0.5rem;
-  font-size: 1.8rem;
-  color: var(--text);
-  text-align: center;
+.modal-header h2 {
+  font-size: 28px;
+  margin: 0 0 8px;
+  background: linear-gradient(135deg, #4361ee, #7209b7);
+  /* -webkit-background-clip: text; */
+  -webkit-text-fill-color: transparent;
 }
 
 .subtitle {
-  text-align: center;
-  color: var(--secondary);
-  margin-bottom: 1.5rem;
-}
-
-.deposit-form {
-  padding: 0 2rem 2rem;
-}
-
-.form-group {
-  margin-bottom: 1.5rem;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 0.5rem;
-  font-weight: 600;
-  color: var(--text);
+  color: #666;
+  margin: 0 0 24px;
 }
 
 .method-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 0.75rem;
+  gap: 12px;
+  margin-bottom: 20px;
 }
 
 .method-btn {
-  padding: 1rem;
-  border: 2px solid var(--highlight);
-  border-radius: 12px;
-  background: var(--card-bg);
-  color: var(--text);
-  font-weight: 600;
+  padding: 16px;
+  border: 2px solid #eee;
+  border-radius: 16px;
+  background: white;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.3s;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.5rem;
+  gap: 8px;
 }
 
 .method-btn.active {
-  border-color: var(--primary);
-  background: linear-gradient(135deg, rgba(255,193,7,0.1), transparent);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(255,193,7,0.2);
+  transform: translateY(-4px);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+  border-color: var(--method-color);
 }
 
 .method-icon {
-  font-size: 1.8rem;
+  font-size: 28px;
 }
 
-.amount-input {
-  position: relative;
-}
-
-.amount-input .currency {
-  position: absolute;
-  left: 1rem;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--primary);
-  font-weight: 700;
-  font-size: 1.1rem;
-}
-
-.amount-input input {
-  width: 100%;
-  padding: 1rem 1rem 1rem 2.5rem;
-  border: 2px solid var(--highlight);
-  border-radius: 12px;
-  background: var(--input-bg);
-  color: var(--text);
-  font-size: 1.1rem;
-}
-
-.amount-input input:focus {
-  border-color: var(--primary);
-  outline: none;
-}
-
-.deposit-form select {
-  width: 100%;
-  padding: 1rem;
-  border: 2px solid var(--highlight);
-  border-radius: 12px;
-  background: var(--input-bg);
-  color: var(--text);
-  font-size: 1rem;
+.method-label {
+  font-size: 13px;
+  font-weight: 600;
 }
 
 .crypto-info {
-  background: rgba(59, 130, 246, 0.05);
-  border: 1px dashed var(--primary);
-  border-radius: 12px;
-  padding: 1.5rem;
+  background: rgba(247, 147, 26, 0.1);
+  border: 1px solid #f7931a;
+  border-radius: 16px;
+  padding: 16px;
   text-align: center;
-  margin: 1rem 0;
+  margin: 20px 0;
 }
 
-.qr-code {
-  margin-bottom: 1rem;
-  color: var(--primary);
+.qr { color: #f7931a; margin-bottom: 8px; }
+.network { font-weight: bold; color: #f7931a; font-size: 12px; }
+.address { font-family: monospace; font-size: 14px; margin: 12px 0; word-break: break-all; }
+.copy-btn { background: #f7931a; color: white; border: none; padding: 10px 20px; border-radius: 12px; }
+
+.form-group {
+  margin-bottom: 20px;
 }
 
-.address {
-  font-family: monospace;
-  font-size: 0.9rem;
-  word-break: break-all;
-  margin: 1rem 0;
-  color: var(--text);
-}
-
-.copy-btn {
-  background: var(--primary);
-  color: white;
-  border: none;
-  padding: 0.6rem 1.2rem;
-  border-radius: 50px;
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
   font-weight: 600;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin: 0 auto;
+  color: #333;
+}
+
+.amount-input-wrapper {
+  position: relative;
+}
+
+.currency-symbol {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 20px;
+  font-weight: bold;
+  color: #4361ee;
+}
+
+.amount-input {
+  width: 100%;
+  padding: 16px 16px 16px 50px;
+  border: 2px solid #eee;
+  border-radius: 16px;
+  font-size: 18px;
   transition: all 0.3s;
 }
 
-.copy-btn:hover {
-  background: var(--accent);
-  transform: translateY(-2px);
+.amount-input:focus {
+  border-color: #4361ee;
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(67, 97, 238, 0.2);
+}
+
+.min-amount {
+  font-size: 12px;
+  color: #999;
+  margin-top: 4px;
+}
+
+.account-select {
+  width: 100%;
+  padding: 16px;
+  border: 2px solid #eee;
+  border-radius: 16px;
+  font-size: 16px;
 }
 
 .modal-actions {
   display: flex;
-  gap: 1rem;
-  margin-top: 2rem;
+  gap: 12px;
+  margin-top: 24px;
 }
 
-.proceed-btn, .cancel-btn {
+.proceed-btn {
   flex: 1;
-  padding: 1rem;
+  background: linear-gradient(135deg, #4361ee, #7209b7);
+  color: white;
   border: none;
-  border-radius: 12px;
-  font-weight: 600;
+  padding: 16px;
+  border-radius: 16px;
+  font-size: 18px;
+  font-weight: bold;
   cursor: pointer;
   transition: all 0.3s;
 }
 
-.proceed-btn {
-  background: var(--primary);
-  color: white;
+.proceed-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .cancel-btn {
-  background: var(--secondary);
-  color: white;
+  flex: 1;
+  background: #f1f1f1;
+  border: none;
+  padding: 16px;
+  border-radius: 16px;
+  font-weight: 600;
 }
 
-.proceed-btn:hover { background: var(--accent); }
-.cancel-btn:hover { opacity: 0.9; }
-
-@keyframes modalIn {
-  from { opacity: 0; transform: scale(0.9); }
-  to { opacity: 1; transform: scale(1); }
+.security-note {
+  text-align: center;
+  margin-top: 20px;
+  font-size: 12px;
+  color: #666;
 }
 
-@media (max-width: 480px) {
-  .method-grid { grid-template-columns: 1fr; }
+/* SUCCESS MODE */
+.success-mode {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.success-check {
+  color: #4ade80;
+  margin-bottom: 20px;
+  animation: bounce 0.6s;
+}
+
+.loader-bar {
+  width: 100%;
+  height: 4px;
+  background: #eee;
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: 20px;
+}
+
+.progress {
+  height: 100%;
+  background: linear-gradient(90deg, #4361ee, #7209b7);
+  width: 0%;
+  animation: load 1.2s ease-in-out forwards;
+}
+
+/* ANIMATIONS */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(50px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes bounce {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+}
+
+@keyframes load {
+  to { width: 100%; }
 }
