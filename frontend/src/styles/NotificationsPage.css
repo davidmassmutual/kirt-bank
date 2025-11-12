@@ -1,7 +1,7 @@
 /* src/styles/NotificationsPage.css */
 .notifications-page {
   padding: 2rem;
-  background: var(--background);
+  margin-top: 2rem;
   min-height: 100vh;
   color: var(--text);
 }

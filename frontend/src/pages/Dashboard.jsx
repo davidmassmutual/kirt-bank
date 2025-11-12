@@ -1,19 +1,21 @@
+// src/pages/Dashboard.jsx
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import AccountSummary from './AccountSummary';
-import DepositOptions from '../components/DepositOptions';
-import TransferPayment from './TransferPayment';
-import CurrencyConverter from '../components/CurrencyConverter';
 import LoanBanner from '../components/LoanBanner';
+import CurrencyConverter from '../components/CurrencyConverter';
 import SecurityDisplay from '../components/SecurityDisplay';
 import DepositModal from '../components/DepositModal';
 import LoadingSkeleton from '../components/LoadingSkeleton';
-import '../styles/Dashboard.css';
+import InvestmentCard from '../components/InvestmentCard';
+import QuickStats from '../components/QuickStats';
+import ActivityFeed from '../components/ActivityFeed';
 import img9 from '../images/WhatsApp Image 2025-10-17 at 16.15.27.jpeg';
-import {useDeposit} from '../context/DepositContext';
-import { FaPlus } from 'react-icons/fa';
+import { useDeposit } from '../context/DepositContext';
+import { FaPlus, FaChartLine, FaExchangeAlt, FaCreditCard, FaBell } from 'react-icons/fa';
+import '../styles/Dashboard.css';
 
 function Dashboard() {
   const [userData, setUserData] = useState(null);
@@ -32,7 +34,6 @@ function Dashboard() {
           headers: { Authorization: `Bearer ${token}` },
         });
         setUserData(res.data);
-        setLoading(false);
       } catch (err) {
         if (err.response?.status === 401) {
           localStorage.removeItem('token');
@@ -41,6 +42,8 @@ function Dashboard() {
         } else {
           toast.error('Failed to load data');
         }
+      } finally {
+        setLoading(false);
       }
     };
     fetchData();
@@ -50,70 +53,112 @@ function Dashboard() {
 
   return (
     <div className="dashboard">
+      {/* MOBILE BRAND */}
       <div className="navbar-brand-mobile">
-        <h1>Kirt Bank <img src={img9} alt="" className="navbar-brand-image" /></h1>
+        <h1>Kirt Bank <img src={img9} alt="Kirt Bank" className="brand-logo" /></h1>
         <p>Strength. Security. Stability.</p>
       </div>
+
+      {/* NOTIFICATIONS BELL */}
       <div className="notifications-bell">
         <button onClick={() => setShowNotifications(!showNotifications)} className="bell-icon">
-          <i className="fas fa-bell"></i>
-          {userData?.notifications?.length > 0 && <span className="badge">{userData.notifications.length}</span>}
+          <FaBell />
+          {userData?.notifications?.length > 0 && (
+            <span className="notification-badge">{userData.notifications.length}</span>
+          )}
         </button>
+
         {showNotifications && (
-          <div className="notifications-overlay">
+          <div className="notifications-panel glass">
             <h3>Notifications</h3>
-            {userData?.notifications?.length > 0 ? (
-              userData.notifications.slice(0, 3).map((n, i) => (
-                <div key={i} className="notification-item">
+            {userData.notifications?.length > 0 ? (
+              userData.notifications.slice(0, 5).map((n, i) => (
+                <div key={i} className="notif-item">
                   <p>{n.message}</p>
                   <span>{new Date(n.date).toLocaleString()}</span>
                 </div>
               ))
             ) : (
-              <p>No notifications.</p>
+              <p>No new notifications.</p>
             )}
-            <Link to="/notifications" onClick={() => setShowNotifications(false)}>View All</Link>
+            <Link to="/notifications" onClick={() => setShowNotifications(false)} className="view-all">
+              View All
+            </Link>
           </div>
         )}
       </div>
 
+       {/* WELCOME */}
+      <div className="welcome-section">
+        <h1>Welcome back, {userData?.name?.split(' ')[0] || 'User'}!</h1>
+      </div>
+
+      {/* KYC WARNING */}
       {userData?.kycStatus !== 'verified' && (
         <div className="kyc-warning">
-          <p>KYC Pending — Upload ID to unlock full features</p>
-          <Link to="/loans">Complete KYC</Link>
+          <p>KYC Pending — Upload ID to <Link to="/kyc">Complete KYC</Link> </p>
         </div>
       )}
 
-      <div className="welcome-section">
-        <h1>Welcome, {userData?.name || 'User'}</h1>
-      </div>
-      <div className="account-sum">
+     
+
+      {/* ACCOUNT SUMMARY */}
+      <div className="account-summary-wrapper">
         <AccountSummary />
       </div>
-      <div className="action-buttons">
-        <div className="action-button-grid">
-         <button onClick={openDepositModal} className="action-button">
-            <FaPlus /> Deposit
-          </button>
-          <Link to="/loans" className="action-button">Loan</Link>
-          <Link to="/transfer" className="action-button">Transfer</Link>
-          <Link to="/cards" className="action-button">Card</Link>
-        </div>
+
+      {/* ACTION BUTTONS – 2×2 MOBILE, 4×1 DESKTOP */}
+      <div className="action-grid">
+        <button onClick={openDepositModal} className="action-card glass">
+          <FaPlus className="icon" />
+          <span>Deposit</span>
+        </button>
+        <Link to="/transfer" className="action-card glass">
+          <FaExchangeAlt className="icon" />
+          <span>Transfer</span>
+        </Link>
+        <Link to="/investment" className="action-card glass">
+          <FaChartLine className="icon" />
+          <span>Invest</span>
+        </Link>
+        <Link to="/cards" className="action-card glass">
+          <FaCreditCard className="icon" />
+          <span>Card</span>
+        </Link>
+      </div>
+
+      {/* LOAN BANNER */}
+      <div className="loan-banner-wrapper">
         <LoanBanner />
       </div>
-      <div className="quick-actions">
-        <div className="action-card"><DepositOptions /></div>
-        <div className="action-card"><TransferPayment /></div>
+<div className="feature-card glass">
+          <InvestmentCard />
+        </div>
+      {/* QUICK STATS */}
+      <div className="quick-stats-wrapper">
+        <QuickStats balance={userData?.balance} />
       </div>
-      <div className="secondary-features">
-        <CurrencyConverter />
-        <SecurityDisplay lastLogin={userData?.lastLogin} twoFactorEnabled={userData?.twoFactorEnabled} />
+
+      {/* RECENT ACTIVITY */}
+      <div className="activity-feed-wrapper">
+        <ActivityFeed userId={userData?._id} />
       </div>
-       {/* MODAL */}
-      <DepositModal 
-        isOpen={isModalOpen} 
-        onClose={closeDepositModal} 
-      />
+
+      {/* SECONDARY FEATURES */}
+      <div className="secondary-features-grid">
+        <div className="feature-card glass">
+          <CurrencyConverter />
+        </div>
+        <div className="feature-card glass">
+          <SecurityDisplay 
+            lastLogin={userData?.lastLogin} 
+            twoFactorEnabled={userData?.twoFactorEnabled} 
+          />
+        </div>
+      </div>
+
+      {/* MODAL */}
+      <DepositModal isOpen={isModalOpen} onClose={closeDepositModal} />
     </div>
   );
 }

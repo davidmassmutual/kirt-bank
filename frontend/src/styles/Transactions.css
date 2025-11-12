@@ -1,7 +1,7 @@
 /* src/styles/Transactions.css */
 .transactions-page {
+  margin-top: 2rem;
   padding: 2rem;
-  background: var(--background);
   min-height: 100vh;
   color: var(--text);
 }

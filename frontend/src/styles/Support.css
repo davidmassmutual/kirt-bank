@@ -1,14 +1,16 @@
 .support {
- padding: 4rem 2rem 8rem;
- background-color: var(--background);
+ padding: 2rem 0rem 4rem;
  animation: fadeIn 0.7s ease-in;
  min-height: calc(100vh - 80px);
+ margin-top: 2rem;
 }
 
 .support h2 {
  font-weight: 700;
  color: var(--text);
  margin-bottom: 1.5rem;
+ display: flex;
+ justify-content: center;
 }
 
 .support button {

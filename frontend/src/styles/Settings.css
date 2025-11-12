@@ -11,16 +11,17 @@
 
 .settings {
   padding: 1.5rem;
-  background: var(--background);
+  margin-top: 2rem;
 }
 
 .settings h2 {
-  font-size: 1.8rem;
+  font-size: 1.9rem;
   font-weight: 700;
   color: var(--text);
   margin-bottom: 1rem;
   display: flex;
-  align-items: center;
+  justify-content: center;
+  text-align: center;
   gap: 0.5rem;
 }
 

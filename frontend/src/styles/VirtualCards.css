@@ -12,7 +12,7 @@
 
 .virtual-cards {
   padding: 1.5rem;
-  background: var(--background);
+  margin-top: 2rem;
 }
 
 .virtual-cards h2 {
@@ -22,6 +22,7 @@
   margin-bottom: 1rem;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 0.5rem;
 }
 
@@ -31,8 +32,8 @@
   margin-bottom: 1.5rem;
 }
 
-.create-card-button {
-  padding: 0.8rem 1.5rem;
+.create-btn {
+  padding: 0.8rem 1rem;
   background: linear-gradient(90deg, var(--gold), #FBBF24);
   color: var(--navy);
   border: none;
@@ -46,12 +47,12 @@
   margin-bottom: 1.5rem;
 }
 
-.create-card-button:disabled {
+.create-btn:disabled {
   background: #E5E7EB;
   cursor: not-allowed;
 }
 
-.create-card-button:hover:not(:disabled) {
+.create-btn:hover:not(:disabled) {
   background: linear-gradient(90deg, #FBBF24, var(--gold));
 }
 

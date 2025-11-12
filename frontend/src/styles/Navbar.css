@@ -156,8 +156,8 @@
   .navbar-menu { max-height: calc(100vh - 60px); }
   .navbar-menu li a,
   .navbar-menu li button {
-    font-size: 1.1rem;
-    padding: 0.8rem;
+    font-size: 1rem;
+    padding: 0.6rem;
   }
 }
 

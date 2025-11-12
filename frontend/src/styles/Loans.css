@@ -12,9 +12,9 @@
 }
 
 .loan-page {
-  padding: 1.5rem;
-  background: var(--background);
+  margin-top: 2rem;
   min-height: 100vh;
+  padding: 1rem 1rem;
 }
 
 .loan-banner {
