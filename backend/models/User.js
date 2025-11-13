@@ -19,7 +19,10 @@ const userSchema = new mongoose.Schema({
   currency: { type: String, default: 'USD' },
   theme: { type: String, default: 'light' },
   // ADD TO userSchema
-profileImage: { type: String, default: '' },
+  profileImage: { type: String, default: '' },
+  phone: { type: String },
+  address: { type: String },
+  
 investments: [{
   plan: String,
   amount: Number,

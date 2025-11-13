@@ -5,6 +5,7 @@ const bcrypt = require('bcryptjs');
 const User = require('../models/User');
 const verifyToken = require('../middleware/auth');
 // ADD TO TOP
+const multer = require('multer');
 const upload = require('../middleware/upload');
 const path = require('path');
 const fs = require('fs');
@@ -174,19 +175,20 @@ async function logAdminNotification(adminId, message) {
 // ──────────────────────────────────────────────────────────────
 // PUT: Update profile
 // ──────────────────────────────────────────────────────────────
+// REPLACE THIS ENTIRE ROUTE
 router.put('/profile', verifyToken, async (req, res) => {
   try {
-    const { name, email, phone, address } = req.body;
-    if (!name || !email) {
-      return res.status(400).json({ message: 'Name and email are required' });
+    const { name, phone, address } = req.body;
+    if (!name) {
+      return res.status(400).json({ message: 'Name is required' });
     }
     const user = await User.findById(req.userId);
     if (!user) return res.status(404).json({ message: 'User not found' });
 
     user.name = name;
-    user.email = email;
-    user.phone = phone || '';
-    user.address = address || '';
+    user.phone = phone || user.phone;
+    user.address = address || user.address;
+    // EMAIL & PHONE CANNOT BE CHANGED AFTER FIRST SET
     await user.save();
 
     res.json({ message: 'Profile updated successfully' });
