@@ -38,11 +38,8 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-// === BODY PARSERS ===
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-
-// === STATIC FILES ===
 app.use('/uploads', express.static(uploadsDir));
 
 // === DATABASE ===
@@ -69,7 +66,6 @@ const loanRoutes = require('./routes/loans');
 const notificationRoutes = require('./routes/notifications');
 const investmentRoutes = require('./routes/investments');
 
-// FIXED: /api/investments (NOT /api/investment)
 app.use('/api/auth', authRoutes);
 app.use('/api/transactions', transactionRoutes);
 app.use('/api/user', userRoutes);
@@ -85,12 +81,12 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// === 404 HANDLER — MUST BE LAST ===
-app.use('*', (req, res) => {
+// === 404 HANDLER — MUST BE AFTER ALL ROUTES ===
+app.use((req, res, next) => {
   res.status(404).json({ message: `Route ${req.originalUrl} not found` });
 });
 
-// === ERROR HANDLER ===
+// === ERROR HANDLER — ALWAYS LAST ===
 app.use((err, req, res, next) => {
   console.error('Error:', err.message);
   if (err.message.includes('CORS')) return res.status(403).json({ message: 'CORS error' });
