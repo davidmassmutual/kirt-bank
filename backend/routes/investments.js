@@ -30,11 +30,12 @@ const PLANS = {
   }
 };
 
-// === GET: All Plans ===
+// backend/routes/investments.js (LINE 26 – FIXED)
 router.get('/plans', (req, res) => {
   try {
     const plans = Object.values(PLANS);
-    res.json(plans);
+    console.log('Returning plans:', plans); // DEBUG
+    res.json(plans); // ← ALWAYS ARRAY
   } catch (err) {
     console.error('Get plans error:', err);
     res.status(500).json({ message: 'Server error' });

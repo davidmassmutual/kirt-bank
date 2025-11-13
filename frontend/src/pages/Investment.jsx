@@ -11,6 +11,10 @@ export default function Investments() {
   const { token } = useAuth();
   const navigate = useNavigate();
 
+  const totalInvested = userInvestments.reduce((sum, inv) => sum + inv.amount, 0);
+
+  const [userBalance, setUserBalance] = useState({ checking: 0, savings: 0, usdt: 0 });
+
   useEffect(() => {
     // Fetch plans
     axios.get('/api/investments/plans')
@@ -35,7 +39,16 @@ export default function Investments() {
     navigate('/invest', { state: { plan } });
   };
 
-  const totalInvested = userInvestments.reduce((sum, inv) => sum + inv.amount, 0);
+useEffect(() => {
+  if (token) {
+    axios.get('/api/user', { headers: { Authorization: `Bearer ${token}` } })
+      .then(res => {
+        setUserInvestments(res.data.investments || []);
+        setUserBalance(res.data.balance || { checking: 0, savings: 0, usdt: 0 });
+      })
+      .catch(() => {});
+  }
+}, [token]);
 
   return (
     <div className="investments-page">
@@ -54,6 +67,15 @@ export default function Investments() {
             <p className="total-count">{userInvestments.length} active plan{userInvestments.length > 1 ? 's' : ''}</p>
           </div>
         )}
+
+        {userInvestments.length > 0 && (
+  <div className="mt-6 p-6 bg-card/80 backdrop-blur rounded-2xl border border-gold/30 text-center">
+    <p className="text-sm text-secondary mb-1">Total Invested</p>
+    <p className="text-3xl font-bold text-gold">${totalInvested.toLocaleString()}</p>
+    <p className="text-xs text-secondary mt-1">{userInvestments.length} active plan{userInvestments.length > 1 ? 's' : ''}</p>
+    <p className="text-xs text-secondary mt-2">Available: ${Object.values(userBalance).reduce((s, v) => s + v, 0).toLocaleString()}</p>
+  </div>
+)}
 
         {/* PLANS */}
         <div className="plans-section">

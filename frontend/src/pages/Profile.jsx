@@ -9,16 +9,13 @@ export default function Profile() {
   const { user, token, fetchUser } = useAuth();
   const navigate = useNavigate();
 
-  // REDIRECT IF NOT LOGGED IN
-  useEffect(() => {
-    if (!token) {
-      navigate('/login');
-      return;
-    }
-  }, [token, navigate]);
+  if (!token) {
+    useEffect(() => navigate('/login'), [navigate]);
+    return null;
+  }
 
-  if (!token || !user) {
-    return null; // Redirecting
+  if (!user) {
+    return <div className="profile-container text-center p-8">Loading...</div>;
   }
 
   const [form, setForm] = useState({
@@ -35,8 +32,8 @@ export default function Profile() {
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-    setImage(file);
-    setPreview(URL.createObjectURL(file));
+      setImage(file);
+      setPreview(URL.createObjectURL(file));
     }
   };
 
@@ -88,7 +85,7 @@ export default function Profile() {
         </div>
 
         <div className="form-group">
-          <label>Email</label>
+          <label>Email (Locked)</label>
           <input type="email" value={user.email} disabled className="opacity-60 cursor-not-allowed" />
         </div>
 

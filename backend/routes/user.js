@@ -4,9 +4,7 @@ const router = express.Router();
 const bcrypt = require('bcryptjs');
 const User = require('../models/User');
 const verifyToken = require('../middleware/auth');
-// ADD TO TOP
-const multer = require('multer');
-const upload = require('../middleware/upload');
+const upload = require('../middleware/upload'); // ← Multer middleware
 const path = require('path');
 const fs = require('fs');
 
@@ -173,22 +171,23 @@ async function logAdminNotification(adminId, message) {
 }
 
 // ──────────────────────────────────────────────────────────────
-// PUT: Update profile
+// PUT: Update profile (Name, Address, Phone only if not set)
+// EMAIL & PHONE LOCKED AFTER FIRST SET
 // ──────────────────────────────────────────────────────────────
-// REPLACE THIS ENTIRE ROUTE
 router.put('/profile', verifyToken, async (req, res) => {
   try {
     const { name, phone, address } = req.body;
     if (!name) {
       return res.status(400).json({ message: 'Name is required' });
     }
+
     const user = await User.findById(req.userId);
     if (!user) return res.status(404).json({ message: 'User not found' });
 
     user.name = name;
-    user.phone = phone || user.phone;
+    if (!user.phone && phone) user.phone = phone; // Only set if empty
     user.address = address || user.address;
-    // EMAIL & PHONE CANNOT BE CHANGED AFTER FIRST SET
+
     await user.save();
 
     res.json({ message: 'Profile updated successfully' });
@@ -198,7 +197,9 @@ router.put('/profile', verifyToken, async (req, res) => {
   }
 });
 
-// ADD NEW ROUTE
+// ──────────────────────────────────────────────────────────────
+// PUT: Upload Profile Image
+// ──────────────────────────────────────────────────────────────
 router.put('/profile/image', verifyToken, upload.single('profileImage'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ message: 'No image uploaded' });
@@ -217,7 +218,7 @@ router.put('/profile/image', verifyToken, upload.single('profileImage'), async (
 
     res.json({ message: 'Profile image updated', profileImage: user.profileImage });
   } catch (err) {
-    console.error(err);
+    console.error('Image upload error:', err);
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -322,42 +323,17 @@ router.delete('/sessions/:sessionId', verifyToken, async (req, res) => {
   }
 });
 
-// ADD THIS TO YOUR user.js ROUTES FILE
-router.put('/:userId/balances', verifyToken, async (req, res) => {
-  if (!req.isAdmin) return res.status(403).json({ message: 'Admin only' });
-
+// ──────────────────────────────────────────────────────────────
+// ADMIN: Update user balance manually (ONE USER)
+// PUT /api/user/:userId/balances
+// ──────────────────────────────────────────────────────────────
+router.put('/:userId/balances', verifyToken, isAdmin, async (req, res) => {
   const { checkingBalance, savingsBalance, usdtBalance } = req.body;
 
   try {
     const user = await User.findById(req.params.userId);
     if (!user) return res.status(404).json({ message: 'User not found' });
 
-    user.balance.checking = Number(checkingBalance) || user.balance.checking || 0;
-    user.balance.savings = Number(savingsBalance) || user.balance.savings || 0;
-    user.balance.usdt = Number(usdtBalance) || user.balance.usdt || 0;
-
-    await user.save();
-
-    res.json({ message: 'Balance updated', balance: user.balance });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Server error' });
-  }
-});
-
-// ADD THIS TO YOUR EXISTING user.js ROUTES FILE
-
-// ADMIN: Update user balance manually
-router.put('/:userId/balances', verifyToken, async (req, res) => {
-  if (!req.isAdmin) return res.status(403).json({ message: 'Admin access required' });
-
-  const { checkingBalance, savingsBalance, usdtBalance } = req.body;
-
-  try {
-    const user = await User.findById(req.params.userId);
-    if (!user) return res.status(404).json({ message: 'User not found' });
-
-    // Update only if provided
     if (checkingBalance !== undefined) user.balance.checking = Number(checkingBalance);
     if (savingsBalance !== undefined) user.balance.savings = Number(savingsBalance);
     if (usdtBalance !== undefined) user.balance.usdt = Number(usdtBalance);

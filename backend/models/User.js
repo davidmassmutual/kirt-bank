@@ -23,14 +23,15 @@ const userSchema = new mongoose.Schema({
   phone: { type: String },
   address: { type: String },
   
+// backend/models/User.js (ADD TO SCHEMA)
 investments: [{
-  plan: String,
-  amount: Number,
-  rate: Number,
-  startDate: Date,
-  maturityDate: Date,
+  plan: { type: String, required: true },
+  amount: { type: Number, required: true },
+  rate: { type: Number, required: true },
+  startDate: { type: Date, default: Date.now },
+  maturityDate: { type: Date, required: true },
   status: { type: String, default: 'Active' },
-  expectedReturn: Number
+  expectedReturn: { type: Number, required: true }
 }],
   notificationsSettings: {
     email: { type: Boolean, default: true },
