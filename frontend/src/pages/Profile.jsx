@@ -1,46 +1,50 @@
+// src/pages/Profile.jsx
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import '../styles/Profile.css';
 
 export default function Profile() {
   const { user, token, fetchUser } = useAuth();
+  const navigate = useNavigate();
 
-  // ADD THIS CHECK
-  if (!token) {
-    return (
-      <div className="profile-container text-center p-8">
-        <p>Please log in to view your profile.</p>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return (
-      <div className="profile-container text-center p-8">
-        <p>Loading profile...</p>
-      </div>
-    );
-  }
-
-  const [form, setForm] = useState({ name: '', email: '', phone: '', address: '' });
-  const [image, setImage] = useState(null);
-  const [preview, setPreview] = useState(user?.profileImage ? `http://localhost:5000${user.profileImage}` : '/default-avatar.png');
-
+  // REDIRECT IF NOT LOGGED IN
   useEffect(() => {
-    if (user) {
-      setForm({ name: user.name, email: user.email, phone: user.phone || '', address: user.address || '' });
+    if (!token) {
+      navigate('/login');
+      return;
     }
-  }, [user]);
+  }, [token, navigate]);
+
+  if (!token || !user) {
+    return null; // Redirecting
+  }
+
+  const [form, setForm] = useState({
+    name: user.name || '',
+    phone: user.phone || '',
+    address: user.address || ''
+  });
+  const [image, setImage] = useState(null);
+  const [preview, setPreview] = useState(
+    user.profileImage ? `https://kirt-bank.vercel.app${user.profileImage}` : '/default-avatar.png'
+  );
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
+    if (file) {
     setImage(file);
     setPreview(URL.createObjectURL(file));
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+
     const formData = new FormData();
     if (image) formData.append('profileImage', image);
 
@@ -50,11 +54,17 @@ export default function Profile() {
           headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' }
         });
       }
-      await axios.put('/api/user/profile', form, { headers: { Authorization: `Bearer ${token}` } });
+
+      await axios.put('/api/user/profile', form, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
       await fetchUser();
       alert('Profile updated!');
     } catch (err) {
       alert(err.response?.data?.message || 'Error');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -79,20 +89,29 @@ export default function Profile() {
 
         <div className="form-group">
           <label>Email</label>
-          <input type="email" value={form.email} onChange={e => setForm({...form, email: e.target.value})} required />
+          <input type="email" value={user.email} disabled className="opacity-60 cursor-not-allowed" />
         </div>
 
-        <div className="form-group">
-          <label>Phone</label>
-          <input type="tel" value={form.phone} onChange={e => setForm({...form, phone: e.target.value})} />
-        </div>
+        {!user.phone ? (
+          <div className="form-group">
+            <label>Phone</label>
+            <input type="tel" value={form.phone} onChange={e => setForm({...form, phone: e.target.value})} />
+          </div>
+        ) : (
+          <div className="form-group">
+            <label>Phone (Locked)</label>
+            <input type="tel" value={user.phone} disabled className="opacity-60 cursor-not-allowed" />
+          </div>
+        )}
 
         <div className="form-group">
           <label>Address</label>
           <textarea value={form.address} onChange={e => setForm({...form, address: e.target.value})} />
         </div>
 
-        <button type="submit" className="save-btn">Save Changes</button>
+        <button type="submit" disabled={isSubmitting} className="save-btn">
+          {isSubmitting ? 'Saving...' : 'Save Changes'}
+        </button>
       </form>
     </div>
   );

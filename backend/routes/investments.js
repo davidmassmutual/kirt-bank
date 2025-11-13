@@ -11,35 +11,29 @@ const PLANS = {
     name: 'Starter', 
     min: 100, 
     max: 5000, 
-    rate: 0.12, 
-    term: '3-6 months',
-    color: 'from-emerald-500 to-teal-600'
+    rate: 0.12, // 12%
+    term: '3-6 months' 
   },
   growth: { 
     name: 'Growth', 
     min: 5001, 
     max: 25000, 
-    rate: 0.18, 
-    term: '6-12 months',
-    color: 'from-blue-500 to-indigo-600'
+    rate: 0.18, // 18%
+    term: '6-12 months' 
   },
   elite: { 
     name: 'Elite', 
     min: 25001, 
     max: 100000, 
-    rate: 0.28, 
-    term: '12-24 months',
-    color: 'from-amber-500 to-orange-600'
+    rate: 0.28, // 28%
+    term: '12-24 months' 
   }
 };
 
 // === GET: All Plans ===
 router.get('/plans', (req, res) => {
   try {
-    const plans = Object.values(PLANS).map(plan => ({
-      ...plan,
-      roi: (plan.rate * 100).toFixed(0)
-    }));
+    const plans = Object.values(PLANS);
     res.json(plans);
   } catch (err) {
     console.error('Get plans error:', err);
@@ -47,20 +41,24 @@ router.get('/plans', (req, res) => {
   }
 });
 
+
+
 // === POST: Invest ===
 router.post('/invest', verifyToken, async (req, res) => {
   const { plan: planKey, amount } = req.body;
 
+  // Validate plan
   if (!planKey || !PLANS[planKey]) {
-    return res.status(400).json({ message: 'Invalid plan selected' });
+    return res.status(400).json({ message: 'Invalid investment plan' });
   }
 
   const plan = PLANS[planKey];
   const amountNum = Number(amount);
 
-  if (isNaN(amountNum) || amountNum < plan.min || amountNum > plan.max) {
+  // Validate amount
+  if (!amountNum || amountNum < plan.min || amountNum > plan.max) {
     return res.status(400).json({
-      message: `Amount must be $${plan.min.toLocaleString()} – $${plan.max.toLocaleString()}`
+      message: `Amount must be between $${plan.min.toLocaleString()} and $${plan.max.toLocaleString()}`
     });
   }
 
@@ -68,6 +66,7 @@ router.post('/invest', verifyToken, async (req, res) => {
     const user = await User.findById(req.userId);
     if (!user) return res.status(404).json({ message: 'User not found' });
 
+    // Calculate total liquid balance
     const totalBalance = user.balance.checking + user.balance.savings + user.balance.usdt;
     if (totalBalance < amountNum) {
       return res.status(400).json({
@@ -77,26 +76,41 @@ router.post('/invest', verifyToken, async (req, res) => {
       });
     }
 
-    // Deduct balance
+    // Deduct from checking (priority)
     let remaining = amountNum;
-    ['checking', 'savings', 'usdt'].forEach(acc => {
-      if (remaining > 0 && user.balance[acc] >= remaining) {
-        user.balance[acc] -= remaining;
-        remaining = 0;
-      } else if (remaining > 0) {
-        remaining -= user.balance[acc];
-        user.balance[acc] = 0;
-      }
-    });
+    if (user.balance.checking >= remaining) {
+      user.balance.checking -= remaining;
+      remaining = 0;
+    } else {
+      remaining -= user.balance.checking;
+      user.balance.checking = 0;
+    }
 
+    // Then savings
+    if (remaining > 0 && user.balance.savings >= remaining) {
+      user.balance.savings -= remaining;
+      remaining = 0;
+    } else if (remaining > 0) {
+      remaining -= user.balance.savings;
+      user.balance.savings = 0;
+    }
+
+    // Then USDT
+    if (remaining > 0) {
+      user.balance.usdt -= remaining;
+    }
+
+    // Initialize investments array
     user.investments = user.investments || [];
 
+    // Generate maturity date (random within term)
     const minMonths = plan.term.includes('3') ? 3 : plan.term.includes('6') ? 6 : 12;
     const maxMonths = plan.term.includes('6') ? 6 : plan.term.includes('12') ? 12 : 24;
     const termMonths = Math.floor(Math.random() * (maxMonths - minMonths + 1)) + minMonths;
     const maturityDate = new Date();
     maturityDate.setMonth(maturityDate.getMonth() + termMonths);
 
+    // Create investment record
     const investment = {
       plan: planKey,
       amount: amountNum,
@@ -104,53 +118,65 @@ router.post('/invest', verifyToken, async (req, res) => {
       startDate: new Date(),
       maturityDate,
       status: 'Active',
-      expectedReturn: amountNum * (1 + plan.rate),
-      color: plan.color
+      expectedReturn: amountNum * (1 + plan.rate)
     };
 
     user.investments.push(investment);
 
-    // Transaction
-    await new Transaction({
+    // Create transaction
+    const transaction = new Transaction({
       userId: user._id,
       type: 'investment',
       amount: amountNum,
       method: 'balance',
       status: 'Completed',
       account: 'checking',
-      date: new Date()
-    }).save();
-
-    // Notification
-    user.notifications.push({
-      message: `$${amountNum.toLocaleString()} invested in ${plan.name} Plan. Expected return: $${(amountNum * plan.rate).toFixed(2)}`,
-      type: 'investment',
-      date: new Date()
+      date: new Date(),
     });
 
+    // Save transaction
+    await transaction.save();
+
+    // Add notification
+    user.notifications.push({
+      message: `Investment of $${amountNum.toLocaleString()} in ${plan.name} Plan confirmed. Expected return: $${(amountNum * plan.rate).toFixed(2)}`,
+      type: 'investment',
+      date: new Date(),
+    });
+
+    // Save user
     await user.save();
 
+    // Return success
     res.json({
       message: 'Investment successful!',
       investment: user.investments[user.investments.length - 1],
-      totalInvested: user.investments.reduce((s, i) => s + i.amount, 0),
+      totalInvested: user.investments.reduce((sum, inv) => sum + inv.amount, 0),
       balance: user.balance
     });
 
   } catch (err) {
     console.error('Investment error:', err);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: 'Server error', error: err.message });
   }
 });
 
-// === GET: My Investments ===
+// === GET: User Investments (Optional - if you want separate endpoint) ===
 router.get('/my', verifyToken, async (req, res) => {
   try {
     const user = await User.findById(req.userId).select('investments');
-    const investments = user?.investments || [];
-    const total = investments.reduce((s, i) => s + i.amount, 0);
-    res.json({ investments, totalInvested: total, count: investments.length });
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    const investments = user.investments || [];
+    const totalInvested = investments.reduce((sum, inv) => sum + inv.amount, 0);
+
+    res.json({
+      investments,
+      totalInvested,
+      count: investments.length
+    });
   } catch (err) {
+    console.error('Get my investments error:', err);
     res.status(500).json({ message: 'Server error' });
   }
 });
