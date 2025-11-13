@@ -15,13 +15,21 @@ export default function Investments() {
 
   const [userBalance, setUserBalance] = useState({ checking: 0, savings: 0, usdt: 0 });
 
-  useEffect(() => {
-    // Fetch plans
-    axios.get('/api/investments/plans')
-      .then(res => {
-        if (Array.isArray(res.data)) setPlans(res.data);
-      })
-      .catch(() => setPlans([]));
+ // src/pages/Investments.jsx
+useEffect(() => {
+  axios.get('/api/investments/plans')
+    .then(res => {
+      if (Array.isArray(res.data)) {
+        setPlans(res.data);
+      } else {
+        console.error('Plans is not array:', res.data);
+        setPlans([]);
+      }
+    })
+    .catch(err => {
+      console.error('Plans error:', err);
+      setPlans([]);
+    });
 
     // Fetch user investments
     if (token) {
@@ -33,8 +41,7 @@ export default function Investments() {
         })
         .catch(() => setUserInvestments([]));
     }
-  }, [token]);
-
+  }, [token]); 
   const handleInvest = (plan) => {
     navigate('/invest', { state: { plan } });
   };

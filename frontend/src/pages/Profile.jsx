@@ -43,39 +43,43 @@ export default function Profile() {
     }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (isSubmitting) return;
-    setIsSubmitting(true);
+// src/pages/Profile.jsx
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  if (isSubmitting) return;
+  setIsSubmitting(true);
 
-    const formData = new FormData();
-    if (image) formData.append('profileImage', image);
+  try {
+    // 1. Upload image (FormData)
+    if (image) {
+      const formData = new FormData();
+      formData.append('profileImage', image);
 
-    try {
-      // Upload image first
-      if (image) {
-        await axios.put('/api/user/profile/image', formData, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'multipart/form-data'
-          }
-        });
-      }
-
-      // Update profile
-      await axios.put('/api/user/profile', form, {
-        headers: { Authorization: `Bearer ${token}` }
+      await axios.put('/api/user/profile/image', formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data'
+        }
       });
-
-      await fetchUser();
-      alert('Profile updated successfully!');
-    } catch (err) {
-      console.error('Profile save error:', err);
-      alert(err.response?.data?.message || 'Failed to save profile');
-    } finally {
-      setIsSubmitting(false);
     }
-  };
+
+    // 2. Update profile (JSON)
+    await axios.put('/api/user/profile', form, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json' // ← CRITICAL
+      }
+    });
+
+    await fetchUser();
+    alert('Profile updated successfully!');
+  } catch (err) {
+    console.error('Profile save error:', err);
+    alert(err.response?.data?.message || 'Failed to save profile');
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
   return (
     <div className="profile-container">

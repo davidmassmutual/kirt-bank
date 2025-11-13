@@ -96,6 +96,20 @@ app.use((err, req, res, next) => {
   res.status(500).json({ message: 'Server error' });
 });
 
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      console.warn(`CORS blocked: ${origin}`);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
 // === START SERVER ===
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, '0.0.0.0', () => {

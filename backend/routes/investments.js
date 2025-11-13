@@ -34,14 +34,13 @@ const PLANS = {
 router.get('/plans', (req, res) => {
   try {
     const plans = Object.values(PLANS);
-    console.log('Returning plans:', plans); // DEBUG
-    res.json(PLANS); // ← ALWAYS ARRAY
+    console.log('Returning plans:', plans);
+    res.json(plans); // ← ARRAY
   } catch (err) {
     console.error('Get plans error:', err);
     res.status(500).json({ message: 'Server error' });
   }
 });
-
 
 
 // === POST: Invest ===
