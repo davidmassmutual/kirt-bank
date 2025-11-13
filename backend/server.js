@@ -38,8 +38,11 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
+// === BODY PARSERS ===
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// === STATIC FILES ===
 app.use('/uploads', express.static(uploadsDir));
 
 // === DATABASE ===
@@ -66,13 +69,14 @@ const loanRoutes = require('./routes/loans');
 const notificationRoutes = require('./routes/notifications');
 const investmentRoutes = require('./routes/investments');
 
+// FIXED: /api/investments (NOT /api/investment)
 app.use('/api/auth', authRoutes);
 app.use('/api/transactions', transactionRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/virtual-cards', virtualCardRoutes);
 app.use('/api/loans', loanRoutes);
 app.use('/api/notifications', notificationRoutes);
-app.use('/api/investments', investmentRoutes);
+app.use('/api/investments', investmentRoutes); // ← FIXED
 
 console.log('All routes loaded');
 
@@ -82,9 +86,9 @@ app.get('/api/health', (req, res) => {
 });
 
 // === 404 HANDLER — MUST BE LAST ===
-// app.use('*', (req, res) => {
-//   res.status(404).json({ message: `Route ${req.originalUrl} not found` });
-// });
+app.use('*', (req, res) => {
+  res.status(404).json({ message: `Route ${req.originalUrl} not found` });
+});
 
 // === ERROR HANDLER ===
 app.use((err, req, res, next) => {
