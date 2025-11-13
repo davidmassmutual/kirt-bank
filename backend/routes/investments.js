@@ -35,7 +35,7 @@ router.get('/plans', (req, res) => {
   try {
     const plans = Object.values(PLANS);
     console.log('Returning plans:', plans); // DEBUG
-    res.json(plans); // ← ALWAYS ARRAY
+    res.json(PLANS); // ← ALWAYS ARRAY
   } catch (err) {
     console.error('Get plans error:', err);
     res.status(500).json({ message: 'Server error' });
