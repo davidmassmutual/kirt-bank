@@ -5,6 +5,7 @@ import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import DepositModal from '../components/DepositModal';
 import '../styles/InvestNow.css';
+import API_BASE_URL from '../config/api';
 
 export default function InvestNow() {
   const location = useLocation();
@@ -36,7 +37,7 @@ export default function InvestNow() {
 
     try {
       const res = await axios.post(
-        '/api/investments/invest',
+        `${API_BASE_URL}/api/investments/invest`,
         { plan: plan.name.toLowerCase(), amount: amountNum },
         { headers: { Authorization: `Bearer ${token}` } }
       );

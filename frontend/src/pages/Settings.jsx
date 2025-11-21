@@ -19,6 +19,7 @@ import {
   FaCog
 } from 'react-icons/fa';
 import '../styles/Settings.css';
+import API_BASE_URL from '../config/api';
 
 function Settings() {
   // ────────────────────────────────────── STATE ──────────────────────────────────────
@@ -43,7 +44,7 @@ function Settings() {
 
   const fetchSettings = useCallback(async () => {
     try {
-      const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/auth/me`, {
+      const res = await axios.get(`${API_BASE_URL}/api/auth/me`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setProfile({
@@ -56,7 +57,7 @@ function Settings() {
       setNotifications(res.data.notificationsSettings || { email: true, sms: false, push: true });
       setPreferences({ currency: res.data.currency || 'USD', theme: res.data.theme || 'light' });
 
-      const sessRes = await axios.get(`${import.meta.env.VITE_API_URL}/api/auth/sessions`, {
+      const sessRes = await axios.get(`${API_BASE_URL}/api/auth/sessions`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setSessions(sessRes.data);
@@ -83,7 +84,7 @@ function Settings() {
     e.preventDefault();
     setSubmitting(true);
     try {
-      await axios.put(`${import.meta.env.VITE_API_URL}/api/user/profile`, profile, {
+      await axios.put(`${API_BASE_URL}/api/user/profile`, profile, {
         headers: { Authorization: `Bearer ${token}` },
       });
       toast.success('Profile updated');
@@ -100,7 +101,7 @@ function Settings() {
     setSubmitting(true);
     try {
       await axios.put(
-        `${import.meta.env.VITE_API_URL}/api/user/password`,
+        `${API_BASE_URL}/api/user/password`,
         { password: security.newPassword },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -116,7 +117,7 @@ function Settings() {
   const start2FASetup = async () => {
     setSubmitting(true);
     try {
-      const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/user/2fa/setup`, {}, {
+      const res = await axios.post(`${API_BASE_URL}/api/user/2fa/setup`, {}, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setSecurity(prev => ({ ...prev, totpSecret: res.data.secret, totpUrl: res.data.otpauth_url }));
@@ -133,7 +134,7 @@ function Settings() {
     if (!/^\d{6}$/.test(totpCode)) return toast.error('Enter a 6‑digit code');
     try {
       await axios.post(
-        `${import.meta.env.VITE_API_URL}/api/user/2fa/verify`,
+        `${API_BASE_URL}/api/user/2fa/verify`,
         { token: totpCode },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -148,7 +149,7 @@ function Settings() {
 
   const disable2FA = async () => {
     try {
-      await axios.post(`${import.meta.env.VITE_API_URL}/api/user/2fa/disable`, {}, {
+      await axios.post(`${API_BASE_URL}/api/user/2fa/disable`, {}, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setSecurity(prev => ({ ...prev, twoFactor: false }));
@@ -160,7 +161,7 @@ function Settings() {
 
   const requestPasswordReset = async () => {
     try {
-      await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/forgot-password`, { email: profile.email });
+      await axios.post(`${API_BASE_URL}/api/auth/forgot-password`, { email: profile.email });
       toast.success('Password‑reset email sent');
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to send email');
@@ -171,7 +172,7 @@ function Settings() {
     e.preventDefault();
     setSubmitting(true);
     try {
-      await axios.put(`${import.meta.env.VITE_API_URL}/api/user/notifications`, notifications, {
+      await axios.put(`${API_BASE_URL}/api/user/notifications`, notifications, {
         headers: { Authorization: `Bearer ${token}` },
       });
       toast.success('Notification preferences saved');
@@ -186,7 +187,7 @@ function Settings() {
     e.preventDefault();
     setSubmitting(true);
     try {
-      await axios.put(`${import.meta.env.VITE_API_URL}/api/user/preferences`, preferences, {
+      await axios.put(`${API_BASE_URL}/api/user/preferences`, preferences, {
         headers: { Authorization: `Bearer ${token}` },
       });
       document.documentElement.setAttribute('data-theme', preferences.theme);
@@ -201,7 +202,7 @@ function Settings() {
   const logoutSession = async sessionId => {
     setSubmitting(true);
     try {
-      await axios.delete(`${import.meta.env.VITE_API_URL}/api/user/sessions/${sessionId}`, {
+      await axios.delete(`${API_BASE_URL}/api/user/sessions/${sessionId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setSessions(prev => prev.filter(s => s._id !== sessionId));

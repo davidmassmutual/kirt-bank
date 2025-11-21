@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import '../styles/Loans.css';
+import API_BASE_URL from '../config/api';
 
 const Loans = () => {
   const [loanOffer, setLoanOffer] = useState(null);
@@ -28,7 +29,7 @@ const Loans = () => {
           navigate('/login');
           return;
         }
-        const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/loans`, {
+        const res = await axios.get(`${import.meta.env.API_BASE_URL}/api/loans`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setLoanOffer(res.data.loanOffer);
@@ -58,7 +59,7 @@ const Loans = () => {
       const amount = Math.floor(Math.random() * (max - min + 1)) + min;
 
       await axios.post(
-        `${import.meta.env.VITE_API_URL}/api/loans/apply`,
+        `${import.meta.env.API_BASE_URL}/api/loans/apply`,
         { amount },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -85,7 +86,7 @@ const Loans = () => {
 
       const token = localStorage.getItem('token');
       await axios.post(
-        `${import.meta.env.VITE_API_URL}/api/loans/apply`,
+        `${import.meta.env.API_BASE_URL}/api/loans/apply`,
         { amount: loanOffer },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -112,7 +113,7 @@ const Loans = () => {
       formData.append('ssn', ssn);
 
       const res = await axios.post(
-        `${import.meta.env.VITE_API_URL}/api/loans/update-offer`,
+        `${import.meta.env.API_BASE_URL}/api/loans/update-offer`,
         formData,
         { headers: { Authorization: `Bearer ${token}` } }
       );

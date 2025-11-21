@@ -12,6 +12,7 @@ import {
   FaUniversity, FaShoppingCart, FaCreditCard, FaMoneyBillWave
 } from 'react-icons/fa';
 import '../styles/Transactions.css';
+import API_BASE_URL from '../config/api';
 
 function Transactions() {
   const [transactions, setTransactions] = useState([]);
@@ -20,7 +21,7 @@ function Transactions() {
   const [filter, setFilter] = useState('all');
   const navigate = useNavigate();
   const token = localStorage.getItem('token');
-  const API = import.meta.env.VITE_API_URL || 'https://kirt-bank.onrender.com';
+  const API = `${API_BASE_URL}`
 
   const fetchTransactions = useCallback(async () => {
     if (!token) {

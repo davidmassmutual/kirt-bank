@@ -4,6 +4,8 @@ import { toast } from 'react-toastify';
 import LoadingSkeleton from '../components/LoadingSkeleton';
 import { FaWallet, FaUniversity, FaCoins } from 'react-icons/fa';
 import '../styles/AccountSummary.css';
+import API_BASE_URL from '../config/api';
+
 
 function AccountSummary() {
   const [balances, setBalances] = useState({ checking: 0, savings: 0, usdt: 0 });
@@ -12,7 +14,7 @@ function AccountSummary() {
   const fetch = useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/auth/me`, {
+      const res = await axios.get(`${API_BASE_URL}/api/auth/me`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const { balance } = res.data;

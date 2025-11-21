@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import axios from 'axios';
 import '../styles/CurrencyConverter.css';
+import API_BASE_URL from '../config/api';
 
 function CurrencyConverter() {
   const [amount, setAmount] = useState('');
@@ -10,7 +11,7 @@ function CurrencyConverter() {
 
   const convert = async () => {
     try {
-      const res = await axios.get(`https://api.exchangerate-api.com/v4/latest/${fromCurrency}`);
+      const res = await axios.get(`${API_BASE_URL}https://api.exchangerate-api.com/v4/latest/${fromCurrency}`);
       const rate = res.data.rates[toCurrency];
       setResult((amount * rate).toFixed(2));
     } catch (err) {

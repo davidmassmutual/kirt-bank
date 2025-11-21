@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { FaArrowDown, FaArrowUp } from 'react-icons/fa';
 import '../styles/ActivityFeed.css';
+import API_BASE_URL from '../config/api';
 
 export default function ActivityFeed({ userId }) {
   const [txns, setTxns] = useState([]);
@@ -11,7 +12,7 @@ export default function ActivityFeed({ userId }) {
     const fetch = async () => {
       try {
         const token = localStorage.getItem('token');
-        const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/transactions/user/${userId}`, {
+        const res = await axios.get(`${API_BASE_URL}/api/transactions/user/${userId}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setTxns(res.data.slice(0, 3));

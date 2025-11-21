@@ -12,6 +12,7 @@ import img5 from '../images/fast.webp';
 import img6 from '../images/Mobile-Banking-App-Features.jpg';
 import img7 from '../images/support.png';
 import img9 from '../images/WhatsApp Image 2025-10-17 at 16.15.27.jpeg';
+import API_BASE_URL from '../config/api';
 
 function Home({ setIsAuthenticated }) {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -58,8 +59,8 @@ function Home({ setIsAuthenticated }) {
 
     try {
       const url = isSignUp
-        ? `${import.meta.env.VITE_API_URL}/api/auth/register`
-        : `${import.meta.env.VITE_API_URL}/api/auth/login`;
+        ? `${API_BASE_URL}/api/auth/register`
+        : `${API_BASE_URL}/api/auth/login`;
       const res = await axios.post(url, formData);
       console.log(isSignUp ? 'Register response:' : 'Login response:', res.data);
       if (res.data.token) {

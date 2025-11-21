@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import LoadingSkeleton from '../components/LoadingSkeleton';
 import { FaEye, FaEyeSlash, FaLock, FaUnlock, FaTrash, FaCreditCard, FaCopy, FaPlus } from 'react-icons/fa';
 import '../styles/VirtualCards.css';
+import API_BASE_URL from '../config/api';
 
 function VirtualCards() {
   const [cards, setCards] = useState([]);
@@ -16,7 +17,7 @@ function VirtualCards() {
   const fetch = useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/virtual-cards`, {
+      const res = await axios.get(`${API_BASE_URL}/api/virtual-cards`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setCards(res.data);
@@ -38,7 +39,7 @@ function VirtualCards() {
     setSubmitting(true);
     try {
       const token = localStorage.getItem('token');
-      const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/virtual-cards`, {}, {
+      const res = await axios.post(`${API_BASE_URL}/api/virtual-cards`, {}, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setCards(prev => [...prev, res.data]);
@@ -54,7 +55,7 @@ function VirtualCards() {
     setSubmitting(true);
     try {
       const token = localStorage.getItem('token');
-      await axios.delete(`${import.meta.env.VITE_API_URL}/api/virtual-cards/${id}`, {
+      await axios.delete(`${API_BASE_URL}/api/virtual-cards/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setCards(prev => prev.filter(c => c._id !== id));
@@ -72,7 +73,7 @@ function VirtualCards() {
     try {
       const token = localStorage.getItem('token');
       await axios.put(
-        `${import.meta.env.VITE_API_URL}/api/virtual-cards/${id}`,
+        `${API_BASE_URL}/api/virtual-cards/${id}`,
         { status: newStatus },
         { headers: { Authorization: `Bearer ${token}` } }
       );

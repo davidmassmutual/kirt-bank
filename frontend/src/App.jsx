@@ -26,6 +26,7 @@ import { DepositProvider } from './context/DepositContext';
 import Profile from './pages/Profile';
 import Investment from './pages/Investment';
 import InvestNow from './pages/InvestNow';
+import API_BASE_URL from './config/api';
 
 // Lazy load heavy admin page
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
@@ -68,7 +69,7 @@ function App() {
       const token = localStorage.getItem('token');
       if (token) {
         try {
-          const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/user`, {
+          const res = await axios.get(`${API_BASE_URL}/api/user`, {
             headers: { Authorization: `Bearer ${token}` },
           });
           setIsAuthenticated(true);

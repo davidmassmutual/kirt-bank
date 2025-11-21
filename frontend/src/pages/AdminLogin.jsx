@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import '../styles/AdminLogin.css';
+import API_BASE_URL from '../config/api';
 
 function AdminLogin({ setIsAuthenticated, setIsAdmin }) {
   const [email, setEmail] = useState('');
@@ -15,7 +16,7 @@ function AdminLogin({ setIsAuthenticated, setIsAdmin }) {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/admin/login`, {
+      const res = await axios.post(`${API_BASE_URL}/api/auth/admin/login`, {
         email,
         password,
       });

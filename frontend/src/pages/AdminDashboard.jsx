@@ -10,6 +10,7 @@ import {
   FaHistory, FaPlus, FaBell, FaUserShield
 } from 'react-icons/fa';
 import '../styles/AdminDashboard.css';
+import API_BASE_URL from '../config/api';
 
 // Deposit alert sound
 const depositSound = new Audio('/sounds/deposit.mp3');
@@ -36,7 +37,7 @@ function AdminDashboard() {
   const pollRef = useRef(null);
   const prevPendingCount = useRef(0);
 
-  const API = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+  const API = `${API_BASE_URL}` || 'http://localhost:5000';
 
   // FETCH USERS
   const fetchUsers = useCallback(async (q = '', p = 1) => {

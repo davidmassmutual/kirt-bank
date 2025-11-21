@@ -6,6 +6,7 @@ import { toast } from 'react-toastify';
 import { FaCheckCircle, FaCopy, FaUpload, FaQrcode } from 'react-icons/fa';
 import LoadingSpinner from '../components/LoadingSpinner';
 import '../styles/DepositDetails.css';
+import API_BASE_URL from '../config/api';
 
 function DepositDetails() {
   const location = useLocation();
@@ -21,7 +22,7 @@ function DepositDetails() {
   const [showSuccess, setShowSuccess] = useState(false);
 
   const token = localStorage.getItem('token');
-  const API = import.meta.env.VITE_API_URL || 'https://kirt-bank.onrender.com';
+  const API = `${API_BASE_URL}` || 'https://kirt-bank.onrender.com';
   const currency = localStorage.getItem('currency') || 'USD';
   const symbol = currency === 'USD' ? '$' : currency;
 
