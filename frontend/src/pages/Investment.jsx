@@ -3,59 +3,54 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
+import API_BASE_URL from '../config/api';
 import '../styles/Investment.css';
 
 export default function Investments() {
   const [plans, setPlans] = useState([]);
   const [userInvestments, setUserInvestments] = useState([]);
+  const [userBalance, setUserBalance] = useState({ checking: 0, savings: 0, usdt: 0 });
   const { token } = useAuth();
   const navigate = useNavigate();
 
   const totalInvested = userInvestments.reduce((sum, inv) => sum + inv.amount, 0);
+  const totalAvailable = Object.values(userBalance).reduce((a, b) => a + b, 0);
 
-  const [userBalance, setUserBalance] = useState({ checking: 0, savings: 0, usdt: 0 });
-
- // src/pages/Investments.jsx
-useEffect(() => {
-  axios.get('/api/investments/plans')
-    .then(res => {
-      if (Array.isArray(res.data)) {
-        setPlans(res.data);
-      } else {
-        console.error('Plans is not array:', res.data);
+  useEffect(() => {
+    // Fetch investment plans
+    axios.get(`${API_BASE_URL}/api/investments/plans`)
+      .then(res => {
+        if (Array.isArray(res.data)) {
+          setPlans(res.data);
+        } else {
+          console.error('Expected array for plans:', res.data);
+          setPlans([]);
+        }
+      })
+      .catch(err => {
+        console.error('Failed to load plans:', err.response || err);
         setPlans([]);
-      }
-    })
-    .catch(err => {
-      console.error('Plans error:', err);
-      setPlans([]);
-    });
+      });
 
-    // Fetch user investments
+    // Fetch user data (investments + balance)
     if (token) {
-      axios.get('/api/user', { headers: { Authorization: `Bearer ${token}` } })
+      axios.get(`${API_BASE_URL}/api/user`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
         .then(res => {
-          if (Array.isArray(res.data.investments)) {
-            setUserInvestments(res.data.investments);
-          }
+          setUserInvestments(res.data.investments || []);
+          setUserBalance(res.data.balance || { checking: 0, savings: 0, usdt: 0 });
         })
-        .catch(() => setUserInvestments([]));
+        .catch(err => {
+          console.error('Failed to load user data:', err.response || err);
+          setUserInvestments([]);
+        });
     }
-  }, [token]); 
+  }, [token]);
+
   const handleInvest = (plan) => {
     navigate('/invest', { state: { plan } });
   };
-
-useEffect(() => {
-  if (token) {
-    axios.get('/api/user', { headers: { Authorization: `Bearer ${token}` } })
-      .then(res => {
-        setUserInvestments(res.data.investments || []);
-        setUserBalance(res.data.balance || { checking: 0, savings: 0, usdt: 0 });
-      })
-      .catch(() => {});
-  }
-}, [token]);
 
   return (
     <div className="investments-page">
@@ -66,30 +61,22 @@ useEffect(() => {
           <p className="hero-subtitle">Earn up to 28% ROI with secure, fixed-term investments</p>
         </div>
 
-        {/* TOTAL INVESTED */}
+        {/* TOTAL INVESTED CARD */}
         {userInvestments.length > 0 && (
-          <div className="total-card">
-            <p className="total-label">Total Invested</p>
-            <p className="total-amount">${totalInvested.toLocaleString()}</p>
-            <p className="total-count">{userInvestments.length} active plan{userInvestments.length > 1 ? 's' : ''}</p>
+          <div className="mt-6 p-6 bg-card/80 backdrop-blur rounded-2xl border border-gold/30 text-center">
+            <p className="text-sm text-secondary mb-1">Total Invested</p>
+            <p className="text-3xl font-bold text-gold">${totalInvested.toLocaleString()}</p>
+            <p className="text-xs text-secondary mt-1">{userInvestments.length} active plan{userInvestments.length > 1 ? 's' : ''}</p>
+            <p className="text-xs text-secondary mt-2">Available Balance: ${totalAvailable.toLocaleString()}</p>
           </div>
         )}
 
-        {userInvestments.length > 0 && (
-  <div className="mt-6 p-6 bg-card/80 backdrop-blur rounded-2xl border border-gold/30 text-center">
-    <p className="text-sm text-secondary mb-1">Total Invested</p>
-    <p className="text-3xl font-bold text-gold">${totalInvested.toLocaleString()}</p>
-    <p className="text-xs text-secondary mt-1">{userInvestments.length} active plan{userInvestments.length > 1 ? 's' : ''}</p>
-    <p className="text-xs text-secondary mt-2">Available: ${Object.values(userBalance).reduce((s, v) => s + v, 0).toLocaleString()}</p>
-  </div>
-)}
-
-        {/* PLANS */}
+        {/* PLANS GRID */}
         <div className="plans-section">
           <h2 className="section-title">Investment Plans</h2>
           <div className="plans-grid">
             {plans.length === 0 ? (
-              <p className="loading-text">Loading plans...</p>
+              <p className="loading-text col-span-full text-center">Loading investment plans...</p>
             ) : (
               plans.map(plan => (
                 <div key={plan.name} className="plan-card">

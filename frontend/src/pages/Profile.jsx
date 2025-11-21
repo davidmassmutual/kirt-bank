@@ -3,36 +3,32 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import API_BASE_URL from '../config/api';
 import '../styles/Profile.css';
 
 export default function Profile() {
   const { user, token, fetchUser } = useAuth();
   const navigate = useNavigate();
 
-  // Redirect if not logged in
   useEffect(() => {
     if (!token) {
       navigate('/login');
     }
   }, [token, navigate]);
 
-  if (!user) {
-    return (
-      <div className="profile-container text-center p-8">
-        <p className="text-xl text-secondary">Loading profile...</p>
-      </div>
-    );
-  }
-
   const [form, setForm] = useState({
-    name: user.name || '',
-    phone: user.phone || '',
-    address: user.address || ''
+    name: user?.name || '',
+    phone: user?.phone || '',
+    address: user?.address || ''
   });
+
   const [image, setImage] = useState(null);
   const [preview, setPreview] = useState(
-    user.profileImage ? `https://your-backend.onrender.com${user.profileImage}` : '/default-avatar.png'
+    user?.profileImage 
+      ? `${API_BASE_URL}${user.profileImage}` 
+      : '/default-avatar.png'
   );
+
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleImageChange = (e) => {
@@ -43,43 +39,50 @@ export default function Profile() {
     }
   };
 
-// src/pages/Profile.jsx
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  if (isSubmitting) return;
-  setIsSubmitting(true);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (isSubmitting) return;
+    setIsSubmitting(true);
 
-  try {
-    // 1. Upload image (FormData)
-    if (image) {
-      const formData = new FormData();
-      formData.append('profileImage', image);
+    try {
+      // Upload image first if changed
+      if (image) {
+        const formData = new FormData();
+        formData.append('profileImage', image);
 
-      await axios.put('/api/user/profile/image', formData, {
+        await axios.put(`${API_BASE_URL}/api/user/profile/image`, formData, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data'
+          }
+        });
+      }
+
+      // Update text fields
+      await axios.put(`${API_BASE_URL}/api/user/profile`, form, {
         headers: {
           Authorization: `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data'
+          'Content-Type': 'application/json'
         }
       });
+
+      await fetchUser(); // Refresh user data
+      alert('Profile updated successfully!');
+    } catch (err) {
+      console.error('Profile update failed:', err);
+      alert(err.response?.data?.message || 'Failed to update profile');
+    } finally {
+      setIsSubmitting(false);
     }
+  };
 
-    // 2. Update profile (JSON)
-    await axios.put('/api/user/profile', form, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json' // ← CRITICAL
-      }
-    });
-
-    await fetchUser();
-    alert('Profile updated successfully!');
-  } catch (err) {
-    console.error('Profile save error:', err);
-    alert(err.response?.data?.message || 'Failed to save profile');
-  } finally {
-    setIsSubmitting(false);
+  if (!user) {
+    return (
+      <div className="profile-container text-center p-8">
+        <p className="text-xl text-secondary">Loading profile...</p>
+      </div>
+    );
   }
-};
 
   return (
     <div className="profile-container">
@@ -132,6 +135,7 @@ const handleSubmit = async (e) => {
           <textarea
             value={form.address}
             onChange={e => setForm({ ...form, address: e.target.value })}
+            rows="3"
           />
         </div>
 
