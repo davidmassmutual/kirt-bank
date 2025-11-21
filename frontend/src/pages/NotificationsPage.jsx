@@ -18,7 +18,7 @@ function NotificationsPage() {
   const fetch = useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await axios.get(`${import.meta.env.API_BASE_URL}/api/notifications`, {
+      const res = await axios.get(`${API_BASE_URL}/api/notifications`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setNotifications(res.data);
@@ -35,7 +35,7 @@ function NotificationsPage() {
 
   const markAsRead = async ( id ) => {
     try {
-      await axios.put(`${import.meta.env.API_BASE_URL}/api/notifications/${id}/read`, {}, {
+      await axios.put(`${API_BASE_URL}/api/notifications/${id}/read`, {}, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       });
       setNotifications(prev => prev.map(n => n._id === id ? { ...n, read: true } : n));
