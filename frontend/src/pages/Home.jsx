@@ -15,7 +15,6 @@ import img9 from '../images/WhatsApp Image 2025-10-17 at 16.15.27.jpeg';
 import {
   FaShieldAlt,
   FaRocket,
-  FaMobileAlt,
   FaCreditCard,
   FaLock,
   FaCheckCircle,
@@ -136,9 +135,6 @@ function Home({ setIsAuthenticated }) {
             <button onClick={() => setIsSignUp(true)} className="btn-primary">
               <FaRocket /> Get Started Free
             </button>
-            <button className="btn-secondary">
-              <FaMobileAlt /> Download App
-            </button>
           </div>
         </div>
         <div className="hero-visual">
@@ -165,58 +161,6 @@ function Home({ setIsAuthenticated }) {
                 </div>
               </div>
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* FEATURES SECTION */}
-      <section className="features-section">
-        <div className="section-header">
-          <h2>Why Choose Kirt Bank?</h2>
-          <p>Experience banking designed for the modern world</p>
-        </div>
-        <div className="features-grid">
-          <div className="feature-card">
-            <div className="feature-icon">
-              <FaRocket />
-            </div>
-            <h3>Lightning Fast</h3>
-            <p>Instant transfers and real-time balance updates. No waiting, no delays.</p>
-          </div>
-          <div className="feature-card">
-            <div className="feature-icon">
-              <FaShieldAlt />
-            </div>
-            <h3>Bank-Grade Security</h3>
-            <p>256-bit encryption, biometric authentication, and FDIC insurance up to $250,000.</p>
-          </div>
-          <div className="feature-card">
-            <div className="feature-icon">
-              <FaPiggyBank />
-            </div>
-            <h3>High-Yield Savings</h3>
-            <p>Earn up to 5.25% APY on your savings with our premium accounts.</p>
-          </div>
-          <div className="feature-card">
-            <div className="feature-icon">
-              <FaMobileAlt />
-            </div>
-            <h3>Mobile Banking</h3>
-            <p>Manage your money anywhere with our award-winning mobile app.</p>
-          </div>
-          <div className="feature-card">
-            <div className="feature-icon">
-              <FaExchangeAlt />
-            </div>
-            <h3>Multi-Currency</h3>
-            <p>Send and receive money in 30+ currencies with competitive exchange rates.</p>
-          </div>
-          <div className="feature-card">
-            <div className="feature-icon">
-              <FaCheckCircle />
-            </div>
-            <h3>24/7 Support</h3>
-            <p>Get help whenever you need it with our dedicated customer support team.</p>
           </div>
         </div>
       </section>
@@ -325,6 +269,58 @@ function Home({ setIsAuthenticated }) {
                 <span>Advanced fraud protection</span>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* FEATURES SECTION */}
+      <section className="features-section">
+        <div className="section-header">
+          <h2>Why Choose Kirt Bank?</h2>
+          <p>Experience banking designed for the modern world</p>
+        </div>
+        <div className="features-grid">
+          <div className="feature-card">
+            <div className="feature-icon">
+              <FaRocket />
+            </div>
+            <h3>Lightning Fast</h3>
+            <p>Instant transfers and real-time balance updates. No waiting, no delays.</p>
+          </div>
+          <div className="feature-card">
+            <div className="feature-icon">
+              <FaShieldAlt />
+            </div>
+            <h3>Bank-Grade Security</h3>
+            <p>256-bit encryption, biometric authentication, and FDIC insurance up to $250,000.</p>
+          </div>
+          <div className="feature-card">
+            <div className="feature-icon">
+              <FaPiggyBank />
+            </div>
+            <h3>High-Yield Savings</h3>
+            <p>Earn up to 5.25% APY on your savings with our premium accounts.</p>
+          </div>
+          <div className="feature-card">
+            <div className="feature-icon">
+              <FaMobileAlt />
+            </div>
+            <h3>Mobile Banking</h3>
+            <p>Manage your money anywhere with our award-winning mobile app.</p>
+          </div>
+          <div className="feature-card">
+            <div className="feature-icon">
+              <FaExchangeAlt />
+            </div>
+            <h3>Multi-Currency</h3>
+            <p>Send and receive money in 30+ currencies with competitive exchange rates.</p>
+          </div>
+          <div className="feature-card">
+            <div className="feature-icon">
+              <FaCheckCircle />
+            </div>
+            <h3>24/7 Support</h3>
+            <p>Get help whenever you need it with our dedicated customer support team.</p>
           </div>
         </div>
       </section>
