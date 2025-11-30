@@ -23,6 +23,7 @@ import './styles/App.css';
 import NotFound from './pages/NotFound';
 import LoadingSkeleton from './components/LoadingSkeleton';
 import { DepositProvider } from './context/DepositContext';
+import { AuthProvider } from './context/AuthContext';
 import Profile from './pages/Profile';
 import Investment from './pages/Investment';
 import InvestNow from './pages/InvestNow';
@@ -42,7 +43,7 @@ function ScrollToTop() {
 
 let idleTimer;
 
-function App() {
+function AppContent() {
   const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('token'));
   const [isAdmin, setIsAdmin] = useState(localStorage.getItem('isAdmin') === 'true');
   const [lastActivity, setLastActivity] = useState(Date.now());
@@ -52,37 +53,63 @@ function App() {
     clearTimeout(idleTimer);
     idleTimer = setTimeout(() => {
       handleLogout();
-    }, 15 * 60 * 1000); // 15 minutes
+    }, 60 * 60 * 1000); // 1 hour idle timeout
   };
 
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('isAdmin');
+    localStorage.removeItem('tokenExpiry');
     setIsAuthenticated(false);
     setIsAdmin(false);
     clearTimeout(idleTimer);
     window.location.href = '/';
   };
 
-  // Validate token on load
+  // Enhanced token validation with refresh logic
   useEffect(() => {
     const validateToken = async () => {
       const token = localStorage.getItem('token');
+      const tokenExpiry = localStorage.getItem('tokenExpiry');
+
       if (token) {
+        // Check if token is expired
+        if (tokenExpiry && Date.now() > parseInt(tokenExpiry)) {
+          console.log('Token expired, logging out');
+          handleLogout();
+          return;
+        }
+
         try {
           const res = await axios.get(`${API_BASE_URL}/api/user`, {
             headers: { Authorization: `Bearer ${token}` },
           });
+
           setIsAuthenticated(true);
           const adminStatus = res.data.isAdmin || false;
           setIsAdmin(adminStatus);
           localStorage.setItem('isAdmin', adminStatus.toString());
+
+          // Set token expiry to 24 hours from now
+          const expiryTime = Date.now() + (24 * 60 * 60 * 1000);
+          localStorage.setItem('tokenExpiry', expiryTime.toString());
+
         } catch (err) {
-          handleLogout();
+          console.error('Token validation failed:', err);
+          // Try to refresh token if it's a 401 error
+          if (err.response?.status === 401) {
+            handleLogout();
+          }
         }
       }
     };
+
     validateToken();
+
+    // Set up periodic token validation (every 5 minutes)
+    const tokenCheckInterval = setInterval(validateToken, 5 * 60 * 1000);
+
+    return () => clearInterval(tokenCheckInterval);
   }, []);
 
   // Idle timeout
@@ -105,65 +132,73 @@ function App() {
   };
 
   return (
+    <div className="app" onMouseMove={resetIdleTimer} onKeyDown={resetIdleTimer}>
+      <ScrollToTop />
+
+      {/* CONDITIONAL NAVBAR */}
+      {showNavbar() && <Navbar handleLogout={handleLogout} isAuthenticated={isAuthenticated} isAdmin={isAdmin} />}
+
+      <div className="main-content">
+        <Routes>
+          {/* PUBLIC */}
+          <Route path="/" element={<Home setIsAuthenticated={setIsAuthenticated} />} />
+          <Route path="/admin" element={<AdminLogin setIsAuthenticated={setIsAuthenticated} setIsAdmin={setIsAdmin} />} />
+
+          {/* PROTECTED USER PAGES */}
+          <Route path="/dashboard" element={isAuthenticated ? <Dashboard /> : <Navigate to="/" />} />
+          <Route path="/account-summary" element={isAuthenticated ? <AccountSummary /> : <Navigate to="/" />} />
+          <Route path="/transfer" element={isAuthenticated ? <TransferPayment /> : <Navigate to="/" />} />
+          <Route path="/cards" element={isAuthenticated ? <VirtualCards /> : <Navigate to="/" />} />
+          <Route path="/transactions" element={isAuthenticated ? <Transactions /> : <Navigate to="/" />} />
+          <Route path="/notifications" element={isAuthenticated ? <NotificationsPage /> : <Navigate to="/" />} />
+          <Route path="/loans" element={isAuthenticated ? <Loans /> : <Navigate to="/" />} />
+          <Route path="/support" element={isAuthenticated ? <Support /> : <Navigate to="/" />} />
+          <Route path="/settings" element={isAuthenticated ? <Settings /> : <Navigate to="/" />} />
+          <Route path="/deposit-details" element={isAuthenticated ? <DepositDetails /> : <Navigate to="/" />} />
+          <Route path="/investment" element={isAuthenticated ? <Investment/> : <Navigate to="/" />} />
+          <Route path="/profile" element={isAuthenticated ? <Profile/> : <Navigate to="/" />} />
+          <Route path="/invest" element={isAuthenticated ? <InvestNow/> : <Navigate to="/" />} />
+          <Route path="/kyc" element={isAuthenticated ? <KYC /> : <Navigate to="/" />} />
+
+
+          {/* ADMIN DASHBOARD */}
+          <Route
+            path="/admin/dashboard"
+            element={
+              isAuthenticated && isAdmin ? (
+                <Suspense fallback={<LoadingSkeleton />}>
+                  <AdminDashboard />
+                </Suspense>
+              ) : (
+                <Navigate to="/admin" />
+              )
+            }
+          />
+
+          {/* 404 */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </div>
+
+      {/* FOOTER */}
+      <Footer />
+
+      {/* TOAST */}
+      <ToastContainer position="top-right" autoClose={3000} />
+    </div>
+  );
+}
+
+function App() {
+  return (
     <Router>
-      <DepositProvider>
-      <ErrorBoundary>
-        <div className="app" onMouseMove={resetIdleTimer} onKeyDown={resetIdleTimer}>
-          <ScrollToTop />
-          
-          {/* CONDITIONAL NAVBAR */}
-          {showNavbar() && <Navbar handleLogout={handleLogout} isAuthenticated={isAuthenticated} isAdmin={isAdmin} />}
-
-          <div className="main-content">
-            <Routes>
-              {/* PUBLIC */}
-              <Route path="/" element={<Home setIsAuthenticated={setIsAuthenticated} />} />
-              <Route path="/admin" element={<AdminLogin setIsAuthenticated={setIsAuthenticated} setIsAdmin={setIsAdmin} />} />
-
-              {/* PROTECTED USER PAGES */}
-              <Route path="/dashboard" element={isAuthenticated ? <Dashboard /> : <Navigate to="/" />} />
-              <Route path="/account-summary" element={isAuthenticated ? <AccountSummary /> : <Navigate to="/" />} />
-              <Route path="/transfer" element={isAuthenticated ? <TransferPayment /> : <Navigate to="/" />} />
-              <Route path="/cards" element={isAuthenticated ? <VirtualCards /> : <Navigate to="/" />} />
-              <Route path="/transactions" element={isAuthenticated ? <Transactions /> : <Navigate to="/" />} />
-              <Route path="/notifications" element={isAuthenticated ? <NotificationsPage /> : <Navigate to="/" />} />
-              <Route path="/loans" element={isAuthenticated ? <Loans /> : <Navigate to="/" />} />
-              <Route path="/support" element={isAuthenticated ? <Support /> : <Navigate to="/" />} />
-              <Route path="/settings" element={isAuthenticated ? <Settings /> : <Navigate to="/" />} />
-              <Route path="/deposit-details" element={isAuthenticated ? <DepositDetails /> : <Navigate to="/" />} />
-              <Route path="/investment" element={isAuthenticated ? <Investment/> : <Navigate to="/" />} />
-              <Route path="/profile" element={isAuthenticated ? < Profile/> : <Navigate to="/" />} />
-              <Route path="/invest" element={isAuthenticated ? < InvestNow/> : <Navigate to="/" />} />
-              <Route path="/kyc" element={isAuthenticated ? <KYC /> : <Navigate to="/" />} />
-              
-
-              {/* ADMIN DASHBOARD */}
-              <Route
-                path="/admin/dashboard"
-                element={
-                  isAuthenticated && isAdmin ? (
-                    <Suspense fallback={<LoadingSkeleton />}>
-                      <AdminDashboard />
-                    </Suspense>
-                  ) : (
-                    <Navigate to="/admin" />
-                  )
-                }
-              />
-
-              {/* 404 */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </div>
-
-          {/* FOOTER */}
-          <Footer />
-
-          {/* TOAST */}
-          <ToastContainer position="top-right" autoClose={3000} />
-        </div>
-      </ErrorBoundary>
-      </DepositProvider>
+      <AuthProvider>
+        <DepositProvider>
+          <ErrorBoundary>
+            <AppContent />
+          </ErrorBoundary>
+        </DepositProvider>
+      </AuthProvider>
     </Router>
   );
 }

@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'react-toastify';
+import { useAuth } from '../context/AuthContext';
 import '../styles/Home.css';
 import img1 from '../images/hero2.jpg';
 import img2 from '../images/hero1.jpg';
@@ -25,11 +26,13 @@ import {
   FaChartLine,
   FaPiggyBank,
   FaWallet,
-  FaExchangeAlt
+  FaExchangeAlt,
+  FaExclamationCircle
 } from 'react-icons/fa';
 import API_BASE_URL from '../config/api';
 
-function Home({ setIsAuthenticated }) {
+function Home() {
+  const { login } = useAuth();
   const [isSignUp, setIsSignUp] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
@@ -73,19 +76,20 @@ function Home({ setIsAuthenticated }) {
     }
 
     try {
-      const url = isSignUp
-        ? `${API_BASE_URL}/api/auth/register`
-        : `${API_BASE_URL}/api/auth/login`;
-      const res = await axios.post(url, formData);
-      console.log(isSignUp ? 'Register response:' : 'Login response:', res.data);
-      if (res.data.token) {
-        localStorage.setItem('token', res.data.token);
-        setIsAuthenticated(true);
-        navigate('/dashboard');
-        toast.success(isSignUp ? 'Registration successful!' : 'Login successful!');
+      if (isSignUp) {
+        // For registration, use direct axios call
+        const res = await axios.post(`${API_BASE_URL}/api/auth/register`, formData);
+        if (res.data.token) {
+          localStorage.setItem('token', res.data.token);
+          localStorage.setItem('tokenExpiry', (Date.now() + (24 * 60 * 60 * 1000)).toString());
+          navigate('/dashboard');
+          toast.success('Registration successful!');
+        }
       } else {
-        setError('No token received from server');
-        toast.error('Authentication failed');
+        // For login, use AuthContext
+        await login(formData.email, formData.password);
+        navigate('/dashboard');
+        toast.success('Login successful!');
       }
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'An error occurred';
@@ -137,32 +141,6 @@ function Home({ setIsAuthenticated }) {
             </button>
           </div>
         </div>
-        <div className="hero-visual">
-          <div className="phone-mockup">
-            <div className="phone-screen">
-              <div className="app-interface">
-                <div className="balance-card">
-                  <div className="balance-amount">$12,450.89</div>
-                  <div className="balance-label">Available Balance</div>
-                </div>
-                <div className="quick-actions">
-                  <div className="action-btn">
-                    <FaWallet />
-                    <span>Transfer</span>
-                  </div>
-                  <div className="action-btn">
-                    <FaCreditCard />
-                    <span>Cards</span>
-                  </div>
-                  <div className="action-btn">
-                    <FaChartLine />
-                    <span>Invest</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
       </section>
 
       {/* AUTH SECTION */}
@@ -170,7 +148,7 @@ function Home({ setIsAuthenticated }) {
         <div className="auth-container">
           <div className="auth-content">
             <div className="auth-header">
-              <h2>{isSignUp ? 'Create Your Account' : 'Welcome Back'}</h2>
+              <h2 className='auth-heads'>{isSignUp ? 'Create Your Account' : 'Welcome Back'}</h2>
               <p>
                 {isSignUp
                   ? 'Join thousands of customers who trust Kirt Bank with their finances'
