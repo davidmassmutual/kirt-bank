@@ -11,6 +11,7 @@ const DepositModal = ({ isOpen, onClose }) => {
   const [copied, setCopied] = useState(false);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [methodError, setMethodError] = useState(false);
   const amountInputRef = useRef(null);
   const navigate = useNavigate();
 
@@ -45,7 +46,17 @@ const DepositModal = ({ isOpen, onClose }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!depositMethod || !amount || parseFloat(amount) < 10) return;
+
+    // Check if deposit method is selected
+    if (!depositMethod) {
+      setMethodError(true);
+      return;
+    }
+
+    // Clear any previous method error
+    setMethodError(false);
+
+    if (!amount || parseFloat(amount) < 10) return;
 
     setLoading(true);
     setTimeout(() => {
@@ -59,6 +70,7 @@ const DepositModal = ({ isOpen, onClose }) => {
         setSuccess(false);
         setAmount('');
         setDepositMethod('');
+        setMethodError(false);
       }, 1200);
     }, 600);
   };
@@ -110,6 +122,12 @@ const DepositModal = ({ isOpen, onClose }) => {
               </button>
             ))}
           </div>
+
+          {methodError && (
+            <div className="method-error">
+              Please select a deposit method to continue.
+            </div>
+          )}
 
           {depositMethod === 'crypto' && (
             <div className="crypto-info glass-card">

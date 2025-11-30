@@ -12,6 +12,22 @@ import img5 from '../images/fast.webp';
 import img6 from '../images/Mobile-Banking-App-Features.jpg';
 import img7 from '../images/support.png';
 import img9 from '../images/WhatsApp Image 2025-10-17 at 16.15.27.jpeg';
+import {
+  FaShieldAlt,
+  FaRocket,
+  FaMobileAlt,
+  FaCreditCard,
+  FaLock,
+  FaCheckCircle,
+  FaArrowRight,
+  FaStar,
+  FaUsers,
+  FaGlobe,
+  FaChartLine,
+  FaPiggyBank,
+  FaWallet,
+  FaExchangeAlt
+} from 'react-icons/fa';
 import API_BASE_URL from '../config/api';
 
 function Home({ setIsAuthenticated }) {
@@ -89,117 +105,369 @@ function Home({ setIsAuthenticated }) {
 
   return (
     <div className="home">
-      <section className="hero">
-        <img src={img5} alt="Banking Hero" className="hero-image" />
+      {/* HERO SECTION */}
+      <section className="hero-section">
         <div className="hero-content">
-          <h1>
-            Kirt Bank <img src={img9} alt="" className="navbar-brand-image" />
+          <div className="hero-badge">
+            <FaShieldAlt /> Trusted by 10,000+ Customers
+          </div>
+          <h1 className="hero-title">
+            Modern Banking Made <span className="highlight">Simple</span>
           </h1>
-          <h2>Secure Banking, Simplified</h2>
-          <p>Join Kirt Bank for seamless, secure, and innovative banking solutions.</p>
-        </div>
-      </section>
-      <section className="auth-section">
-        <h2>{isSignUp ? 'Join Us Today' : 'Welcome Back'}</h2>
-        {error && <div className="error">{error}</div>}
-        <form onSubmit={handleSubmit} className="auth-form">
-          {isSignUp && (
-            <input
-              type="text"
-              name="name"
-              placeholder="Full Name"
-              value={formData.name}
-              onChange={handleInputChange}
-              required
-              disabled={loading}
-            />
-          )}
-          <input
-            type="email"
-            name="email"
-            placeholder="Email"
-            value={formData.email}
-            onChange={handleInputChange}
-            required
-            disabled={loading}
-          />
-          <input
-            type="password"
-            name="password"
-            placeholder="Password"
-            value={formData.password}
-            onChange={handleInputChange}
-            required
-            disabled={loading}
-          />
-          <button type="submit" disabled={loading}>
-            <i className={`fas ${isSignUp ? 'fa-user-plus' : 'fa-sign-in-alt'}`}></i>
-            {loading ? 'Processing...' : isSignUp ? 'Sign Up' : 'Login'}
-          </button>
-          <p onClick={toggleAuthMode}>
-            {isSignUp ? (
-              <>
-                Already have an account? <Link to="#" onClick={toggleAuthMode}>Log In</Link>
-              </>
-            ) : (
-              <>
-                Don't have an account? <Link to="#" onClick={toggleAuthMode}>Sign Up</Link>
-              </>
-            )}
+          <p className="hero-subtitle">
+            Experience next-generation banking with instant transfers, competitive rates,
+            and bank-grade security. Join thousands of satisfied customers.
           </p>
-        </form>
+          <div className="hero-stats">
+            <div className="stat">
+              <div className="stat-number">$2.1B+</div>
+              <div className="stat-label">Assets Under Management</div>
+            </div>
+            <div className="stat">
+              <div className="stat-number">28%</div>
+              <div className="stat-label">Average Investment Returns</div>
+            </div>
+            <div className="stat">
+              <div className="stat-number">24/7</div>
+              <div className="stat-label">Customer Support</div>
+            </div>
+          </div>
+          <div className="hero-buttons">
+            <button onClick={() => setIsSignUp(true)} className="btn-primary">
+              <FaRocket /> Get Started Free
+            </button>
+            <button className="btn-secondary">
+              <FaMobileAlt /> Download App
+            </button>
+          </div>
+        </div>
+        <div className="hero-visual">
+          <div className="phone-mockup">
+            <div className="phone-screen">
+              <div className="app-interface">
+                <div className="balance-card">
+                  <div className="balance-amount">$12,450.89</div>
+                  <div className="balance-label">Available Balance</div>
+                </div>
+                <div className="quick-actions">
+                  <div className="action-btn">
+                    <FaWallet />
+                    <span>Transfer</span>
+                  </div>
+                  <div className="action-btn">
+                    <FaCreditCard />
+                    <span>Cards</span>
+                  </div>
+                  <div className="action-btn">
+                    <FaChartLine />
+                    <span>Invest</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </section>
+
+      {/* FEATURES SECTION */}
       <section className="features-section">
-        <h2>Why Choose Kirt Bank?</h2>
-        <div className="features">
+        <div className="section-header">
+          <h2>Why Choose Kirt Bank?</h2>
+          <p>Experience banking designed for the modern world</p>
+        </div>
+        <div className="features-grid">
           <div className="feature-card">
-            <img src={img5} alt="Fast Transfers" className="feature-image" />
-            <h3>Fast Transfers</h3>
-            <p>Send money instantly to anyone, anywhere.</p>
+            <div className="feature-icon">
+              <FaRocket />
+            </div>
+            <h3>Lightning Fast</h3>
+            <p>Instant transfers and real-time balance updates. No waiting, no delays.</p>
           </div>
           <div className="feature-card">
-            <img src={img7} alt="Secure Banking" className="feature-image" />
-            <h3>Secure Banking</h3>
-            <p>Advanced encryption for your peace of mind.</p>
+            <div className="feature-icon">
+              <FaShieldAlt />
+            </div>
+            <h3>Bank-Grade Security</h3>
+            <p>256-bit encryption, biometric authentication, and FDIC insurance up to $250,000.</p>
           </div>
           <div className="feature-card">
-            <img src={img3} alt="24/7 Support" className="feature-image" />
+            <div className="feature-icon">
+              <FaPiggyBank />
+            </div>
+            <h3>High-Yield Savings</h3>
+            <p>Earn up to 5.25% APY on your savings with our premium accounts.</p>
+          </div>
+          <div className="feature-card">
+            <div className="feature-icon">
+              <FaMobileAlt />
+            </div>
+            <h3>Mobile Banking</h3>
+            <p>Manage your money anywhere with our award-winning mobile app.</p>
+          </div>
+          <div className="feature-card">
+            <div className="feature-icon">
+              <FaExchangeAlt />
+            </div>
+            <h3>Multi-Currency</h3>
+            <p>Send and receive money in 30+ currencies with competitive exchange rates.</p>
+          </div>
+          <div className="feature-card">
+            <div className="feature-icon">
+              <FaCheckCircle />
+            </div>
             <h3>24/7 Support</h3>
-            <p>Our team is here for you anytime.</p>
+            <p>Get help whenever you need it with our dedicated customer support team.</p>
           </div>
         </div>
       </section>
+
+      {/* AUTH SECTION */}
+      <section className="auth-section">
+        <div className="auth-container">
+          <div className="auth-content">
+            <div className="auth-header">
+              <h2>{isSignUp ? 'Create Your Account' : 'Welcome Back'}</h2>
+              <p>
+                {isSignUp
+                  ? 'Join thousands of customers who trust Kirt Bank with their finances'
+                  : 'Access your account and continue managing your money securely'
+                }
+              </p>
+            </div>
+
+            {error && (
+              <div className="error-message">
+                <FaExclamationCircle />
+                {error}
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit} className="auth-form">
+              {isSignUp && (
+                <div className="form-group">
+                  <label>Full Name</label>
+                  <input
+                    type="text"
+                    name="name"
+                    placeholder="Enter your full name"
+                    value={formData.name}
+                    onChange={handleInputChange}
+                    required
+                    disabled={loading}
+                  />
+                </div>
+              )}
+
+              <div className="form-group">
+                <label>Email Address</label>
+                <input
+                  type="email"
+                  name="email"
+                  placeholder="Enter your email"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  required
+                  disabled={loading}
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Password</label>
+                <input
+                  type="password"
+                  name="password"
+                  placeholder="Create a secure password"
+                  value={formData.password}
+                  onChange={handleInputChange}
+                  required
+                  disabled={loading}
+                />
+              </div>
+
+              <button type="submit" disabled={loading} className="auth-submit">
+                {loading ? (
+                  <>Processing...</>
+                ) : (
+                  <>
+                    {isSignUp ? 'Create Account' : 'Sign In'}
+                    <FaArrowRight />
+                  </>
+                )}
+              </button>
+            </form>
+
+            <div className="auth-toggle">
+              <p>
+                {isSignUp ? 'Already have an account?' : "Don't have an account?"}
+                <button onClick={toggleAuthMode} className="toggle-link">
+                  {isSignUp ? 'Sign In' : 'Create Account'}
+                </button>
+              </p>
+            </div>
+          </div>
+
+          <div className="auth-visual">
+            <div className="benefits-list">
+              <div className="benefit-item">
+                <FaCheckCircle className="check-icon" />
+                <span>Free transfers up to $10,000/month</span>
+              </div>
+              <div className="benefit-item">
+                <FaCheckCircle className="check-icon" />
+                <span>No hidden fees or charges</span>
+              </div>
+              <div className="benefit-item">
+                <FaCheckCircle className="check-icon" />
+                <span>Instant account verification</span>
+              </div>
+              <div className="benefit-item">
+                <FaCheckCircle className="check-icon" />
+                <span>Advanced fraud protection</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* SECURITY SECTION */}
       <section className="security-section">
-        <h2>Your Security, Our Priority</h2>
-        <p>Bank with confidence knowing your data is protected with state-of-the-art security measures.</p>
-        <img src={img6} alt="Security" className="security-image" />
-      </section>
-      <section className="reviews-section">
-        <h2>Customer Reviews</h2>
-        <div className="reviews">
-          <div className="review-card">
-            <p>"Kirt Bank is reliable and user-friendly!"</p>
-            <span>– Jane Doe</span>
+        <div className="security-content">
+          <div className="security-text">
+            <h2>Your Security is Our Priority</h2>
+            <p>
+              We employ bank-grade security measures including 256-bit SSL encryption,
+              biometric authentication, and real-time fraud monitoring to keep your money safe.
+            </p>
+            <div className="security-features">
+              <div className="security-feature">
+                <FaLock className="security-icon" />
+                <div>
+                  <h4>End-to-End Encryption</h4>
+                  <p>All data is encrypted in transit and at rest</p>
+                </div>
+              </div>
+              <div className="security-feature">
+                <FaShieldAlt className="security-icon" />
+                <div>
+                  <h4>Fraud Protection</h4>
+                  <p>AI-powered fraud detection and prevention</p>
+                </div>
+              </div>
+              <div className="security-feature">
+                <FaCheckCircle className="security-icon" />
+                <div>
+                  <h4>Federal Insurance</h4>
+                  <p>FDIC insured up to $250,000 per account</p>
+                </div>
+              </div>
+            </div>
           </div>
-          <div className="review-card">
-            <p>"Best banking app I've used. Highly secure."</p>
-            <span>– John Smith</span>
-          </div>
-          <div className="review-card">
-            <p>"Fast and easy transactions every time."</p>
-            <span>– Sarah Johnson</span>
-          </div>
-          <div className="review-card">
-            <p>"Excellent support and features!"</p>
-            <span>– Michael Brown</span>
+          <div className="security-visual">
+            <div className="security-badge">
+              <FaShieldAlt className="badge-icon" />
+              <span>Bank-Grade Security</span>
+            </div>
           </div>
         </div>
       </section>
+
+      {/* REVIEWS SECTION */}
+      <section className="reviews-section">
+        <div className="section-header">
+          <h2>What Our Customers Say</h2>
+          <p>Join thousands of satisfied banking customers</p>
+        </div>
+        <div className="reviews-grid">
+          <div className="review-card">
+            <div className="review-stars">
+              {[...Array(5)].map((_, i) => (
+                <FaStar key={i} className="star" />
+              ))}
+            </div>
+            <p className="review-text">
+              "Kirt Bank has transformed how I manage my money. The app is intuitive,
+              transfers are instant, and customer service is exceptional."
+            </p>
+            <div className="review-author">
+              <div className="author-avatar">JD</div>
+              <div>
+                <div className="author-name">Jane Doe</div>
+                <div className="author-title">Small Business Owner</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="review-card">
+            <div className="review-stars">
+              {[...Array(5)].map((_, i) => (
+                <FaStar key={i} className="star" />
+              ))}
+            </div>
+            <p className="review-text">
+              "The investment options are fantastic. I've seen returns I never thought
+              possible with traditional banks. Highly recommend!"
+            </p>
+            <div className="review-author">
+              <div className="author-avatar">MS</div>
+              <div>
+                <div className="author-name">Mike Smith</div>
+                <div className="author-title">Tech Professional</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="review-card">
+            <div className="review-stars">
+              {[...Array(5)].map((_, i) => (
+                <FaStar key={i} className="star" />
+              ))}
+            </div>
+            <p className="review-text">
+              "Security is top-notch. I feel completely safe banking with Kirt Bank.
+              The mobile app makes managing finances a breeze."
+            </p>
+            <div className="review-author">
+              <div className="author-avatar">SJ</div>
+              <div>
+                <div className="author-name">Sarah Johnson</div>
+                <div className="author-title">Marketing Director</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA SECTION */}
       <section className="cta-section">
-        <h2>Ready to Start Banking?</h2>
-        <button onClick={() => setIsSignUp(true)} className="cta-button">
-          Get Started Now
-        </button>
+        <div className="cta-content">
+          <h2>Ready to Experience Modern Banking?</h2>
+          <p>
+            Join Kirt Bank today and discover why thousands of customers have made the switch.
+            Open your account in minutes, no credit check required.
+          </p>
+          <div className="cta-buttons">
+            <button onClick={() => setIsSignUp(true)} className="btn-primary">
+              <FaRocket /> Start Banking Today
+            </button>
+            <button className="btn-outline">
+              <FaUsers /> Schedule a Demo
+            </button>
+          </div>
+          <div className="cta-trust">
+            <div className="trust-item">
+              <FaCheckCircle />
+              <span>No Monthly Fees</span>
+            </div>
+            <div className="trust-item">
+              <FaCheckCircle />
+              <span>Free Transfers</span>
+            </div>
+            <div className="trust-item">
+              <FaCheckCircle />
+              <span>24/7 Support</span>
+            </div>
+          </div>
+        </div>
       </section>
     </div>
   );

@@ -52,13 +52,13 @@
   right: 12px;
   background: rgba(255, 255, 255, 0.15);
   border: 1px solid rgba(255, 255, 255, 0.25);
-  width: 32px;
-  height: 32px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 18px;
+  font-size: 14px;
   color: #ccc;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -142,6 +142,26 @@
   font-size: 12px;
   font-weight: 600;
   color: var(--secondary);
+}
+
+/* METHOD ERROR */
+.method-error {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 8px;
+  padding: 10px 14px;
+  color: #ef4444;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: center;
+  margin-bottom: 16px;
+  animation: shake 0.5s ease-in-out;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
 }
 
 /* CRYPTO INFO – RICH, NOT FLAT */
