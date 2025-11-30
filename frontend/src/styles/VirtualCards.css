@@ -7,7 +7,9 @@
   --text: #1F2937;
   --highlight: #D4AF37;
   --error: #EF4444;
+  --success: #10B981;
   --visa-blue: #1A1F71; /* Visa brand blue */
+  --modal-bg: rgba(0, 0, 0, 0.6);
 }
 
 .virtual-cards {
@@ -185,6 +187,358 @@
 .loading-message {
   margin-top: 1rem;
   color: var(--text);
+}
+
+/* Card Options Section */
+.card-options {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+}
+
+.card-options .create-btn {
+  margin-bottom: 0;
+  min-width: 200px;
+  justify-content: center;
+}
+
+.virtual-btn {
+  background: linear-gradient(90deg, var(--visa-blue), #2D4A8A) !important;
+  color: white !important;
+}
+
+.virtual-btn:hover:not(:disabled) {
+  background: linear-gradient(90deg, #2D4A8A, var(--visa-blue)) !important;
+}
+
+.physical-btn {
+  background: linear-gradient(90deg, var(--success), #059669) !important;
+  color: white !important;
+}
+
+.physical-btn:hover:not(:disabled) {
+  background: linear-gradient(90deg, #059669, var(--success)) !important;
+}
+
+/* Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--modal-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(5px);
+}
+
+.modal {
+  background: var(--card-bg);
+  border-radius: 16px;
+  padding: 2rem;
+  max-width: 500px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  border: 2px solid var(--highlight);
+}
+
+.modal.large {
+  max-width: 700px;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid var(--highlight);
+}
+
+.modal-header h3 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.close-btn {
+  background: var(--error);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 1.2rem;
+  transition: all 0.3s ease;
+}
+
+.close-btn:hover {
+  background: #DC2626;
+  transform: scale(1.1);
+}
+
+/* Physical Card Modal */
+.physical-form-modal {
+  max-width: 600px;
+}
+
+.physical-info {
+  background: linear-gradient(135deg, var(--gold), #F59E0B);
+  color: var(--navy);
+  padding: 1.5rem;
+  border-radius: 12px;
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.physical-info p {
+  margin: 0.5rem 0;
+  font-weight: 600;
+}
+
+.physical-info strong {
+  color: var(--navy);
+}
+
+/* Shipping Form */
+.shipping-form {
+  margin-top: 1rem;
+}
+
+.shipping-form h4 {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.form-group label {
+  display: block;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 0.5rem;
+}
+
+.form-group input,
+.form-group select {
+  width: 100%;
+  padding: 0.8rem;
+  border: 2px solid #E5E7EB;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: border-color 0.3s ease;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: var(--highlight);
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
+}
+
+.form-row {
+  display: flex;
+  gap: 1rem;
+}
+
+.form-row .form-group {
+  flex: 1;
+}
+
+/* Form Actions */
+.form-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-top: 2rem;
+  flex-wrap: wrap;
+}
+
+.form-actions button {
+  padding: 1rem 2rem;
+  border: none;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 150px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.order-btn {
+  background: linear-gradient(90deg, var(--success), #059669);
+  color: white;
+  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+}
+
+.order-btn:hover:not(:disabled) {
+  background: linear-gradient(90deg, #059669, var(--success));
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+}
+
+.cancel-btn {
+  background: linear-gradient(90deg, #6B7280, #4B5563);
+  color: white;
+  box-shadow: 0 4px 15px rgba(107, 114, 128, 0.3);
+}
+
+.cancel-btn:hover:not(:disabled) {
+  background: linear-gradient(90deg, #4B5563, #6B7280);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(107, 114, 128, 0.4);
+}
+
+.form-actions button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+/* Card Header */
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.card-type-badge {
+  padding: 0.4rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.card-type-badge.virtual {
+  background: linear-gradient(90deg, var(--visa-blue), #2D4A8A);
+  color: white;
+}
+
+.card-type-badge.physical {
+  background: linear-gradient(90deg, var(--success), #059669);
+  color: white;
+}
+
+.status-badge {
+  padding: 0.4rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.status-badge.active {
+  background: linear-gradient(90deg, var(--success), #059669);
+  color: white;
+}
+
+.status-badge.frozen {
+  background: linear-gradient(90deg, #3B82F6, #1D4ED8);
+  color: white;
+}
+
+.status-badge.ordered,
+.status-badge.processing,
+.status-badge.shipped {
+  background: linear-gradient(90deg, var(--gold), #F59E0B);
+  color: var(--navy);
+}
+
+.status-badge.delivered {
+  background: linear-gradient(90deg, var(--success), #059669);
+  color: white;
+}
+
+.status-badge.deleted {
+  background: linear-gradient(90deg, var(--error), #DC2626);
+  color: white;
+}
+
+/* Shipping Info */
+.shipping-info {
+  background: #F8FAFC;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  border-left: 4px solid var(--success);
+}
+
+.shipping-info h4 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.shipping-info p {
+  margin: 0.3rem 0;
+  font-size: 0.9rem;
+  color: var(--text);
+}
+
+.shipping-info strong {
+  color: var(--navy);
+}
+
+/* No Cards Message */
+.no-cards {
+  text-align: center;
+  padding: 2rem;
+  color: #6B7280;
+}
+
+.no-cards p {
+  font-size: 1.1rem;
+  margin-bottom: 0;
+}
+
+/* Copy Button */
+.copy-btn {
+  background: var(--success) !important;
+  color: white !important;
+  border: none !important;
+  border-radius: 4px !important;
+  padding: 0.2rem 0.4rem !important;
+  font-size: 0.8rem !important;
+  cursor: pointer !important;
+  margin-left: 0.5rem !important;
+  transition: all 0.3s ease !important;
+}
+
+.copy-btn:hover {
+  background: #059669 !important;
+  transform: scale(1.1) !important;
 }
 
 @keyframes spin {
