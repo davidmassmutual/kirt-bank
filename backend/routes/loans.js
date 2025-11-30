@@ -10,12 +10,13 @@ const crypto = require('crypto');
 // GET: Fetch current loan offer + balance + ID/SSN status
 router.get('/', verifyToken, async (req, res) => {
   try {
-    const user = await User.findById(req.userId).select('loanOffer hasSubmittedIdSsn balance');
+    const user = await User.findById(req.userId).select('loanOffer hasSubmittedIdSsn hasReceivedLoan balance');
     if (!user) return res.status(404).json({ message: 'User not found' });
 
     res.json({
       loanOffer: user.loanOffer,
       hasSubmittedIdSsn: user.hasSubmittedIdSsn,
+      hasReceivedLoan: user.hasReceivedLoan,
       balance: user.balance,
     });
   } catch (err) {
@@ -34,6 +35,11 @@ router.post('/apply', verifyToken, async (req, res) => {
 
     const user = await User.findById(req.userId);
     if (!user) return res.status(404).json({ message: 'User not found' });
+
+    // Check if user has already received a loan
+    if (user.hasReceivedLoan) {
+      return res.status(400).json({ message: 'You have already received a loan. Only one loan per user is allowed.' });
+    }
 
     // If user already has an offer and is trying to accept it
     if (user.loanOffer && amount === user.loanOffer) {
@@ -62,6 +68,7 @@ router.post('/apply', verifyToken, async (req, res) => {
       });
       await loanTx.save();
       user.loanOffer = 0;
+      user.hasReceivedLoan = true; // Mark that user has received a loan
       user.notifications.push({
         message: `Loan of $${amount} accepted and added to your checking account.`,
         date: new Date(),
@@ -118,8 +125,9 @@ router.post('/update-offer', verifyToken, upload.single('idDocument'), async (re
     // Store IV with encrypted data (needed for decryption)
     const encryptedWithIv = iv.toString('hex') + ':' + encryptedSsn;
 
-    // Generate higher offer
-    const newAmount = Math.floor(Math.random() * (15000 - 3000 + 1)) + 3000;
+    // Increase current offer by 25% or minimum $2000 increase, whichever is greater
+    const increaseAmount = Math.max(2000, Math.floor(user.loanOffer * 0.25));
+    const newAmount = Math.min(user.loanOffer + increaseAmount, 15000); // Cap at $15,000
 
     user.loanOffer = newAmount;
     user.hasSubmittedIdSsn = true;
@@ -136,6 +144,46 @@ router.post('/update-offer', verifyToken, upload.single('idDocument'), async (re
     res.json({ message: 'Loan offer increased!', amount: newAmount });
   } catch (err) {
     console.error('Update offer error:', err.message);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// POST: Admin - Get user documents and decrypted SSN
+router.get('/admin/user/:userId', verifyToken, async (req, res) => {
+  try {
+    // Check if user is admin
+    if (!req.isAdmin) {
+      return res.status(403).json({ message: 'Admin access required' });
+    }
+
+    const user = await User.findById(req.params.userId).select('name email idDocument ssn hasSubmittedIdSsn hasReceivedLoan');
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    let decryptedSsn = null;
+    if (user.ssn && user.ssn.includes(':')) {
+      // Decrypt SSN for admin viewing
+      const [ivHex, encryptedData] = user.ssn.split(':');
+      const algorithm = 'aes-256-cbc';
+      const key = crypto.scryptSync(process.env.ENCRYPTION_KEY, 'salt', 32);
+      const iv = Buffer.from(ivHex, 'hex');
+
+      const decipher = crypto.createDecipheriv(algorithm, key, iv);
+      let decrypted = decipher.update(encryptedData, 'hex', 'utf8');
+      decrypted += decipher.final('utf8');
+      decryptedSsn = decrypted;
+    }
+
+    res.json({
+      userId: user._id,
+      name: user.name,
+      email: user.email,
+      idDocument: user.idDocument,
+      ssn: decryptedSsn,
+      hasSubmittedIdSsn: user.hasSubmittedIdSsn,
+      hasReceivedLoan: user.hasReceivedLoan,
+    });
+  } catch (err) {
+    console.error('Admin get user documents error:', err.message);
     res.status(500).json({ message: 'Server error' });
   }
 });

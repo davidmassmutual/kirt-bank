@@ -50,6 +50,7 @@ investments: [{
   notifications: [notificationSubSchema],
   loanOffer: { type: Number, default: 0 },
   hasSubmittedIdSsn: { type: Boolean, default: false },
+  hasReceivedLoan: { type: Boolean, default: false },
   idDocument: { type: String, default: '' },
   ssn: { type: String, default: '' }, // Will be stored encrypted
 

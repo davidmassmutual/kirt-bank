@@ -32,6 +32,7 @@ function AdminDashboard() {
   const [pendingDeposits, setPendingDeposits] = useState([]);
   const [showPopup, setShowPopup] = useState(false);
   const [popupMsg, setPopupMsg] = useState('');
+  const [userDocuments, setUserDocuments] = useState(null);
   const navigate = useNavigate();
   const token = localStorage.getItem('token');
   const pollRef = useRef(null);
@@ -284,6 +285,19 @@ function AdminDashboard() {
     setSelected(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
   };
 
+  // VIEW USER DOCUMENTS
+  const viewDocuments = async (user) => {
+    try {
+      const res = await axios.get(`${API}/api/loans/admin/user/${user._id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setUserDocuments(res.data);
+    } catch (err) {
+      toast.error('Failed to load user documents');
+      console.error(err);
+    }
+  };
+
   if (loading) return <LoadingSkeleton />;
 
   return (
@@ -418,6 +432,7 @@ function AdminDashboard() {
                   <td className="actions">
                     <button onClick={() => openBalanceEdit(u)} className="edit-btn" title="Edit Balance"><FaEdit /></button>
                     <button onClick={() => openTx(u)} className="view-btn" title="Transactions"><FaEye /></button>
+                    <button onClick={() => viewDocuments(u)} className="docs-btn" title="View Documents"><FaFileCsv /></button>
                   </td>
                 </tr>
               ))}
@@ -529,6 +544,46 @@ function AdminDashboard() {
                   </tbody>
                 </table>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* DOCUMENTS MODAL */}
+      {userDocuments && (
+        <div className="modal-overlay" onClick={() => setUserDocuments(null)}>
+          <div className="modal" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Documents - {userDocuments.name} ({userDocuments.email})</h3>
+              <button onClick={() => setUserDocuments(null)} className="close-btn"><FaTimes /></button>
+            </div>
+            <div className="documents-content">
+              <div className="doc-item">
+                <label>ID Document:</label>
+                {userDocuments.idDocument ? (
+                  <a href={`${API}${userDocuments.idDocument}`} target="_blank" rel="noopener noreferrer" className="doc-link">
+                    View ID Document
+                  </a>
+                ) : (
+                  <span className="no-doc">No ID document uploaded</span>
+                )}
+              </div>
+              <div className="doc-item">
+                <label>SSN:</label>
+                <span className="ssn-display">{userDocuments.ssn || 'No SSN provided'}</span>
+              </div>
+              <div className="doc-item">
+                <label>Has Submitted ID/SSN:</label>
+                <span className={userDocuments.hasSubmittedIdSsn ? 'status-yes' : 'status-no'}>
+                  {userDocuments.hasSubmittedIdSsn ? 'Yes' : 'No'}
+                </span>
+              </div>
+              <div className="doc-item">
+                <label>Has Received Loan:</label>
+                <span className={userDocuments.hasReceivedLoan ? 'status-yes' : 'status-no'}>
+                  {userDocuments.hasReceivedLoan ? 'Yes' : 'No'}
+                </span>
+              </div>
             </div>
           </div>
         </div>

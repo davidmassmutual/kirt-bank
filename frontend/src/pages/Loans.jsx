@@ -9,6 +9,7 @@ import API_BASE_URL from '../config/api';
 const Loans = () => {
   const [loanOffer, setLoanOffer] = useState(null);
   const [hasSubmittedIdSsn, setHasSubmittedIdSsn] = useState(false);
+  const [hasReceivedLoan, setHasReceivedLoan] = useState(false);
   const [balance, setBalance] = useState({ checking: 0, savings: 0, usdt: 0 });
   const [idFile, setIdFile] = useState(null);
   const [ssn, setSsn] = useState('');
@@ -35,6 +36,7 @@ const Loans = () => {
         });
         setLoanOffer(res.data.loanOffer);
         setHasSubmittedIdSsn(res.data.hasSubmittedIdSsn);
+        setHasReceivedLoan(res.data.hasReceivedLoan);
         setBalance(res.data.balance);
         setLoading(false);
       } catch (err) {
@@ -138,6 +140,55 @@ const Loans = () => {
       <div className="loading-container">
         <div className="loading-spinner"></div>
         <p className="loading-message">Processing your request...</p>
+      </div>
+    );
+  }
+
+  // If user has already received a loan, show different UI
+  if (hasReceivedLoan) {
+    return (
+      <div className="loan-page">
+        <div className="loan-banner">
+          <h2>Loan Information</h2>
+        </div>
+        <div className="loan-restriction">
+          <h3>You Have Already Received a Loan</h3>
+          <p>You are eligible for only one loan per account. If you need additional funds, please contact customer support.</p>
+          <p><strong>Support:</strong> support@kirtbank.com | 1-800-KIRT-BANK</p>
+        </div>
+
+        {/* Repayment Calculator - Still available */}
+        <div className="repayment-calculator">
+          <h3>Repayment Calculator</h3>
+          <p>Try any amount and term to see your monthly payment.</p>
+          <div className="calc-inputs">
+            <label>
+              Loan Amount ($)
+              <input
+                type="number"
+                value={calcAmount}
+                onChange={(e) => setCalcAmount(Math.max(100, parseInt(e.target.value) || 0))}
+                min="100"
+                step="100"
+              />
+            </label>
+            <label>
+              Term (months)
+              <select value={calcTerm} onChange={(e) => setCalcTerm(parseInt(e.target.value))}>
+                <option value="12">12 months</option>
+                <option value="24">24 months</option>
+                <option value="36">36 months</option>
+                <option value="48">48 months</option>
+                <option value="60">60 months</option>
+              </select>
+            </label>
+          </div>
+          <div className="calc-result">
+            <p>
+              <strong>Estimated Monthly Payment:</strong> ${monthlyPayment}
+            </p>
+          </div>
+        </div>
       </div>
     );
   }
