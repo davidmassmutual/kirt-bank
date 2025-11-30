@@ -35,11 +35,18 @@ export default function InvestNow() {
   const handleInvest = async () => {
     if (!isValid) return;
 
+    const authToken = localStorage.getItem('token');
+    if (!authToken) {
+      alert('Please log in to make an investment.');
+      navigate('/login');
+      return;
+    }
+
     try {
       const res = await axios.post(
         `${API_BASE_URL}/api/investments/invest`,
         { plan: plan.name.toLowerCase(), amount: amountNum },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${authToken}` } }
       );
 
       await fetchUser();
