@@ -34,7 +34,7 @@
 }
 
 .summary-row span:first-child {
-  color: #9ca3af;
+  color: var(--navy);
   font-weight: 500;
 }
 
@@ -65,7 +65,7 @@
 
 .info-grid label {
   font-size: 14px;
-  color: #9ca3af;
+  color: var(--navy);
   margin-bottom: 4px;
 }
 
@@ -188,7 +188,7 @@
   text-align: center;
   margin-top: 2rem;
   font-size: 13px;
-  color: #9ca3af;
+  color: var(--navy);
   font-style: italic;
 }
 
@@ -230,7 +230,7 @@
 
 .success-card p {
   margin-bottom: 1rem;
-  color: #9ca3af;
+  color: var(--navy);
   line-height: 1.6;
 }
 
