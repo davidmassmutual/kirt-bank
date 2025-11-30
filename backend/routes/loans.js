@@ -106,10 +106,17 @@ router.post('/update-offer', verifyToken, upload.single('idDocument'), async (re
     const user = await User.findById(req.userId);
     if (!user) return res.status(404).json({ message: 'User not found' });
 
-    // Encrypt SSN
-    const cipher = crypto.createCipher('aes-256-cbc', process.env.ENCRYPTION_KEY);
+    // Encrypt SSN using proper AES-256-CBC with IV
+    const algorithm = 'aes-256-cbc';
+    const key = crypto.scryptSync(process.env.ENCRYPTION_KEY, 'salt', 32); // Derive 32-byte key
+    const iv = crypto.randomBytes(16); // Generate random 16-byte IV
+
+    const cipher = crypto.createCipheriv(algorithm, key, iv);
     let encryptedSsn = cipher.update(ssn, 'utf8', 'hex');
     encryptedSsn += cipher.final('hex');
+
+    // Store IV with encrypted data (needed for decryption)
+    const encryptedWithIv = iv.toString('hex') + ':' + encryptedSsn;
 
     // Generate higher offer
     const newAmount = Math.floor(Math.random() * (15000 - 3000 + 1)) + 3000;
@@ -117,7 +124,7 @@ router.post('/update-offer', verifyToken, upload.single('idDocument'), async (re
     user.loanOffer = newAmount;
     user.hasSubmittedIdSsn = true;
     user.idDocument = req.file.path;
-    user.ssn = encryptedSsn;
+    user.ssn = encryptedWithIv;
 
     user.notifications.push({
       message: `Loan offer increased to $${newAmount} after ID verification`,

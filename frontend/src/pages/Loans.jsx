@@ -1,5 +1,5 @@
 // frontend/src/pages/Loans.jsx
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'react-toastify';
@@ -19,6 +19,7 @@ const Loans = () => {
   const [calcAmount, setCalcAmount] = useState(5000); // For repayment calculator
   const [calcTerm, setCalcTerm] = useState(36);
   const navigate = useNavigate();
+  const idSsnFormRef = useRef(null);
 
   useEffect(() => {
     const fetchLoanData = async () => {
@@ -29,7 +30,7 @@ const Loans = () => {
           navigate('/login');
           return;
         }
-        const res = await axios.get(`${import.meta.env.API_BASE_URL}/api/loans`, {
+        const res = await axios.get(`${API_BASE_URL}/api/loans`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setLoanOffer(res.data.loanOffer);
@@ -59,7 +60,7 @@ const Loans = () => {
       const amount = Math.floor(Math.random() * (max - min + 1)) + min;
 
       await axios.post(
-        `${import.meta.env.API_BASE_URL}/api/loans/apply`,
+        `${API_BASE_URL}/api/loans/apply`,
         { amount },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -86,7 +87,7 @@ const Loans = () => {
 
       const token = localStorage.getItem('token');
       await axios.post(
-        `${import.meta.env.API_BASE_URL}/api/loans/apply`,
+        `${API_BASE_URL}/api/loans/apply`,
         { amount: loanOffer },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -113,7 +114,7 @@ const Loans = () => {
       formData.append('ssn', ssn);
 
       const res = await axios.post(
-        `${import.meta.env.API_BASE_URL}/api/loans/update-offer`,
+        `${API_BASE_URL}/api/loans/update-offer`,
         formData,
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -165,7 +166,12 @@ const Loans = () => {
 
           {!hasSubmittedIdSsn && (
             <button
-              onClick={() => setShowIdSsnForm(true)}
+              onClick={() => {
+                setShowIdSsnForm(true);
+                setTimeout(() => {
+                  idSsnFormRef.current?.scrollIntoView({ behavior: 'smooth' });
+                }, 100);
+              }}
               className="increase-btn"
               disabled={submitting}
             >
@@ -185,7 +191,7 @@ const Loans = () => {
 
       {/* ID/SSN Form */}
       {showIdSsnForm && !hasSubmittedIdSsn && (
-        <div className="id-ssn-form">
+        <div className="id-ssn-form" ref={idSsnFormRef}>
           <h3>Submit Documents to Increase Offer</h3>
           <form onSubmit={handleIdSsnSubmit}>
             <label>
