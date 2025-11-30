@@ -1,6 +1,7 @@
 // src/components/DepositModal.jsx
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import { FaTimes, FaCopy, FaCheck, FaQrcode, FaUniversity, FaBitcoin, FaCreditCard, FaMobileAlt, FaArrowRight } from 'react-icons/fa';
 import '../styles/DepositModal.css';
 
@@ -49,6 +50,7 @@ const DepositModal = ({ isOpen, onClose }) => {
 
     // Check if deposit method is selected
     if (!depositMethod) {
+      toast.error('Please select a payment method to continue');
       setMethodError(true);
       return;
     }
@@ -149,7 +151,7 @@ const DepositModal = ({ isOpen, onClose }) => {
                 type="number"
                 value={amount}
                 onChange={e => setAmount(e.target.value)}
-                placeholder="10.00"
+                placeholder="$10.00"
                 min="10"
                 step="0.01"
                 required
