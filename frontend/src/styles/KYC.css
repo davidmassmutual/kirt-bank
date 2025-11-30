@@ -44,12 +44,8 @@
 .kyc-header h1 {
   font-size: 2.5rem;
   font-weight: 800;
-  color: #1F2937;
+  color: var(--text);
   margin-bottom: 1rem;
-  background: linear-gradient(135deg, #D4AF37 0%, #F59E0B 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
 }
 
 .kyc-header p {

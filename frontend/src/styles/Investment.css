@@ -80,9 +80,7 @@
 .hero-title {
   font-size: 4rem;
   font-weight: 900;
-  background: var(--gradient-gold);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: var(--text);
   background-clip: text;
   margin-bottom: 1.5rem;
   position: relative;
