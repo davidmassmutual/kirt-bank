@@ -52,7 +52,7 @@ function NotificationsPage() {
     switch (priority) {
       case 'high': return <FaExclamationCircle className="priority high" />;
       case 'medium': return <FaInfoCircle className="priority medium" />;
-      default: return <FaCheckCircle className="priority low" />;
+      default: return <FaBell className="priority low" />;
     }
   };
 

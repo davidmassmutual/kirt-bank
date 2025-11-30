@@ -24,9 +24,9 @@ export default function Profile() {
 
   const [image, setImage] = useState(null);
   const [preview, setPreview] = useState(
-    user?.profileImage 
-      ? `${API_BASE_URL}${user.profileImage}` 
-      : '/default-avatar.png'
+    user?.profileImage
+      ? `${API_BASE_URL}${user.profileImage}`
+      : 'https://via.placeholder.com/160x160/64748B/FFFFFF?text=No+Image'
   );
 
   const [isSubmitting, setIsSubmitting] = useState(false);

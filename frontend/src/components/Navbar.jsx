@@ -1,5 +1,5 @@
 // src/components/Navbar.jsx
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { FaHome, FaWallet, FaExchangeAlt, FaCreditCard, FaHistory, FaBell, 
          FaHandHoldingUsd, FaHeadset, FaCog, FaSignOutAlt, FaBars, FaTimes, FaUserTie, FaChartBar} from 'react-icons/fa';
@@ -11,10 +11,36 @@ function Navbar({ handleLogout, isAuthenticated }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
   const { openDepositModal } = useDeposit();
+  const navbarRef = useRef(null);
 
   if (!isAuthenticated) return null;
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (navbarRef.current && !navbarRef.current.contains(event.target) && isMenuOpen) {
+        setIsMenuOpen(false);
+      }
+    };
+
+    const handleEscapeKey = (event) => {
+      if (event.key === 'Escape' && isMenuOpen) {
+        setIsMenuOpen(false);
+      }
+    };
+
+    if (isMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('keydown', handleEscapeKey);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEscapeKey);
+    };
+  }, [isMenuOpen]);
 
   const navItems = [
     { path: '/dashboard', label: 'Dashboard', icon: <FaHome /> },
@@ -35,7 +61,7 @@ function Navbar({ handleLogout, isAuthenticated }) {
       <button className="hamburger" onClick={toggleMenu}>
         {isMenuOpen ? <FaTimes /> : <FaBars />}
       </button>
-      <nav className={`navbar ${isMenuOpen ? 'active' : ''}`}>
+      <nav ref={navbarRef} className={`navbar ${isMenuOpen ? 'active' : ''}`}>
         <div className="navbar-brand">
           <h1>Kirt Bank <img src={img9} alt="" className='navbar-brand-image' /></h1>
           <p>Strength. Security. Stability.</p>
