@@ -26,6 +26,7 @@ import { DepositProvider } from './context/DepositContext';
 import Profile from './pages/Profile';
 import Investment from './pages/Investment';
 import InvestNow from './pages/InvestNow';
+import KYC from './pages/KYC';
 import API_BASE_URL from './config/api';
 
 // Lazy load heavy admin page
@@ -133,6 +134,7 @@ function App() {
               <Route path="/investment" element={isAuthenticated ? <Investment/> : <Navigate to="/" />} />
               <Route path="/profile" element={isAuthenticated ? < Profile/> : <Navigate to="/" />} />
               <Route path="/invest" element={isAuthenticated ? < InvestNow/> : <Navigate to="/" />} />
+              <Route path="/kyc" element={isAuthenticated ? <KYC /> : <Navigate to="/" />} />
               
 
               {/* ADMIN DASHBOARD */}
