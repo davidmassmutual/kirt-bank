@@ -1,41 +1,105 @@
-/* src/styles/Investment.css */
+/* Modern Investment Page Design */
+:root {
+  --gold: #D4AF37;
+  --navy: #1F2937;
+  --navy-light: #374151;
+  --secondary: #64748B;
+  --success: #10B981;
+  --error: #EF4444;
+  --warning: #F59E0B;
+  --info: #3B82F6;
+  --card-bg: rgba(255, 255, 255, 0.98);
+  --text: #1F2937;
+  --text-light: #64748B;
+  --background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --glass-bg: rgba(255, 255, 255, 0.1);
+  --glass-border: rgba(255, 255, 255, 0.2);
+  --shadow-light: 0 4px 20px rgba(0, 0, 0, 0.08);
+  --shadow-medium: 0 8px 32px rgba(0, 0, 0, 0.12);
+  --shadow-heavy: 0 20px 60px rgba(0, 0, 0, 0.15);
+  --gradient-primary: linear-gradient(135deg, #667EEA 0%, #764BA2 100%);
+  --gradient-gold: linear-gradient(135deg, #D4AF37 0%, #F59E0B 100%);
+  --gradient-success: linear-gradient(135deg, #10B981 0%, #059669 100%);
+  --gradient-card: linear-gradient(145deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.7) 100%);
+}
+
 .investments-page {
   min-height: 100vh;
+  background: var(--background);
   padding: 2rem 1rem;
-  background: linear-gradient(to bottom, rgba(30, 58, 138, 0.4), rgba(15, 23, 42, 0.8));
-  animation: fadeIn 0.8s ease-out;
+  position: relative;
+  overflow-x: hidden;
+}
+
+.investments-page::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="20" cy="20" r="2" fill="rgba(255,255,255,0.1)"/><circle cx="80" cy="40" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="40" cy="80" r="1.5" fill="rgba(255,255,255,0.1)"/></svg>');
+  opacity: 0.5;
+  pointer-events: none;
 }
 
 .investments-container {
   max-width: 1400px;
   margin: 0 auto;
-  animation: scaleIn 0.6s ease-out;
+  position: relative;
+  z-index: 1;
+  animation: fadeInUp 0.8s ease-out;
 }
 
-/* Hero Section */
+/* Hero Section - Modern Glass Design */
 .hero-section {
-  text-align: center;
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  border-radius: 24px;
+  padding: 4rem 2rem;
   margin-bottom: 3rem;
-  padding: 3rem 1rem;
-  background: linear-gradient(135deg, rgba(255, 193, 7, 0.15), rgba(30, 58, 138, 0.3));
-  border-radius: 20px;
-  border: 1px solid rgba(255, 193, 7, 0.3);
-  backdrop-filter: blur(10px);
+  position: relative;
+  overflow: hidden;
+  text-align: center;
+  box-shadow: var(--shadow-medium);
+  animation: slideDown 0.8s ease-out;
+}
+
+.hero-section::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(212, 175, 55, 0.1) 0%, transparent 70%);
+  animation: rotate 20s linear infinite;
 }
 
 .hero-title {
-  font-size: 3.5rem;
-  font-weight: 800;
-  background: linear-gradient(90deg, var(--gold), #FBBF24);
+  font-size: 4rem;
+  font-weight: 900;
+  background: var(--gradient-gold);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  margin-bottom: 1rem;
+  background-clip: text;
+  margin-bottom: 1.5rem;
+  position: relative;
+  z-index: 2;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
 }
 
 .hero-subtitle {
-  font-size: 1.4rem;
-  color: #E2E8F0;
+  font-size: 1.3rem;
+  color: rgba(255, 255, 255, 0.9);
   font-weight: 500;
+  max-width: 600px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 2;
+  line-height: 1.6;
 }
 
 /* Total Invested Card */
@@ -264,4 +328,59 @@
   .hero-title { font-size: 2.3rem; }
   .plan-roi { font-size: 2.8rem; }
   .plans-grid { grid-template-columns: 1fr; }
+}
+
+/* Keyframe Animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }

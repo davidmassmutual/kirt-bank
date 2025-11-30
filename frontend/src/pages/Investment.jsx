@@ -63,11 +63,11 @@ export default function Investments() {
 
         {/* TOTAL INVESTED CARD */}
         {userInvestments.length > 0 && (
-          <div className="mt-6 p-6 bg-card/80 backdrop-blur rounded-2xl border border-gold/30 text-center">
-            <p className="text-sm text-secondary mb-1">Total Invested</p>
-            <p className="text-3xl font-bold text-gold">${totalInvested.toLocaleString()}</p>
-            <p className="text-xs text-secondary mt-1">{userInvestments.length} active plan{userInvestments.length > 1 ? 's' : ''}</p>
-            <p className="text-xs text-secondary mt-2">Available Balance: ${totalAvailable.toLocaleString()}</p>
+          <div className="total-card">
+            <p className="total-label">Total Invested</p>
+            <p className="total-amount">${totalInvested.toLocaleString()}</p>
+            <p className="total-count">{userInvestments.length} active plan{userInvestments.length > 1 ? 's' : ''}</p>
+            <p className="total-count" style={{marginTop: '1rem'}}>Available Balance: ${totalAvailable.toLocaleString()}</p>
           </div>
         )}
 
