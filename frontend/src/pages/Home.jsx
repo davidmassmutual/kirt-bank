@@ -303,7 +303,7 @@ function Home({ setIsAuthenticated }) {
           </div>
           <div className="feature-card">
             <div className="feature-icon">
-              <FaMobileAlt />
+              <FaGlobe />
             </div>
             <h3>Mobile Banking</h3>
             <p>Manage your money anywhere with our award-winning mobile app.</p>
