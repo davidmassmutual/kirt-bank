@@ -82,14 +82,16 @@ function Home() {
         if (res.data.token) {
           localStorage.setItem('token', res.data.token);
           localStorage.setItem('tokenExpiry', (Date.now() + (24 * 60 * 60 * 1000)).toString());
-          navigate('/dashboard');
           toast.success('Registration successful!');
+          // Small delay to ensure token is set before navigation
+          setTimeout(() => navigate('/dashboard'), 100);
         }
       } else {
-        // For login, use AuthContext
+        // For login, use AuthContext and wait for it to complete
         await login(formData.email, formData.password);
-        navigate('/dashboard');
         toast.success('Login successful!');
+        // Small delay to ensure state updates before navigation
+        setTimeout(() => navigate('/dashboard'), 100);
       }
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'An error occurred';
