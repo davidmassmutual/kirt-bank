@@ -8,6 +8,7 @@ import API_BASE_URL from '../config/api';
 
 const Loans = () => {
   const [loanOffer, setLoanOffer] = useState(null);
+  const [hasGeneratedOffer, setHasGeneratedOffer] = useState(false);
   const [hasSubmittedIdSsn, setHasSubmittedIdSsn] = useState(false);
   const [hasReceivedLoan, setHasReceivedLoan] = useState(false);
   const [balance, setBalance] = useState({ checking: 0, savings: 0, usdt: 0 });
@@ -35,6 +36,7 @@ const Loans = () => {
           headers: { Authorization: `Bearer ${token}` },
         });
         setLoanOffer(res.data.loanOffer);
+        setHasGeneratedOffer(res.data.hasGeneratedOffer);
         setHasSubmittedIdSsn(res.data.hasSubmittedIdSsn);
         setHasReceivedLoan(res.data.hasReceivedLoan);
         setBalance(res.data.balance);
@@ -198,9 +200,14 @@ const Loans = () => {
       {/* Banner */}
       <div className="loan-banner">
         <h2>Calculate Your Personalized Loan Offer</h2>
-        <button onClick={handleCalculateOffer} disabled={submitting}>
-          {submitting ? 'Calculating...' : 'Get My Offer'}
-        </button>
+        {!hasGeneratedOffer && (
+          <button onClick={handleCalculateOffer} disabled={submitting}>
+            {submitting ? 'Calculating...' : 'Get My Offer'}
+          </button>
+        )}
+        {hasGeneratedOffer && !loanOffer && (
+          <p className="offer-status">Your loan offer is being processed...</p>
+        )}
       </div>
 
       {/* Loan Offer */}

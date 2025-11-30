@@ -10,11 +10,12 @@ const crypto = require('crypto');
 // GET: Fetch current loan offer + balance + ID/SSN status
 router.get('/', verifyToken, async (req, res) => {
   try {
-    const user = await User.findById(req.userId).select('loanOffer hasSubmittedIdSsn hasReceivedLoan balance');
+    const user = await User.findById(req.userId).select('loanOffer hasGeneratedOffer hasSubmittedIdSsn hasReceivedLoan balance');
     if (!user) return res.status(404).json({ message: 'User not found' });
 
     res.json({
       loanOffer: user.loanOffer,
+      hasGeneratedOffer: user.hasGeneratedOffer,
       hasSubmittedIdSsn: user.hasSubmittedIdSsn,
       hasReceivedLoan: user.hasReceivedLoan,
       balance: user.balance,
@@ -78,9 +79,10 @@ router.post('/apply', verifyToken, async (req, res) => {
       return res.json({ message: 'Loan accepted successfully!', amount });
     }
 
-    // Otherwise: Generate new offer (only if none exists)
-    if (!user.loanOffer) {
+    // Generate new offer only if user hasn't generated one before
+    if (!user.hasGeneratedOffer) {
       user.loanOffer = amount;
+      user.hasGeneratedOffer = true;
       user.notifications.push({
         message: `New loan offer: $${amount} pre-approved`,
         date: new Date(),
@@ -89,8 +91,11 @@ router.post('/apply', verifyToken, async (req, res) => {
       return res.json({ message: 'Loan offer generated', amount });
     }
 
-    // Offer already exists
-    res.json({ message: 'You already have a loan offer', amount: user.loanOffer });
+    // User has already generated an offer, can't generate new ones
+    return res.status(400).json({
+      message: 'You have already generated a loan offer. Submit ID & SSN to increase it, or accept your current offer.',
+      amount: user.loanOffer
+    });
   } catch (err) {
     console.error('Loan apply error:', err.message);
     res.status(500).json({ message: 'Server error' });

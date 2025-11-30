@@ -49,6 +49,7 @@ investments: [{
   // Added fields
   notifications: [notificationSubSchema],
   loanOffer: { type: Number, default: 0 },
+  hasGeneratedOffer: { type: Boolean, default: false },
   hasSubmittedIdSsn: { type: Boolean, default: false },
   hasReceivedLoan: { type: Boolean, default: false },
   idDocument: { type: String, default: '' },
