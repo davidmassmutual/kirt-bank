@@ -336,14 +336,45 @@ router.post('/kyc', verifyToken, upload.single('idDocument'), async (req, res) =
     user.kycStatus = 'submitted';
     user.kycSubmittedAt = new Date();
 
-    await user.save();
+  await user.save();
 
-    res.json({
-      message: 'KYC documents submitted successfully',
-      kycStatus: 'submitted'
-    });
+  res.json({
+    message: 'KYC documents submitted successfully',
+    kycStatus: 'submitted'
+  });
+} catch (err) {
+  console.error('KYC submission error:', err.message);
+  res.status(500).json({ message: 'Server error' });
+}
+});
+
+// ──────────────────────────────────────────────────────────────
+// ADMIN: Approve/Reject KYC
+// PUT /api/user/:userId/kyc-approve
+// ──────────────────────────────────────────────────────────────
+router.put('/:userId/kyc-approve', verifyToken, isAdmin, async (req, res) => {
+  try {
+    const { action } = req.body; // 'approve' or 'reject'
+    const userId = req.params.userId;
+
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    if (action === 'approve') {
+      user.kycStatus = 'verified';
+      await logAdminNotification(req.userId, `KYC approved for ${user.name} (${user.email})`);
+    } else if (action === 'reject') {
+      user.kycStatus = 'rejected';
+      user.kycDocument = null; // Optionally remove document
+      await logAdminNotification(req.userId, `KYC rejected for ${user.name} (${user.email})`);
+    } else {
+      return res.status(400).json({ message: 'Invalid action' });
+    }
+
+    await user.save();
+    res.json({ message: `KYC ${action}d successfully`, kycStatus: user.kycStatus });
   } catch (err) {
-    console.error('KYC submission error:', err.message);
+    console.error('KYC approval error:', err.message);
     res.status(500).json({ message: 'Server error' });
   }
 });

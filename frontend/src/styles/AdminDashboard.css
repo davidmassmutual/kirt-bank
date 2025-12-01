@@ -1,22 +1,6 @@
 /* src/styles/AdminDashboard.css */
 
 /* ──────────────────────────────────────
-   ROOT VARIABLES (Add to :root in main CSS or App.css)
-   ────────────────────────────────────── */
-:root {
-  --primary: #7c3aed;      /* Violet */
-  --accent: #f59e0b;       /* Amber */
-  --success: #10b981;      /* Emerald */
-  --error: #ef4444;        /* Red */
-  --background: #f8fafc;
-  --card-bg: #ffffff;
-  --text: #1e293b;
-  --secondary: #64748b;
-  --highlight: #e2e8f0;
-  --input-bg: #f8fafc;
-}
-
-/* ──────────────────────────────────────
    LAYOUT
    ────────────────────────────────────── */
 .admin-dashboard {
@@ -684,4 +668,147 @@
     padding: 1rem;
     font-size: 0.9rem;
   }
+}
+
+/* ──────────────────────────────────────
+   KYC APPROVAL ELEMENTS
+   ────────────────────────────────────── */
+.doc-item {
+  margin-bottom: 1.5rem;
+}
+
+.doc-item label {
+  display: block;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 0.5rem;
+  font-size: 0.95rem;
+}
+
+.doc-link, .kyc-status {
+  display: inline-block;
+  padding: 0.6rem 1rem;
+  background: var(--card-bg);
+  border: 1px solid var(--highlight);
+  border-radius: 8px;
+  text-decoration: none;
+  color: var(--primary);
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.doc-link:hover {
+  background: var(--primary);
+  color: white;
+  transform: translateY(-2px);
+}
+
+.ssn-display {
+  padding: 0.8rem;
+  background: var(--card-bg);
+  border: 1px solid var(--highlight);
+  border-radius: 8px;
+  font-family: monospace;
+  font-weight: 500;
+  letter-spacing: 1px;
+}
+
+.no-doc {
+  color: var(--secondary);
+  font-style: italic;
+  padding: 0.8rem;
+  background: rgba(156, 163, 175, 0.1);
+  border-radius: 8px;
+}
+
+.kyc-actions {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(255, 193, 7, 0.2);
+}
+
+.kyc-actions h4 {
+  margin: 0 0 1rem;
+  color: var(--text);
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.kyc-buttons {
+  display: flex;
+  gap: 1rem;
+}
+
+.kyc-approve-btn, .kyc-reject-btn {
+  padding: 0.8rem 1.2rem;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-size: 0.95rem;
+}
+
+.kyc-approve-btn {
+  background: var(--success);
+  color: white;
+}
+
+.kyc-reject-btn {
+  background: var(--error);
+  color: white;
+}
+
+.kyc-approve-btn:hover {
+  background: #059669;
+  transform: translateY(-2px);
+}
+
+.kyc-reject-btn:hover {
+  background: #dc2626;
+  transform: translateY(-2px);
+}
+
+.kyc-status {
+  font-weight: 600;
+  padding: 0.4rem 0.8rem;
+  border-radius: 50px;
+  font-size: 0.85rem;
+  text-align: center;
+  display: inline-block;
+}
+
+.status-verified {
+  background: rgba(16, 185, 129, 0.2);
+  color: var(--success);
+}
+
+.status-rejected {
+  background: rgba(239, 68, 68, 0.2);
+  color: var(--error);
+}
+
+.status-submitted {
+  background: rgba(251, 191, 36, 0.2);
+  color: #f59e0b;
+}
+
+.status-pending {
+  background: rgba(156, 163, 175, 0.2);
+  color: #6b7280;
+}
+
+.status-yes {
+  color: var(--success);
+  font-weight: 600;
+}
+
+.status-no {
+  color: var(--secondary);
+  font-weight: 600;
 }

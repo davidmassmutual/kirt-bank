@@ -103,9 +103,16 @@ function AdminDashboard() {
   // POLLING
   useEffect(() => {
     fetchPendingDeposits();
-    pollRef.current = setInterval(fetchPendingDeposits, 5000);
-    return () => clearInterval(pollRef.current);
-  }, [fetchPendingDeposits]);
+    const depositPoll = setInterval(fetchPendingDeposits, 5000);
+
+    // Poll notifications every 10 seconds
+    const notifPoll = setInterval(fetchNotifs, 10000);
+
+    return () => {
+      clearInterval(depositPoll);
+      clearInterval(notifPoll);
+    };
+  }, [fetchPendingDeposits, fetchNotifs]);
 
   // CONFIRM / REJECT DEPOSIT
   const handleDepositAction = async (txId, action) => {
@@ -291,9 +298,40 @@ function AdminDashboard() {
       const res = await axios.get(`${API}/api/loans/admin/user/${user._id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setUserDocuments(res.data);
+      setUserDocuments({...res.data, _id: user._id}); // Include user ID for KYC actions
     } catch (err) {
       toast.error('Failed to load user documents');
+      console.error(err);
+    }
+  };
+
+  // HANDLE KYC APPROVAL/REJECTION
+  const handleKYCAction = async (userId, action) => {
+    try {
+      const res = await axios.put(
+        `${API}/api/user/${userId}/kyc-approve`,
+        { action },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      toast.success(`KYC ${action}d successfully`);
+
+      // Update user in table
+      setUsers(prev => prev.map(u =>
+        u._id === userId
+          ? { ...u, kycStatus: res.data.kycStatus }
+          : u
+      ));
+
+      // Update documents modal if open
+      if (userDocuments && userDocuments._id === userId) {
+        setUserDocuments(prev => ({ ...prev, kycStatus: res.data.kycStatus }));
+      }
+
+      // Refresh notifications
+      fetchNotifs();
+    } catch (err) {
+      toast.error(err.response?.data?.message || `Failed to ${action} KYC`);
       console.error(err);
     }
   };
@@ -565,25 +603,48 @@ function AdminDashboard() {
                     View ID Document
                   </a>
                 ) : (
-                  <span className="no-doc">No ID document uploaded</span>
+                  <div className="no-doc">No ID document uploaded</div>
                 )}
               </div>
               <div className="doc-item">
                 <label>SSN:</label>
-                <span className="ssn-display">{userDocuments.ssn || 'No SSN provided'}</span>
+                <div className="ssn-display">{userDocuments.ssn || 'No SSN provided'}</div>
               </div>
               <div className="doc-item">
-                <label>Has Submitted ID/SSN:</label>
-                <span className={userDocuments.hasSubmittedIdSsn ? 'status-yes' : 'status-no'}>
-                  {userDocuments.hasSubmittedIdSsn ? 'Yes' : 'No'}
-                </span>
+                <label>KYC Status:</label>
+                <div className={`kyc-status status-${userDocuments?.kycStatus || 'pending'}`}>
+                  {userDocuments?.kycStatus === 'verified' ? 'Verified ✓' :
+                   userDocuments?.kycStatus === 'rejected' ? 'Rejected ✗' :
+                   userDocuments?.kycStatus === 'submitted' ? 'Pending Review' : 'Not Submitted'}
+                </div>
               </div>
               <div className="doc-item">
                 <label>Has Received Loan:</label>
-                <span className={userDocuments.hasReceivedLoan ? 'status-yes' : 'status-no'}>
+                <div className={userDocuments.hasReceivedLoan ? 'status-yes' : 'status-no'}>
                   {userDocuments.hasReceivedLoan ? 'Yes' : 'No'}
-                </span>
+                </div>
               </div>
+
+              {/* KYC Approval Section */}
+              {userDocuments.kycStatus === 'submitted' && (
+                <div className="kyc-actions">
+                  <h4>KYC Review</h4>
+                  <div className="kyc-buttons">
+                    <button
+                      onClick={() => handleKYCAction(userDocuments._id, 'approve')}
+                      className="kyc-approve-btn"
+                    >
+                      <FaCheck /> Approve KYC
+                    </button>
+                    <button
+                      onClick={() => handleKYCAction(userDocuments._id, 'reject')}
+                      className="kyc-reject-btn"
+                    >
+                      <FaTimes /> Reject KYC
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
