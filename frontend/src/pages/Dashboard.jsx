@@ -73,14 +73,17 @@ function Dashboard() {
           <div className="notifications-panel glass">
             <h3>Notifications</h3>
             {userData.notifications?.length > 0 ? (
-              userData.notifications.slice(0, 5).map((n, i) => (
-                <div key={i} className="notif-item">
-                  <p>{n.message}</p>
-                  <span>{new Date(n.date).toLocaleString()}</span>
-                </div>
-              ))
+              userData.notifications
+                .sort((a, b) => new Date(b.date) - new Date(a.date)) // Sort by most recent
+                .slice(0, 2) // Show latest 2 notifications
+                .map((n, i) => (
+                  <div key={i} className="notif-item">
+                    <p>{n.message}</p>
+                    <span>{new Date(n.date).toLocaleString()}</span>
+                  </div>
+                ))
             ) : (
-              <p>No new notifications.</p>
+              <p>No notifications yet.</p>
             )}
             <Link to="/notifications" onClick={() => setShowNotifications(false)} className="view-all">
               View All
@@ -140,6 +143,11 @@ function Dashboard() {
       {/* RECENT ACTIVITY */}
       <div className="activity-feed-wrapper">
         <ActivityFeed userId={userData?._id} />
+        <div className="view-all-activity">
+          <Link to="/transactions" className="view-all-btn">
+            View All Activity
+          </Link>
+        </div>
       </div>
 
       {/* SECONDARY FEATURES */}

@@ -13,7 +13,7 @@ function Navbar({ handleLogout, isAuthenticated }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
   const { openDepositModal } = useDeposit();
-  const { user } = useAuth();
+  const { user, fetchUser } = useAuth();
   const navbarRef = useRef(null);
 
   if (!isAuthenticated) return null;
@@ -62,7 +62,7 @@ function Navbar({ handleLogout, isAuthenticated }) {
   return (
     <>
       <button className="hamburger" onClick={toggleMenu}>
-        {isMenuOpen ? <FaTimes /> : <FaBars />}
+        <FaBars />
       </button>
       <nav ref={navbarRef} className={`navbar ${isMenuOpen ? 'active' : ''}`}>
         <div className="navbar-brand">

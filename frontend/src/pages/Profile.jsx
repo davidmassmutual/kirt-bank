@@ -7,7 +7,7 @@ import '../styles/Profile.css';
 import { FaUser, FaEnvelope, FaPhone, FaMapMarkerAlt, FaCalendarAlt, FaShieldAlt, FaEdit } from 'react-icons/fa';
 
 export default function Profile() {
-  const { user, token } = useAuth();
+  const { user, token, fetchUser } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {

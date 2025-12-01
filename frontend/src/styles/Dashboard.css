@@ -406,6 +406,33 @@
 .amount.deposit { color: #10b981; }
 .amount.withdraw, .amount.transfer { color: #ef4444; }
 
+/* VIEW ALL ACTIVITY BUTTON */
+.view-all-activity {
+  text-align: center;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.view-all-btn {
+  display: inline-block;
+  padding: 0.8rem 1.5rem;
+  background: linear-gradient(90deg, var(--gold), #FBBF24);
+  color: #1a1a1a;
+  text-decoration: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);
+}
+
+.view-all-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(255, 193, 7, 0.4);
+  color: #1a1a1a;
+}
+
 /* SECONDARY FEATURES – FIXED & ELEGANT */
 .secondary-features {
   display: grid;
@@ -471,4 +498,3 @@
   .action-grid { grid-template-columns: repeat(4, 1fr); gap: 1.2rem; }
   .secondary-features { grid-template-columns: repeat(3, 1fr); }
 }
-

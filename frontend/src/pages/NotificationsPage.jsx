@@ -81,9 +81,16 @@ function NotificationsPage() {
                 <span className="notif-time">
                   {new Date(notif.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </span>
-                <button onClick={() => markAsRead(notif._id)} className={`mark-read ${notif.read ? 'read' : ''}`}>
-                  <FaCheckCircle />
-                </button>
+                {notif.read && (
+                  <button onClick={() => markAsRead(notif._id)} className="mark-read read">
+                    <FaCheckCircle />
+                  </button>
+                )}
+                {!notif.read && (
+                  <button onClick={() => markAsRead(notif._id)} className="mark-read unread">
+                    <FaCheckCircle />
+                  </button>
+                )}
               </div>
               <h3>{notif.title}</h3>
               <p>{notif.message}</p>
