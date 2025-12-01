@@ -399,3 +399,205 @@
     font-size: 1.8rem;
   }
 }
+
+/* Loan Details Styling */
+.current-loan-details {
+  display: grid;
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.loan-summary-card {
+  background: var(--card-bg);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+  border: 2px solid var(--gold);
+}
+
+.loan-summary-title {
+  text-align: center;
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--navy);
+  margin-bottom: 1.5rem;
+}
+
+.loan-info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.loan-info-card {
+  background: linear-gradient(135deg, rgba(255, 193, 7, 0.1), rgba(255, 255, 255, 0.8));
+  border-radius: 12px;
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  border: 1px solid rgba(255, 193, 7, 0.3);
+  transition: all 0.3s ease;
+}
+
+.loan-info-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 15px rgba(255, 193, 7, 0.2);
+}
+
+.info-icon {
+  font-size: 2rem;
+  width: 60px;
+  height: 60px;
+  background: var(--gold);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--navy);
+  font-weight: bold;
+}
+
+.info-content {
+  flex: 1;
+}
+
+.info-content label {
+  display: block;
+  font-size: 0.9rem;
+  color: var(--secondary);
+  font-weight: 500;
+  margin-bottom: 0.3rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.info-content span {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.loan-amount {
+  color: var(--success) !important;
+  font-weight: 700 !important;
+}
+
+.interest-rate {
+  color: var(--success) !important;
+  font-weight: 700 !important;
+}
+
+.repayment-date {
+  color: var(--error) !important;
+  font-weight: 700 !important;
+}
+
+.monthly-payment, .remaining-balance {
+  color: var(--gold) !important;
+  font-weight: 700 !important;
+}
+
+/* Loan Status Card */
+.loan-status-card {
+  background: var(--card-bg);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+  border: 2px solid var(--navy);
+}
+
+.status-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.status-title {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--navy);
+  margin: 0;
+}
+
+.status-badge.active {
+  background: linear-gradient(90deg, var(--gold), #FBBF24);
+  color: white;
+  padding: 0.6rem 1.2rem;
+  border-radius: 25px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.status-progress {
+  margin-bottom: 1.5rem;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 12px;
+  background: #E5E7EB;
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 0.5rem;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--gold), #FBBF24);
+  border-radius: 6px;
+  width: 0%;
+  transition: width 0.5s ease;
+}
+
+.progress-text {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.9rem;
+  color: var(--secondary);
+}
+
+.status-info {
+  background: rgba(251, 191, 36, 0.1);
+  border: 1px solid rgba(251, 191, 36, 0.3);
+  border-radius: 12px;
+  padding: 1.5rem;
+}
+
+.info-alert {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.alert-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.alert-content {
+  line-height: 1.6;
+  color: var(--text);
+}
+
+.alert-content strong {
+  color: var(--navy);
+  font-weight: 700;
+}
+
+.highlight-amount {
+  color: var(--gold);
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.highlight-date {
+  color: var(--error);
+  font-weight: 700;
+}

@@ -163,47 +163,85 @@ const Loans = () => {
         </div>
 
         <div className="current-loan-details">
-          <div className="loan-summary">
-            <h3>Loan Summary</h3>
+          <div className="loan-summary-card">
+            <h3 className="loan-summary-title">🚀 Your Active Loan</h3>
             <div className="loan-info-grid">
-              <div className="loan-info-item">
-                <label>Loan Amount</label>
-                <span className="loan-amount">${currentLoanAmount.toLocaleString()}</span>
+              <div className="loan-info-card">
+                <div className="info-icon">💰</div>
+                <div className="info-content">
+                  <label>Loan Amount</label>
+                  <span className="loan-amount">${currentLoanAmount.toLocaleString()}</span>
+                </div>
               </div>
-              <div className="loan-info-item">
-                <label>Interest Rate</label>
-                <span className="interest-rate">0% APR (Interest-Free)</span>
+              <div className="loan-info-card">
+                <div className="info-icon">📊</div>
+                <div className="info-content">
+                  <label>Interest Rate</label>
+                  <span className="interest-rate">0% APR (Interest-Free)</span>
+                </div>
               </div>
-              <div className="loan-info-item">
-                <label>Loan Start Date</label>
-                <span>{loanStartDate ? new Date(loanStartDate).toLocaleDateString() : 'N/A'}</span>
+              <div className="loan-info-card">
+                <div className="info-icon">📅</div>
+                <div className="info-content">
+                  <label>Loan Start Date</label>
+                  <span>{loanStartDate ? new Date(loanStartDate).toLocaleDateString() : 'N/A'}</span>
+                </div>
               </div>
-              <div className="loan-info-item">
-                <label>Repayment Due Date</label>
-                <span className="repayment-date">
-                  {loanRepaymentDate ? new Date(loanRepaymentDate).toLocaleDateString() : 'N/A'}
-                </span>
+              <div className="loan-info-card">
+                <div className="info-icon">⏰</div>
+                <div className="info-content">
+                  <label>Repayment Due Date</label>
+                  <span className="repayment-date">
+                    {loanRepaymentDate ? new Date(loanRepaymentDate).toLocaleDateString() : 'N/A'}
+                  </span>
+                </div>
               </div>
-              <div className="loan-info-item">
-                <label>Monthly Payment</label>
-                <span className="monthly-payment">${monthlyPayment}</span>
+              <div className="loan-info-card">
+                <div className="info-icon">💳</div>
+                <div className="info-content">
+                  <label>Monthly Payment</label>
+                  <span className="monthly-payment">${monthlyPayment}/month</span>
+                </div>
               </div>
-              <div className="loan-info-item">
-                <label>Remaining Balance</label>
-                <span className="remaining-balance">${currentLoanAmount.toLocaleString()}</span>
+              <div className="loan-info-card">
+                <div className="info-icon">🔄</div>
+                <div className="info-content">
+                  <label>Remaining Balance</label>
+                  <span className="remaining-balance">${currentLoanAmount.toLocaleString()}</span>
+                </div>
               </div>
             </div>
           </div>
 
-          <div className="loan-status">
-            <h4>Loan Status</h4>
-            <div className="status-indicator active">
-              <span>Active - Repayment in Progress</span>
+          <div className="loan-status-card">
+            <div className="status-header">
+              <h4 className="status-title">📋 Loan Status</h4>
+              <div className="status-badge active">
+                <span>🏦 Active Loan</span>
+              </div>
             </div>
-            <p className="repayment-info">
-              You are required to repay the full loan amount of ${currentLoanAmount.toLocaleString()} by the due date.
-              No interest will be charged on this interest-free loan.
-            </p>
+            <div className="status-progress">
+              <div className="progress-bar">
+                <div className="progress-fill" style={{width: '0%'}}></div>
+              </div>
+              <div className="progress-text">
+                <span>0% Repaid</span>
+                <span>${currentLoanAmount.toLocaleString()} remaining</span>
+              </div>
+            </div>
+            <div className="status-info">
+              <div className="info-alert">
+                <div className="alert-icon">⚠️</div>
+                <div className="alert-content">
+                  <strong>Important:</strong> You must repay the full loan amount of
+                  <span className="highlight-amount">${currentLoanAmount.toLocaleString()}</span> by
+                  <span className="highlight-date">
+                    {loanRepaymentDate ? new Date(loanRepaymentDate).toLocaleDateString() : 'N/A'}
+                  </span>.
+                  No interest will be charged on this interest-free loan.
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
