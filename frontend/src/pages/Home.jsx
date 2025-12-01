@@ -1,5 +1,4 @@
-// frontend/src/pages/Home.jsx
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'react-toastify';
@@ -33,8 +32,9 @@ import {
 import API_BASE_URL from '../config/api';
 
 function Home() {
-  const { login } = useAuth();
+  const { login, user, loading: authLoading } = useAuth();
   const [isSignUp, setIsSignUp] = useState(false);
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -43,7 +43,13 @@ function Home() {
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
+
+  // Redirect to dashboard if user is already authenticated
+  useEffect(() => {
+    if (user && !authLoading) {
+      navigate('/dashboard');
+    }
+  }, [user, authLoading, navigate]);
 
   const handleInputChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
