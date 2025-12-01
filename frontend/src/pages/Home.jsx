@@ -44,12 +44,7 @@ function Home() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Redirect to dashboard if user is already authenticated
-  useEffect(() => {
-    if (user && !authLoading) {
-      navigate('/dashboard');
-    }
-  }, [user, authLoading, navigate]);
+
 
   const handleInputChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
