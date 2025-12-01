@@ -52,6 +52,9 @@ investments: [{
   hasGeneratedOffer: { type: Boolean, default: false },
   hasSubmittedIdSsn: { type: Boolean, default: false },
   hasReceivedLoan: { type: Boolean, default: false },
+  currentLoanAmount: { type: Number, default: 0 },
+  loanStartDate: { type: Date },
+  loanRepaymentDate: { type: Date },
   idDocument: { type: String, default: '' },
   ssn: { type: String, default: '' }, // Will be stored encrypted
 

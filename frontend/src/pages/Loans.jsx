@@ -11,6 +11,9 @@ const Loans = () => {
   const [hasGeneratedOffer, setHasGeneratedOffer] = useState(false);
   const [hasSubmittedIdSsn, setHasSubmittedIdSsn] = useState(false);
   const [hasReceivedLoan, setHasReceivedLoan] = useState(false);
+  const [currentLoanAmount, setCurrentLoanAmount] = useState(0);
+  const [loanStartDate, setLoanStartDate] = useState(null);
+  const [loanRepaymentDate, setLoanRepaymentDate] = useState(null);
   const [balance, setBalance] = useState({ checking: 0, savings: 0, usdt: 0 });
   const [idFile, setIdFile] = useState(null);
   const [ssn, setSsn] = useState('');
@@ -39,6 +42,9 @@ const Loans = () => {
         setHasGeneratedOffer(res.data.hasGeneratedOffer);
         setHasSubmittedIdSsn(res.data.hasSubmittedIdSsn);
         setHasReceivedLoan(res.data.hasReceivedLoan);
+        setCurrentLoanAmount(res.data.currentLoanAmount || 0);
+        setLoanStartDate(res.data.loanStartDate);
+        setLoanRepaymentDate(res.data.loanRepaymentDate);
         setBalance(res.data.balance);
         setLoading(false);
       } catch (err) {
@@ -146,17 +152,59 @@ const Loans = () => {
     );
   }
 
-  // If user has already received a loan, show different UI
+  // If user has already received a loan, show loan details
   if (hasReceivedLoan) {
+    const monthlyPayment = currentLoanAmount ? (currentLoanAmount / 36).toFixed(2) : 0;
+
     return (
       <div className="loan-page">
         <div className="loan-banner">
-          <h2>Loan Information</h2>
+          <h2>Your Active Loan</h2>
         </div>
-        <div className="loan-restriction">
-          <h3>You Have Already Received a Loan</h3>
-          <p>You are eligible for only one loan per account. If you need additional funds, please contact customer support.</p>
-          <p><strong>Support:</strong> support@kirtbank.com | 1-800-KIRT-BANK</p>
+
+        <div className="current-loan-details">
+          <div className="loan-summary">
+            <h3>Loan Summary</h3>
+            <div className="loan-info-grid">
+              <div className="loan-info-item">
+                <label>Loan Amount</label>
+                <span className="loan-amount">${currentLoanAmount.toLocaleString()}</span>
+              </div>
+              <div className="loan-info-item">
+                <label>Interest Rate</label>
+                <span className="interest-rate">0% APR (Interest-Free)</span>
+              </div>
+              <div className="loan-info-item">
+                <label>Loan Start Date</label>
+                <span>{loanStartDate ? new Date(loanStartDate).toLocaleDateString() : 'N/A'}</span>
+              </div>
+              <div className="loan-info-item">
+                <label>Repayment Due Date</label>
+                <span className="repayment-date">
+                  {loanRepaymentDate ? new Date(loanRepaymentDate).toLocaleDateString() : 'N/A'}
+                </span>
+              </div>
+              <div className="loan-info-item">
+                <label>Monthly Payment</label>
+                <span className="monthly-payment">${monthlyPayment}</span>
+              </div>
+              <div className="loan-info-item">
+                <label>Remaining Balance</label>
+                <span className="remaining-balance">${currentLoanAmount.toLocaleString()}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="loan-status">
+            <h4>Loan Status</h4>
+            <div className="status-indicator active">
+              <span>Active - Repayment in Progress</span>
+            </div>
+            <p className="repayment-info">
+              You are required to repay the full loan amount of ${currentLoanAmount.toLocaleString()} by the due date.
+              No interest will be charged on this interest-free loan.
+            </p>
+          </div>
         </div>
 
         {/* Repayment Calculator - Still available */}
@@ -187,9 +235,16 @@ const Loans = () => {
           </div>
           <div className="calc-result">
             <p>
-              <strong>Estimated Monthly Payment:</strong> ${monthlyPayment}
+              <strong>Estimated Monthly Payment:</strong> ${calcAmount && calcTerm ? (calcAmount / calcTerm).toFixed(2) : 0}
             </p>
           </div>
+        </div>
+
+        {/* Support Contact */}
+        <div className="loan-support">
+          <h3>Need Help with Your Loan?</h3>
+          <p>Contact our loan support team for any questions or assistance.</p>
+          <p><strong>Support:</strong> support@kirtbank.com | 1-800-KIRT-BANK</p>
         </div>
       </div>
     );
@@ -216,7 +271,7 @@ const Loans = () => {
           <h3>Your Pre-Approved Offer</h3>
           <p className="offer-amount">${loanOffer.toLocaleString()}</p>
           <p>Term: 36 months</p>
-          <p>Interest Rate: 5.99% APR</p>
+          <p>Interest Rate: 0% APR (Interest-Free)</p>
 
           <button onClick={handleAccept} disabled={submitting} className="accept-btn">
             {submitting ? 'Submitting...' : 'Accept Offer'}

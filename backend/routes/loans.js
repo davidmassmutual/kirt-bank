@@ -7,10 +7,10 @@ const verifyToken = require('../middleware/auth');
 const upload = require('../middleware/upload');
 const crypto = require('crypto');
 
-// GET: Fetch current loan offer + balance + ID/SSN status
+// GET: Fetch current loan offer + balance + ID/SSN status + loan details
 router.get('/', verifyToken, async (req, res) => {
   try {
-    const user = await User.findById(req.userId).select('loanOffer hasGeneratedOffer hasSubmittedIdSsn hasReceivedLoan balance');
+    const user = await User.findById(req.userId).select('loanOffer hasGeneratedOffer hasSubmittedIdSsn hasReceivedLoan balance currentLoanAmount loanStartDate loanRepaymentDate');
     if (!user) return res.status(404).json({ message: 'User not found' });
 
     res.json({
@@ -18,6 +18,9 @@ router.get('/', verifyToken, async (req, res) => {
       hasGeneratedOffer: user.hasGeneratedOffer,
       hasSubmittedIdSsn: user.hasSubmittedIdSsn,
       hasReceivedLoan: user.hasReceivedLoan,
+      currentLoanAmount: user.currentLoanAmount,
+      loanStartDate: user.loanStartDate,
+      loanRepaymentDate: user.loanRepaymentDate,
       balance: user.balance,
     });
   } catch (err) {
@@ -57,7 +60,15 @@ router.post('/apply', verifyToken, async (req, res) => {
       }
 
       // Loan accepted — add to balance, create transaction, reset offer, add notification
+      const startDate = new Date();
+      const repaymentDate = new Date();
+      repaymentDate.setMonth(repaymentDate.getMonth() + 36); // 36 months repayment
+
       user.balance.checking += amount;
+      user.currentLoanAmount = amount;
+      user.loanStartDate = startDate;
+      user.loanRepaymentDate = repaymentDate;
+
       const loanTx = new Transaction({
         userId: user._id,
         type: 'loan',
@@ -71,7 +82,7 @@ router.post('/apply', verifyToken, async (req, res) => {
       user.loanOffer = 0;
       user.hasReceivedLoan = true; // Mark that user has received a loan
       user.notifications.push({
-        message: `Loan of $${amount} accepted and added to your checking account.`,
+        message: `Interest-free loan of $${amount} accepted and added to your checking account. Repayment due: ${repaymentDate.toLocaleDateString()}`,
         date: new Date(),
       });
       await user.save();

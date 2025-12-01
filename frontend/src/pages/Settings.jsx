@@ -3,6 +3,7 @@ import axios from 'axios';
 import { toast } from 'react-toastify';
 import { QRCodeSVG } from "qrcode.react";
 import LoadingSkeleton from '../components/LoadingSkeleton';
+import { useAuth } from '../context/AuthContext';
 import {
   FaUser,
   FaEnvelope,
@@ -22,6 +23,8 @@ import '../styles/Settings.css';
 import API_BASE_URL from '../config/api';
 
 function Settings() {
+  const { fetchUser } = useAuth();
+
   // ────────────────────────────────────── STATE ──────────────────────────────────────
   const [profile, setProfile] = useState({ firstName: '', lastName: '', email: '', phone: '', address: '', profileImage: '' });
   const [security, setSecurity] = useState({
@@ -117,6 +120,7 @@ function Settings() {
       });
 
       setProfile(prev => ({ ...prev, profileImage: res.data.profileImage }));
+      await fetchUser(); // Update global user state
       toast.success('Profile image updated successfully');
       setProfileImageFile(null);
     } catch (err) {
@@ -130,9 +134,22 @@ function Settings() {
     e.preventDefault();
     setSubmitting(true);
     try {
-      await axios.put(`${API_BASE_URL}/api/user/profile`, profile, {
+      // Combine firstName and lastName for backend
+      const fullName = `${profile.firstName.trim()} ${profile.lastName.trim()}`.trim();
+
+      const profileData = {
+        name: fullName,
+        phone: profile.phone,
+        address: profile.address
+      };
+
+      await axios.put(`${API_BASE_URL}/api/user/profile`, profileData, {
         headers: { Authorization: `Bearer ${token}` },
       });
+
+      // Refresh user data to update navbar
+      await fetchSettings();
+
       toast.success('Profile updated');
     } catch (err) {
       toast.error(err.response?.data?.message || 'Update failed');

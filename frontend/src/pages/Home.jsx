@@ -27,7 +27,8 @@ import {
   FaPiggyBank,
   FaWallet,
   FaExchangeAlt,
-  FaExclamationCircle
+  FaExclamationCircle,
+  FaHandHoldingUsd
 } from 'react-icons/fa';
 import API_BASE_URL from '../config/api';
 
@@ -282,6 +283,13 @@ function Home() {
         <div className="features-grid">
           <div className="feature-card">
             <div className="feature-icon">
+              <FaHandHoldingUsd />
+            </div>
+            <h3>Interest-Free Loans</h3>
+            <p>Get loans with 0% interest rate. Borrow what you need and repay exactly the same amount.</p>
+          </div>
+          <div className="feature-card">
+            <div className="feature-icon">
               <FaRocket />
             </div>
             <h3>Lightning Fast</h3>
@@ -314,13 +322,6 @@ function Home() {
             </div>
             <h3>Multi-Currency</h3>
             <p>Send and receive money in 30+ currencies with competitive exchange rates.</p>
-          </div>
-          <div className="feature-card">
-            <div className="feature-icon">
-              <FaCheckCircle />
-            </div>
-            <h3>24/7 Support</h3>
-            <p>Get help whenever you need it with our dedicated customer support team.</p>
           </div>
         </div>
       </section>

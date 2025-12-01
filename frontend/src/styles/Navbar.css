@@ -196,8 +196,11 @@
   }
   .navbar.active { transform: translateX(0); }
   .close-menu { display: block; }
-  .navbar-brand { display: none; }
-  .navbar-menu { max-height: calc(100vh - 60px); }
+  .navbar-brand h1,
+  .navbar-brand p { display: none; }
+  .navbar-brand { display: block; margin-bottom: 1rem; }
+  .welcome-section { margin-bottom: 1rem; }
+  .navbar-menu { max-height: calc(100vh - 120px); }
   .navbar-menu li a,
   .navbar-menu li button {
     font-size: 1rem;
