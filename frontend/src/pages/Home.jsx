@@ -35,7 +35,8 @@ function Home() {
   const { login } = useAuth();
   const [isSignUp, setIsSignUp] = useState(false);
   const [formData, setFormData] = useState({
-    name: '',
+    firstName: '',
+    lastName: '',
     email: '',
     password: '',
   });
@@ -49,8 +50,8 @@ function Home() {
   };
 
   const validateForm = () => {
-    if (isSignUp && !formData.name.trim()) {
-      setError('Full name is required for registration');
+    if (isSignUp && (!formData.firstName.trim() || !formData.lastName.trim())) {
+      setError('First name and last name are required for registration');
       return false;
     }
     if (!formData.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
@@ -104,7 +105,12 @@ function Home() {
 
   const toggleAuthMode = () => {
     setIsSignUp(!isSignUp);
-    setFormData({ name: '', email: '', password: '' });
+    setFormData({
+      firstName: '',
+      lastName: '',
+      email: '',
+      password: '',
+    });
     setError('');
   };
 
@@ -168,18 +174,32 @@ function Home() {
 
             <form onSubmit={handleSubmit} className="auth-form">
               {isSignUp && (
-                <div className="form-group">
-                  <label>Full Name</label>
-                  <input
-                    type="text"
-                    name="name"
-                    placeholder="Enter your full name"
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    required
-                    disabled={loading}
-                  />
-                </div>
+                <>
+                  <div className="form-group">
+                    <label>First Name</label>
+                    <input
+                      type="text"
+                      name="firstName"
+                      placeholder="Enter your first name"
+                      value={formData.firstName}
+                      onChange={handleInputChange}
+                      required
+                      disabled={loading}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Last Name</label>
+                    <input
+                      type="text"
+                      name="lastName"
+                      placeholder="Enter your last name"
+                      value={formData.lastName}
+                      onChange={handleInputChange}
+                      required
+                      disabled={loading}
+                    />
+                  </div>
+                </>
               )}
 
               <div className="form-group">

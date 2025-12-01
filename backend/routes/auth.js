@@ -74,9 +74,9 @@ router.post('/admin/login', async (req, res) => {
 
 router.post('/register', async (req, res) => {
   try {
-    const { name, email, password } = req.body;
-    if (!name || !email || !password) {
-      return res.status(400).json({ message: 'Name, email, and password are required' });
+    const { firstName, lastName, email, password } = req.body;
+    if (!firstName || !lastName || !email || !password) {
+      return res.status(400).json({ message: 'First name, last name, email, and password are required' });
     }
     const userExists = await User.findOne({ email });
     if (userExists) {
@@ -84,7 +84,7 @@ router.post('/register', async (req, res) => {
     }
     const hashedPassword = await bcrypt.hash(password, 10);
     const user = new User({
-      name,
+      name: `${firstName} ${lastName}`,
       email,
       password: hashedPassword,
       phone: '',

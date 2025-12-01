@@ -23,7 +23,7 @@ import API_BASE_URL from '../config/api';
 
 function Settings() {
   // ────────────────────────────────────── STATE ──────────────────────────────────────
-  const [profile, setProfile] = useState({ name: '', email: '', phone: '', address: '', profileImage: '' });
+  const [profile, setProfile] = useState({ firstName: '', lastName: '', email: '', phone: '', address: '', profileImage: '' });
   const [security, setSecurity] = useState({
     twoFactor: false,
     newPassword: '',
@@ -48,11 +48,18 @@ function Settings() {
       const res = await axios.get(`${API_BASE_URL}/api/auth/me`, {
         headers: { Authorization: `Bearer ${token}` },
       });
+      // Split name into first and last name
+      const nameParts = res.data.name?.split(' ') || [];
+      const firstName = nameParts[0] || '';
+      const lastName = nameParts.slice(1).join(' ') || '';
+
       setProfile({
-        name: res.data.name || '',
+        firstName,
+        lastName,
         email: res.data.email || '',
         phone: res.data.phone || '',
         address: res.data.address || '',
+        profileImage: res.data.profileImage || '',
       });
       setSecurity(prev => ({ ...prev, twoFactor: res.data.twoFactorEnabled || false }));
       setNotifications(res.data.notificationsSettings || { email: true, sms: false, push: true });
@@ -253,6 +260,23 @@ function Settings() {
     }
   };
 
+  const clearAllSessions = async () => {
+    if (!confirm('Are you sure you want to clear all sessions? You will be logged out of all devices.')) return;
+
+    setSubmitting(true);
+    try {
+      await axios.delete(`${API_BASE_URL}/api/user/sessions`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setSessions([]);
+      toast.success('All sessions cleared');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to clear sessions');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   // ────────────────────────────────────── RENDER ──────────────────────────────────────
   if (loading) return <LoadingSkeleton />;
 
@@ -305,13 +329,19 @@ function Settings() {
           </div>
 
           <form onSubmit={submitProfile}>
-            <label>
-              <FaUser /> Full Name
-              <input name="name" value={profile.name} onChange={handleProfileChange} required disabled={submitting} />
-            </label>
+            <div className="name-fields">
+              <label>
+                <FaUser /> First Name
+                <input name="firstName" value={profile.firstName || ''} onChange={handleProfileChange} required disabled={submitting} />
+              </label>
+              <label>
+                <FaUser /> Last Name
+                <input name="lastName" value={profile.lastName || ''} onChange={handleProfileChange} required disabled={submitting} />
+              </label>
+            </div>
             <label>
               <FaEnvelope /> Email
-              <input name="email" type="email" value={profile.email} onChange={handleProfileChange} required disabled={submitting} />
+              <input name="email" type="email" value={profile.email} disabled title="Email cannot be changed" />
             </label>
             <label>
               <FaPhone /> Phone
@@ -468,6 +498,13 @@ function Settings() {
           <h3>
             <FaDesktop /> Active Sessions
           </h3>
+          {sessions.length > 0 && (
+            <div className="session-actions">
+              <button onClick={clearAllSessions} disabled={submitting} className="clear-all-btn">
+                <FaSignOutAlt /> Clear All Sessions
+              </button>
+            </div>
+          )}
           {sessions.length > 0 ? (
             <div className="sessions-list">
               {sessions.map(s => (

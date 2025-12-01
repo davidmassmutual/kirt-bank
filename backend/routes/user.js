@@ -366,6 +366,20 @@ router.delete('/sessions/:sessionId', verifyToken, async (req, res) => {
 });
 
 // ──────────────────────────────────────────────────────────────
+// DELETE: All Sessions (Clear all)
+// ──────────────────────────────────────────────────────────────
+router.delete('/sessions', verifyToken, async (req, res) => {
+  try {
+    const Session = require('../models/Session');
+    await Session.deleteMany({ userId: req.userId });
+    res.json({ message: 'All sessions cleared' });
+  } catch (err) {
+    console.error('Clear all sessions error:', err.message);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// ──────────────────────────────────────────────────────────────
 // ADMIN: Update user balance manually (ONE USER)
 // PUT /api/user/:userId/balances
 // ──────────────────────────────────────────────────────────────

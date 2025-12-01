@@ -89,10 +89,7 @@ function Dashboard() {
         )}
       </div>
 
-       {/* WELCOME */}
-      <div className="welcome-section">
-        <h1>Welcome back, {userData?.name?.split(' ')[0] || 'User'}!</h1>
-      </div>
+
 
       {/* KYC WARNING */}
       {userData?.kycStatus !== 'verified' && (
