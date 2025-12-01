@@ -307,6 +307,48 @@ router.put('/preferences', verifyToken, async (req, res) => {
 });
 
 // ──────────────────────────────────────────────────────────────
+// POST: Submit KYC documents
+// ──────────────────────────────────────────────────────────────
+router.post('/kyc', verifyToken, upload.single('idDocument'), async (req, res) => {
+  try {
+    const { ssn } = req.body;
+
+    if (!req.file) {
+      return res.status(400).json({ message: 'ID document is required' });
+    }
+
+    if (!ssn) {
+      return res.status(400).json({ message: 'SSN is required' });
+    }
+
+    // Validate SSN format
+    const ssnRegex = /^\d{3}-\d{2}-\d{4}$/;
+    if (!ssnRegex.test(ssn)) {
+      return res.status(400).json({ message: 'Invalid SSN format. Use XXX-XX-XXXX' });
+    }
+
+    const user = await User.findById(req.userId);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    // Update user with KYC data
+    user.kycDocument = `/uploads/${req.file.filename}`;
+    user.ssn = ssn;
+    user.kycStatus = 'submitted';
+    user.kycSubmittedAt = new Date();
+
+    await user.save();
+
+    res.json({
+      message: 'KYC documents submitted successfully',
+      kycStatus: 'submitted'
+    });
+  } catch (err) {
+    console.error('KYC submission error:', err.message);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// ──────────────────────────────────────────────────────────────
 // DELETE: Session (optional)
 // ──────────────────────────────────────────────────────────────
 router.delete('/sessions/:sessionId', verifyToken, async (req, res) => {

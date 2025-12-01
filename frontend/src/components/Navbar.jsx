@@ -1,16 +1,19 @@
 // src/components/Navbar.jsx
 import { useEffect, useState, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { FaHome, FaWallet, FaExchangeAlt, FaCreditCard, FaHistory, FaBell, 
+import { FaHome, FaWallet, FaExchangeAlt, FaCreditCard, FaHistory, FaBell,
          FaHandHoldingUsd, FaHeadset, FaCog, FaSignOutAlt, FaBars, FaTimes, FaUserTie, FaChartBar} from 'react-icons/fa';
 import { useDeposit } from '../context/DepositContext';
+import { useAuth } from '../context/AuthContext';
 import '../styles/Navbar.css';
 import img9 from '../images/WhatsApp Image 2025-10-17 at 16.15.27.jpeg';
+import API_BASE_URL from '../config/api';
 
 function Navbar({ handleLogout, isAuthenticated }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
   const { openDepositModal } = useDeposit();
+  const { user } = useAuth();
   const navbarRef = useRef(null);
 
   if (!isAuthenticated) return null;
@@ -63,7 +66,25 @@ function Navbar({ handleLogout, isAuthenticated }) {
       </button>
       <nav ref={navbarRef} className={`navbar ${isMenuOpen ? 'active' : ''}`}>
         <div className="navbar-brand">
-          <h1>Kirt Bank <img src={img9} alt="" className='navbar-brand-image' /></h1>
+          <div className="brand-header">
+            <h1>Kirt Bank <img src={img9} alt="" className='navbar-brand-image' /></h1>
+            <div className="welcome-section">
+              {user?.profileImage ? (
+                <img
+                  src={`${API_BASE_URL}${user.profileImage}`}
+                  alt="Profile"
+                  className="navbar-profile-image"
+                />
+              ) : (
+                <div className="navbar-profile-placeholder">
+                  <FaUserTie />
+                </div>
+              )}
+              <span className="welcome-text">
+                Welcome, {user?.name?.split(' ')[0] || 'User'}
+              </span>
+            </div>
+          </div>
           <p>Strength. Security. Stability.</p>
           <button className="close-menu" onClick={toggleMenu}>
             <FaTimes />

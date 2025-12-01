@@ -23,7 +23,7 @@ import API_BASE_URL from '../config/api';
 
 function Settings() {
   // ────────────────────────────────────── STATE ──────────────────────────────────────
-  const [profile, setProfile] = useState({ name: '', email: '', phone: '', address: '' });
+  const [profile, setProfile] = useState({ name: '', email: '', phone: '', address: '', profileImage: '' });
   const [security, setSecurity] = useState({
     twoFactor: false,
     newPassword: '',
@@ -38,6 +38,7 @@ function Settings() {
   const [totpCode, setTotpCode] = useState('');
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [profileImageFile, setProfileImageFile] = useState(null);
 
   // ────────────────────────────────────── HELPERS ──────────────────────────────────────
   const token = localStorage.getItem('token');
@@ -79,6 +80,44 @@ function Settings() {
   const handleNotificationsChange = e =>
     setNotifications({ ...notifications, [e.target.name]: e.target.checked });
   const handlePreferencesChange = e => setPreferences({ ...preferences, [e.target.name]: e.target.value });
+
+  const handleProfileImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setProfileImageFile(file);
+      // Preview the image
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setProfile({ ...profile, profileImage: e.target.result });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const uploadProfileImage = async () => {
+    if (!profileImageFile) return;
+
+    setSubmitting(true);
+    try {
+      const formData = new FormData();
+      formData.append('profileImage', profileImageFile);
+
+      const res = await axios.put(`${API_BASE_URL}/api/user/profile/image`, formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data'
+        },
+      });
+
+      setProfile(prev => ({ ...prev, profileImage: res.data.profileImage }));
+      toast.success('Profile image updated successfully');
+      setProfileImageFile(null);
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to upload image');
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   const submitProfile = async e => {
     e.preventDefault();
@@ -229,6 +268,42 @@ function Settings() {
           <h3>
             <FaUser /> Profile Information
           </h3>
+
+          {/* Profile Image Section */}
+          <div className="profile-image-section">
+            <div className="profile-image-container">
+              {profile.profileImage ? (
+                <img
+                  src={profile.profileImage.startsWith('data:') ? profile.profileImage : `${API_BASE_URL}${profile.profileImage}`}
+                  alt="Profile"
+                  className="profile-image-display"
+                />
+              ) : (
+                <div className="profile-image-placeholder">
+                  <FaUser />
+                </div>
+              )}
+            </div>
+            <div className="profile-image-controls">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleProfileImageChange}
+                style={{ display: 'none' }}
+                id="profile-image-input"
+                disabled={submitting}
+              />
+              <label htmlFor="profile-image-input" className="image-upload-btn">
+                Choose Image
+              </label>
+              {profileImageFile && (
+                <button onClick={uploadProfileImage} disabled={submitting} className="image-save-btn">
+                  {submitting ? 'Uploading...' : 'Save Image'}
+                </button>
+              )}
+            </div>
+          </div>
+
           <form onSubmit={submitProfile}>
             <label>
               <FaUser /> Full Name

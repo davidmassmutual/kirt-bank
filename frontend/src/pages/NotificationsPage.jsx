@@ -35,7 +35,7 @@ function NotificationsPage() {
 
   const markAsRead = async ( id ) => {
     try {
-      await axios.put(`${API_BASE_URL}/api/notifications/${id}/read`, {}, {
+      await axios.put(`${API_BASE_URL}/api/notifications/read/${id}`, {}, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       });
       setNotifications(prev => prev.map(n => n._id === id ? { ...n, read: true } : n));
