@@ -23,7 +23,7 @@ import './styles/App.css';
 import NotFound from './pages/NotFound';
 import LoadingSkeleton from './components/LoadingSkeleton';
 import { DepositProvider } from './context/DepositContext';
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import Profile from './pages/Profile';
 import Investment from './pages/Investment';
 import InvestNow from './pages/InvestNow';
@@ -44,9 +44,10 @@ function ScrollToTop() {
 let idleTimer;
 
 function AppContent() {
-  const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('token'));
+  const { user, token, loading, logout } = useAuth();
   const [isAdmin, setIsAdmin] = useState(localStorage.getItem('isAdmin') === 'true');
   const [lastActivity, setLastActivity] = useState(Date.now());
+  const isAuthenticated = !!user && !!token;
 
   const resetIdleTimer = () => {
     setLastActivity(Date.now());
@@ -57,10 +58,9 @@ function AppContent() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
+    logout();
     localStorage.removeItem('isAdmin');
     localStorage.removeItem('tokenExpiry');
-    setIsAuthenticated(false);
     setIsAdmin(false);
     clearTimeout(idleTimer);
     window.location.href = '/';
@@ -85,7 +85,7 @@ function AppContent() {
             headers: { Authorization: `Bearer ${token}` },
           });
 
-          setIsAuthenticated(true);
+          // Authentication state updated via AuthContext
           const adminStatus = res.data.isAdmin || false;
           setIsAdmin(adminStatus);
           localStorage.setItem('isAdmin', adminStatus.toString());
@@ -141,8 +141,8 @@ function AppContent() {
       <div className="main-content">
         <Routes>
           {/* PUBLIC */}
-          <Route path="/" element={<Home setIsAuthenticated={setIsAuthenticated} />} />
-          <Route path="/admin" element={<AdminLogin setIsAuthenticated={setIsAuthenticated} setIsAdmin={setIsAdmin} />} />
+          <Route path="/" element={<Home />} />
+          <Route path="/admin" element={<AdminLogin />} />
 
           {/* PROTECTED USER PAGES */}
           <Route path="/dashboard" element={isAuthenticated ? <Dashboard /> : <Navigate to="/" />} />

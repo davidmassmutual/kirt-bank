@@ -262,9 +262,12 @@
 }
 
 .action-card {
-  background: var(--card-bg);
+  background: rgba(255, 193, 7, 0.15);
   backdrop-filter: blur(15px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid var(--gold);
+    box-shadow:
+    0 8px 25px rgba(255, 193, 7, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
   border-radius: 20px;
   padding: 1.5rem;
   display: flex;
@@ -272,32 +275,43 @@
   align-items: center;
   justify-content: center;
   text-align: center;
-  color: var(--secondary);
+  color: var(--secondaryr);
   text-decoration: none;
   transition: all 0.3s ease;
   cursor: pointer;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
   animation: scaleIn 0.5s ease-out;
+  position: relative;
+  overflow: hidden;
+}
+
+.action-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: linear-gradient(135deg, rgba(255, 193, 7, 0.3), rgba(255, 193, 7, 0.05));
+  pointer-events: none;
 }
 
 .action-card:hover {
   transform: translateY(-8px);
   box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
   border-color: var(--gold);
-  background: rgba(255, 193, 7, 0.05);
+  background: var(--card-bg)
 }
 
 .action-card .icon {
   font-size: 28px;
-  color: var(--gold);
+  color: var(--navy);
   margin-bottom: 0.75rem;
   animation: bounce 2s infinite;
 }
 
+
 .action-card span {
   font-weight: 600;
   font-size: 16px;
-  color: var(--secondary);
+  color: var(--text);
 }
 
 /* LOAN BANNER */
@@ -342,9 +356,6 @@
 /* ACTIVITY FEED */
 .activity-feed-wrapper {
   margin: 2rem 0;
-}
-
-.activity-feed {
   background: var(--card-bg);
   backdrop-filter: blur(15px);
   border-radius: 20px;

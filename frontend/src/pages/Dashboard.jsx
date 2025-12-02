@@ -110,19 +110,19 @@ function Dashboard() {
 
       {/* ACTION BUTTONS – 2×2 MOBILE, 4×1 DESKTOP */}
       <div className="action-grid">
-        <button onClick={openDepositModal} className="action-card glass">
+        <button onClick={openDepositModal} className="action-card">
           <FaPlus className="icon" />
           <span>Deposit</span>
         </button>
-        <Link to="/transfer" className="action-card glass">
+        <Link to="/transfer" className="action-card">
           <FaExchangeAlt className="icon" />
           <span>Transfer</span>
         </Link>
-        <Link to="/investment" className="action-card glass">
+        <Link to="/investment" className="action-card">
           <FaChartLine className="icon" />
           <span>Invest</span>
         </Link>
-        <Link to="/cards" className="action-card glass">
+        <Link to="/cards" className="action-card">
           <FaCreditCard className="icon" />
           <span>Card</span>
         </Link>

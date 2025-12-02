@@ -75,22 +75,20 @@ function NotificationsPage() {
           </div>
         ) : (
           filtered.map(notif => (
-            <div key={notif._id} className={`notification-card ${notif.read ? 'read' : 'unread'} priority-${notif.priority}`}>
+            <div
+              key={notif._id}
+              className={`notification-card ${notif.read ? 'read' : 'unread'} priority-${notif.priority}`}
+              onClick={!notif.read ? () => markAsRead(notif._id) : undefined}
+              style={!notif.read ? { cursor: 'pointer' } : {}}
+            >
               <div className="notif-header">
                 {getPriorityIcon(notif.priority)}
                 <span className="notif-time">
                   {new Date(notif.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </span>
-                {notif.read && (
-                  <button onClick={() => markAsRead(notif._id)} className="mark-read read">
-                    <FaCheckCircle />
-                  </button>
-                )}
-                {!notif.read && (
-                  <button onClick={() => markAsRead(notif._id)} className="mark-read unread">
-                    <FaCheckCircle />
-                  </button>
-                )}
+                <button onClick={(e) => { e.stopPropagation(); if (notif.read) markAsRead(notif._id); }} className={`mark-read ${notif.read ? 'read' : 'unread'}`}>
+                  <FaCheckCircle />
+                </button>
               </div>
               <h3>{notif.title}</h3>
               <p>{notif.message}</p>

@@ -32,7 +32,7 @@ import {
 import API_BASE_URL from '../config/api';
 
 function Home() {
-  const { login, user, loading: authLoading } = useAuth();
+  const { login, user, loading: authLoading, setToken } = useAuth();
   const [isSignUp, setIsSignUp] = useState(false);
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
@@ -43,6 +43,12 @@ function Home() {
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (user && !authLoading) {
+      navigate('/dashboard');
+    }
+  }, [user, authLoading, navigate]);
 
 
 
@@ -86,15 +92,15 @@ function Home() {
           localStorage.setItem('token', res.data.token);
           localStorage.setItem('tokenExpiry', (Date.now() + (24 * 60 * 60 * 1000)).toString());
           toast.success('Registration successful!');
-          // Small delay to ensure token is set before navigation
-          setTimeout(() => navigate('/dashboard'), 100);
+          // Now setToken to trigger fetchUser
+          setToken(res.data.token);
+          setTimeout(() => {}, 100); // small delay
         }
       } else {
         // For login, use AuthContext and wait for it to complete
         await login(formData.email, formData.password);
         toast.success('Login successful!');
-        // Small delay to ensure state updates before navigation
-        setTimeout(() => navigate('/dashboard'), 100);
+        // Navigation will happen via useEffect when user is set
       }
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'An error occurred';
@@ -146,7 +152,10 @@ function Home() {
             </div>
           </div>
           <div className="hero-buttons">
-            <button onClick={() => setIsSignUp(true)} className="btn-primary">
+            <button onClick={() => {
+              setIsSignUp(true);
+              document.querySelector('.auth-section')?.scrollIntoView({ behavior: 'smooth' });
+            }} className="btn-primary">
               <FaRocket /> Get Started Free
             </button>
           </div>
@@ -444,11 +453,11 @@ function Home() {
             Open your account in minutes, no credit check required.
           </p>
           <div className="cta-buttons">
-            <button onClick={() => setIsSignUp(true)} className="btn-primary">
+            <button onClick={() => {
+              setIsSignUp(true);
+              document.querySelector('.auth-section')?.scrollIntoView({ behavior: 'smooth' });
+            }} className="btn-primary">
               <FaRocket /> Start Banking Today
-            </button>
-            <button className="btn-outline">
-              <FaUsers /> Schedule a Demo
             </button>
           </div>
           <div className="cta-trust">

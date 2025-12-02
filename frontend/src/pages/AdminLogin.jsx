@@ -1,16 +1,19 @@
 // frontend/src/pages/AdminLogin.jsx
+// frontend/src/pages/AdminLogin.jsx
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'react-toastify';
+import { useAuth } from '../context/AuthContext';
 import '../styles/AdminLogin.css';
 import API_BASE_URL from '../config/api';
 
-function AdminLogin({ setIsAuthenticated, setIsAdmin }) {
+function AdminLogin() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { setToken } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -20,12 +23,12 @@ function AdminLogin({ setIsAuthenticated, setIsAdmin }) {
         email,
         password,
       });
-      localStorage.setItem('token', res.data.token);
+      const token = res.data.token;
+      localStorage.setItem('token', token);
       localStorage.setItem('isAdmin', 'true');
-      setIsAuthenticated(true);
-      setIsAdmin(true);
+      setToken(token);
       toast.success('Admin login successful!');
-      navigate('/admin/dashboard');
+      setTimeout(() => navigate('/admin/dashboard'), 100);
     } catch (err) {
       console.error('Admin login error:', err.response?.status, err.response?.data);
       toast.error(err.response?.data?.message || 'Admin login failed');

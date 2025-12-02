@@ -54,6 +54,7 @@
   border-radius: 12px;
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.1);
+  margin-top: 3rem !important;
 }
 
 .navbar-profile-image,
@@ -91,8 +92,8 @@
   display: none;
   background: none;
   border: none;
-  color: white;
-  font-size: 1.6rem;
+  color: var(--gold);
+  font-size: 1.8rem;
   position: absolute;
   top: 0.5rem;
   right: 0.5rem;
@@ -104,6 +105,7 @@
 }
 
 .navbar-menu {
+  margin-top: -2rem;
   list-style: none;
   flex-grow: 1;
   overflow-y: auto;
@@ -175,13 +177,8 @@
   transition: transform 0.3s ease;
 }
 
-.hamburger:hover {
-  transform: scale(1.2);
-}
 
-.hamburger i {
-  animation: bounce 1.5s infinite;
-}
+
 
 /* Mobile */
 @media (max-width: 576px) {

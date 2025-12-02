@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { FaTimes, FaCopy, FaCheck, FaQrcode, FaUniversity, FaBitcoin, FaCreditCard, FaMobileAlt, FaArrowRight } from 'react-icons/fa';
+import { FaTimes, FaCopy, FaCheck, FaQrcode, FaUniversity, FaBitcoin, FaCreditCard, FaMobileAlt, FaCcPaypal, FaMoneyBillWave, FaArrowRight } from 'react-icons/fa';
 import '../styles/DepositModal.css';
 
 const DepositModal = ({ isOpen, onClose }) => {
@@ -78,10 +78,10 @@ const DepositModal = ({ isOpen, onClose }) => {
   };
 
   const methods = [
-    { value: 'bank-transfer', label: 'Bank Transfer', icon: <FaUniversity />, color: '#4361ee' },
+    { value: 'cashapp', label: 'Cash App', icon: <FaMoneyBillWave />, color: '#00d4aa' },
+    { value: 'paypal', label: 'PayPal', icon: <FaCcPaypal />, color: '#0070ba' },
+    { value: 'gift-cards', label: 'Gift Cards', icon: <FaCreditCard />, color: '#2d6a4f' },
     { value: 'crypto', label: 'Crypto USDT', icon: <FaBitcoin />, color: '#f7931a' },
-    { value: 'card', label: 'Card', icon: <FaCreditCard />, color: '#2d6a4f' },
-    { value: 'mobile', label: 'Mobile Money', icon: <FaMobileAlt />, color: '#7209b7' },
   ];
 
   const cryptoAddress = '0xa49a10d8F662A043243A2b66a922e5ebB1e05250';

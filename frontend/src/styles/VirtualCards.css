@@ -57,7 +57,9 @@
 .create-btn:hover:not(:disabled) {
   background: linear-gradient(90deg, #FBBF24, var(--gold));
 }
-
+.create-btn-physical-btn{
+  color: var(--text);
+}
 .cards-list {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -214,12 +216,12 @@
 }
 
 .physical-btn {
-  background: linear-gradient(90deg, var(--success), #059669) !important;
-  color: white !important;
+  background: var(--gold) !important;
+  color: var(--text) !important;
 }
 
 .physical-btn:hover:not(:disabled) {
-  background: linear-gradient(90deg, #059669, var(--success)) !important;
+  background: linear-gradient(90deg, #F59E0B, var(--gold)) !important;
 }
 
 /* Modal Styles */
