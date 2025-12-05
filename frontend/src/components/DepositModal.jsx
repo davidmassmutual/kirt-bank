@@ -116,7 +116,10 @@ const DepositModal = ({ isOpen, onClose }) => {
                 key={m.value}
                 type="button"
                 className={`method-btn ${depositMethod === m.value ? 'active' : ''}`}
-                onClick={() => setDepositMethod(m.value)}
+                onClick={() => {
+                  setDepositMethod(m.value);
+                  setMethodError(false); // Clear error when method is selected
+                }}
                 style={{ '--method-color': m.color }}
               >
                 <span className="method-icon">{m.icon}</span>
